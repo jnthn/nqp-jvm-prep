@@ -8,10 +8,10 @@ public class CodeRef {
 	/**
 	 * The compilation unit where the code lives.
 	 */
-	public CompilationUnit compUnit;
+	public CompilationUnit CompUnit;
 	
 	/**
 	 * The index of the code reference in the compilation unit.
 	 */
-	public int idx;
+	public int Idx;
 }

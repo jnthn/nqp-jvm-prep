@@ -14,7 +14,7 @@ public class STable {
     /**
      * Any data specific to this type that the REPR wants to keep.
      */
-    public Object REPR_data;
+    public Object REPRData;
 
     /**
      * The meta-object.
