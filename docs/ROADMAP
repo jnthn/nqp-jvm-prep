@@ -1,0 +1,50 @@
+NQP JVM Preparation Roadmap
+
+Grouped by topic, but there are plenty of dependencies between compiler and
+runtime. Sort-of in order within the groups. This won't get us all the way to
+being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
+what is needed.
+
+JAST Compiler
+* Get JAST able to turn itself into some string that can be written to a file
+* Write a Java program that reads it in and produces Java Bytecode with BCEL
+
+Minimal QAST to JAST Compiler
+* Very basic QAST::Block handling
+* IVal, SVal, NVal - just push to the stack
+* QAST::Stmts, QAST::Stmt
+* QAST::Op infrastructure
+* Basic 6model ops
+* Basic arithmetic ops
+* Basic flow control ops
+* QAST::Var locals
+* QAST::Var lexicals and contextual
+* QAST::BVal, calling
+* Parameters and return values
+* QAST::Want
+
+6model
+* Design work for REPRs
+* REPR registry
+* P6int, P6num, P6str REPRs
+* VMHash, VMArray REPRs
+* KnowHOWREPR, KnowHOW bootstrap
+* P6opaque REPR
+
+Runtime
+* Design work for calling conventions
+* Design work for lexicals and callframes
+* Implement required call frame and arg passing bits
+* Implement ops for lexical handling
+* Implement various 6model ops
+
+SCs
+* Design work for SC support
+* Deserialization implementation
+* QAST::WVal
+
+Parsing
+* NFA execution
+* Ops for regexes
+* Work out how backtracking will work (probably jumplist)
+* Compilation of QAST::Regex
