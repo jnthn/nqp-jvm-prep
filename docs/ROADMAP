@@ -6,7 +6,6 @@ being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
 JAST Compiler
-* Get JAST able to turn itself into some string that can be written to a file
 * Write a Java program that reads it in and produces Java Bytecode with BCEL
 
 Minimal QAST to JAST Compiler
