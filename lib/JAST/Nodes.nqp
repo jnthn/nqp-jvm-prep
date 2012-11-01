@@ -19,6 +19,16 @@ class JAST::Class is JAST::Node {
     method name(*@value) { @value ?? ($!name := @value[0]) !! $!name }
     method super(*@value) { @value ?? ($!super := @value[0]) !! $!super }
     method methods() { @!methods }
+    
+    method dump() {
+        my @dumped;
+        nqp::push(@dumped, "+ class $!name");
+        nqp::push(@dumped, "+ super $!super");
+        for @!methods {
+            nqp::push(@dumped, $_.dump());
+        }
+        return nqp::join("\n", @dumped);
+    }
 }
 
 class JAST::InstructionList {
@@ -70,6 +80,25 @@ class JAST::Method is JAST::Node {
     method argument_types() { @!argument_types }
     method local_types() { @!local_types }
     method instructions() { @!instructions }
+    
+    method dump() {
+        my @dumped;
+        nqp::push(@dumped, "+ method $!name");
+        nqp::push(@dumped, "++ returns $!returns");
+        if $!static {
+            nqp::push(@dumped, "++ static");
+        }
+        for @!argument_types {
+            nqp::push(@dumped, "++ arg " ~ $_);
+        }
+        for @!local_types {
+            nqp::push(@dumped, "++ local " ~ $_);
+        }
+        for @!instructions {
+            nqp::push(@dumped, $_.dump());
+        }
+        return nqp::join("\n", @dumped);
+    }
 }
 
 class JAST::Instruction is JAST::Node {
@@ -83,6 +112,10 @@ class JAST::Instruction is JAST::Node {
     
     method op() { $!op }
     method args() { @!args }
+    
+    method dump() {
+        "$!op " ~ nqp::join(", ", @!args)
+    }
 }
 
 my %opmap := nqp::hash(
