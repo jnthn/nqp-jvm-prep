@@ -40,15 +40,18 @@ class JAST::InstructionList {
 class JAST::Method is JAST::Node {
     has str $!name;
     has int $!static;
-    has $!return_type;
+    has $!returns;
     has @!argument_types;
     has @!local_types;
     has @!instructions;
     
-    method BUILD(:$name!, :$return_type!, :$static = 1) {
+    method BUILD(:$name!, :$returns!, :$static = 1) {
         $!name := $name;
-        $!return_type := $return_type;
+        $!returns := $returns;
         $!static := $static;
+        @!argument_types := [];
+        @!local_types := [];
+        @!instructions := [];
     }
     
     method add_instruction($ins) {
@@ -63,7 +66,7 @@ class JAST::Method is JAST::Node {
 
     method name(*@value) { @value ?? ($!name := @value[0]) !! $!name }
     method static(*@value) { @value ?? ($!static := @value[0]) !! $!static }
-    method return_type(*@value) { @value ?? ($!return_type := @value[0]) !! $!return_type }
+    method returns(*@value) { @value ?? ($!returns := @value[0]) !! $!returns }
     method argument_types() { @!argument_types }
     method local_types() { @!local_types }
     method instructions() { @!instructions }
