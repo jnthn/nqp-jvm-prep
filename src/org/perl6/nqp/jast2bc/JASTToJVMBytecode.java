@@ -1,10 +1,10 @@
 package org.perl6.nqp.jast2bc;
 
+import java.util.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import org.apache.bcel.generic.*;
-
 import com.sun.org.apache.bcel.internal.Constants;
 
 public class JASTToJVMBytecode {
@@ -74,6 +74,9 @@ public class JASTToJVMBytecode {
 			ConstantPoolGen cp, InstructionList il) throws Exception {
 		String curLine, methodName = null, returnType = null;
 		boolean isStatic = false;
+		List<String> argNames = new ArrayList<String>();
+		List<Type> argTypes = new ArrayList<Type>();
+		
 		MethodGen m = null;
 		InstructionFactory f = null;
 		
@@ -97,6 +100,11 @@ public class JASTToJVMBytecode {
 					returnType = curLine.substring("++ returns ".length());
 				else if (curLine.equals("++ static"))
 					isStatic = true;
+				else if (curLine.startsWith("++ arg ")) {
+					String[] bits = curLine.split("\\s", 4);
+					argNames.add(bits[2]);
+					argTypes.add(processType(bits[3]));
+				}
 				else
 					throw new Exception("Cannot understand '" + curLine + "'");
 				continue;
@@ -114,8 +122,8 @@ public class JASTToJVMBytecode {
 							? Constants.ACC_STATIC | Constants.ACC_PUBLIC
 							: Constants.ACC_PUBLIC),
 						processType(returnType),
-						new Type[] { }, // XXX arg types
-						new String[] { }, // XXX arg names
+						argTypes.toArray(new Type[0]),
+						argNames.toArray(new String[0]),
 						methodName, c.getClassName(),
 						il, cp);
 				 f = new InstructionFactory(c);
