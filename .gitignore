@@ -1,1 +1,3 @@
 *.class
+*.pbc
+*.pir
