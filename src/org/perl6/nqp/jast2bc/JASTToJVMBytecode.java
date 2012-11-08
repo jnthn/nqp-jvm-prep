@@ -42,7 +42,7 @@ public class JASTToJVMBytecode {
 			{
 				superName = curLine.substring("+ super ".length());
 			}
-			else if (curLine.startsWith("+ method"))
+			else if (curLine.equals("+ method"))
 			{
 				break;
 			}
@@ -59,10 +59,63 @@ public class JASTToJVMBytecode {
 		// Create class generator object.
 		ClassGen c = new ClassGen(className, superName,  "<generated>",
 				Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
+		ConstantPoolGen cp = c.getConstantPool();
+		
+		// Process all of the methods.
+		if (!curLine.equals("+ method"))
+			throw new Exception("Expected method after class configuration");
+		while (processMethod(in, c, cp))
+			;
 		
 		return c;
 	}
 	
+	private static boolean processMethod(BufferedReader in, ClassGen c,
+			ConstantPoolGen cp) throws Exception {
+		String curLine, methodName = null, returnType = null;
+		boolean isStatic = false;
+		
+		boolean inMethodHeader = true;
+		while ((curLine = in.readLine()) != null) {
+			// See if we need to move to the next method.
+			if (curLine.equals("+ method")) {
+				if (inMethodHeader)
+					throw new Exception("Unexpected + method in method header");
+				return true;
+			}
+			
+			// Is it a header line?
+			if (curLine.startsWith("++ ")) {
+				if (!inMethodHeader)
+					throw new Exception("Unexpected method header directive: " + curLine);
+				if (curLine.startsWith("++ name "))
+					methodName = curLine.substring("++ name ".length());
+				else if (curLine.startsWith("++ returns "))
+					returnType = curLine.substring("++ returns ".length());
+				else if (curLine.equals("++ static"))
+					isStatic = true;
+				else
+					throw new Exception("Cannot understand '" + curLine + "'");
+			}
+			
+			// Otherwise, we have an instruction. If we've been in the method
+			// header, this will be the first instruction also.
+			else if (inMethodHeader) {
+				// Transition to instructions mode.
+				inMethodHeader = false;
+				
+				// Create method object.
+				// XXX
+			}
+			
+			// Process line as an instruction.
+			// XXX
+		}
+		if (inMethodHeader)
+			throw new Exception("Unexpected end of file in method header");
+		return false;
+	}
+
 	private static void usage()
 	{
 		System.err.println("Usage: JASTToJVMBytecode jast-dump-file output-class-file");
