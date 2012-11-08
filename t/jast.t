@@ -58,7 +58,7 @@ jast_test(
     -> $c {
         my $m := JAST::Method.new(:name('one'), :returns('Integer'));
         $m.add_instruction(JAST::Instruction.new( :op('iconst_1') ));
-        $m.add_instruction(JAST::Instruction.new( :op('return') ));
+        $m.add_instruction(JAST::Instruction.new( :op('ireturn') ));
         $c.add_method($m);
     },
     'System.out.println(new Integer(JASTTest.one()).toString());',
