@@ -332,6 +332,102 @@ public class JASTToJVMBytecode {
 		case 0x77: // dneg
 			il.append(InstructionConstants.DNEG);
 			break;
+		case 0x78: // ishl
+			il.append(InstructionConstants.ISHL);
+			break;
+		case 0x79: // lshl
+			il.append(InstructionConstants.LSHL);
+			break;
+		case 0x7a: // ishr
+			il.append(InstructionConstants.ISHR);
+			break;
+		case 0x7b: // lshr
+			il.append(InstructionConstants.LSHR);
+			break;
+		case 0x7c: // iushr
+			il.append(InstructionConstants.IUSHR);
+			break;
+		case 0x7d: // lushr
+			il.append(InstructionConstants.LUSHR);
+			break;
+		case 0x7e: // iand
+			il.append(InstructionConstants.IAND);
+			break;
+		case 0x7f: // land
+			il.append(InstructionConstants.LAND);
+			break;
+		case 0x80: // ior
+			il.append(InstructionConstants.IOR);
+			break;
+		case 0x81: // lor
+			il.append(InstructionConstants.LOR);
+			break;
+		case 0x82: // ixor
+			il.append(InstructionConstants.IXOR);
+			break;
+		case 0x83: // lxor
+			il.append(InstructionConstants.LXOR);
+			break;
+		case 0x85: // i2l
+			il.append(InstructionConstants.I2L);
+			break;
+		case 0x86: // i2f
+			il.append(InstructionConstants.I2F);
+			break;
+		case 0x87: // i2d
+			il.append(InstructionConstants.I2D);
+			break;
+		case 0x88: // l2i
+			il.append(InstructionConstants.L2I);
+			break;
+		case 0x89: // l2f
+			il.append(InstructionConstants.L2F);
+			break;
+		case 0x8a: // l2d
+			il.append(InstructionConstants.L2D);
+			break;
+		case 0x8b: // f2i
+			il.append(InstructionConstants.F2I);
+			break;
+		case 0x8c: // f2l
+			il.append(InstructionConstants.F2L);
+			break;
+		case 0x8d: // f2d
+			il.append(InstructionConstants.F2D);
+			break;
+		case 0x8e: // d2i
+			il.append(InstructionConstants.D2I);
+			break;
+		case 0x8f: // d2l
+			il.append(InstructionConstants.D2L);
+			break;
+		case 0x90: // d2f
+			il.append(InstructionConstants.D2F);
+			break;
+		case 0x91: // i2b
+			il.append(InstructionConstants.I2B);
+			break;
+		case 0x92: // i2c
+			il.append(InstructionConstants.I2C);
+			break;
+		case 0x93: // i2s
+			il.append(InstructionConstants.I2S);
+			break;
+		case 0x94: // lcmp
+			il.append(InstructionConstants.LCMP);
+			break;
+		case 0x95: // fcmpl
+			il.append(InstructionConstants.FCMPL);
+			break;
+		case 0x96: // fcmpg
+			il.append(InstructionConstants.FCMPG);
+			break;
+		case 0x97: // dcmpl
+			il.append(InstructionConstants.DCMPL);
+			break;
+		case 0x98: // dcmpg
+			il.append(InstructionConstants.DCMPG);
+			break;
 		case 0xac: // ireturn
 			il.append(InstructionConstants.IRETURN);
 			break;
