@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(1);
+plan(2);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -64,3 +64,18 @@ jast_test(
     'System.out.println(new Integer(JASTTest.one()).toString());',
     "1\n",
     "Simple method returning a constant");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('add'), :returns('Integer'));
+        $m.add_argument('a', 'Integer');
+        $m.add_argument('b', 'Integer');
+        $m.add_instruction(JAST::Instruction.new( :op('iload_0') ));
+        $m.add_instruction(JAST::Instruction.new( :op('iload_1') ));
+        $m.add_instruction(JAST::Instruction.new( :op('iadd') ));
+        $m.add_instruction(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.add(39, 3)).toString());',
+    "42\n",
+    "Can receive and add 2 integer arguments");
