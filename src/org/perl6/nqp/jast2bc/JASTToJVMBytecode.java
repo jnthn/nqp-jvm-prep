@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import org.apache.bcel.generic.*;
+
 import com.sun.org.apache.bcel.internal.Constants;
 
 public class JASTToJVMBytecode {
@@ -198,6 +199,138 @@ public class JASTToJVMBytecode {
 			break;
 		case 0x0f: // dconst_1
 			il.append(InstructionConstants.DCONST_1);
+			break;
+		case 0x1a: // iload_0
+			il.append(InstructionFactory.createLoad(Type.INT, 0));
+			break;
+		case 0x1b: // iload_1
+			il.append(InstructionFactory.createLoad(Type.INT, 1));
+			break;
+		case 0x1c: // iload_2
+			il.append(InstructionFactory.createLoad(Type.INT, 2));
+			break;
+		case 0x1d: // iload_3
+			il.append(InstructionFactory.createLoad(Type.INT, 3));
+			break;
+		case 0x1e: // lload_0
+			il.append(InstructionFactory.createLoad(Type.LONG, 0));
+			break;
+		case 0x1f: // lload_1
+			il.append(InstructionFactory.createLoad(Type.LONG, 1));
+			break;
+		case 0x20: // lload_2
+			il.append(InstructionFactory.createLoad(Type.LONG, 2));
+			break;
+		case 0x21: // lload_3
+			il.append(InstructionFactory.createLoad(Type.LONG, 3));
+			break;
+		case 0x22: // fload_0
+			il.append(InstructionFactory.createLoad(Type.FLOAT, 0));
+			break;
+		case 0x23: // fload_1
+			il.append(InstructionFactory.createLoad(Type.FLOAT, 1));
+			break;
+		case 0x24: // fload_2
+			il.append(InstructionFactory.createLoad(Type.FLOAT, 2));
+			break;
+		case 0x25: // fload_3
+			il.append(InstructionFactory.createLoad(Type.FLOAT, 3));
+			break;
+		case 0x26: // dload_0
+			il.append(InstructionFactory.createLoad(Type.DOUBLE, 0));
+			break;
+		case 0x27: // dload_1
+			il.append(InstructionFactory.createLoad(Type.DOUBLE, 1));
+			break;
+		case 0x28: // dload_2
+			il.append(InstructionFactory.createLoad(Type.DOUBLE, 2));
+			break;
+		case 0x29: // dload_3
+			il.append(InstructionFactory.createLoad(Type.DOUBLE, 3));
+			break;
+		case 0x2a: // aload_0
+			il.append(InstructionFactory.createLoad(Type.OBJECT, 0));
+			break;
+		case 0x2b: // aload_1
+			il.append(InstructionFactory.createLoad(Type.OBJECT, 1));
+			break;
+		case 0x2c: // aload_2
+			il.append(InstructionFactory.createLoad(Type.OBJECT, 2));
+			break;
+		case 0x2d: // aload_3
+			il.append(InstructionFactory.createLoad(Type.OBJECT, 3));
+			break;
+		case 0x60: // iadd
+			il.append(InstructionConstants.IADD);
+			break;
+		case 0x61: // ladd
+			il.append(InstructionConstants.LADD);
+			break;
+		case 0x62: // fadd
+			il.append(InstructionConstants.FADD);
+			break;
+		case 0x63: // dadd
+			il.append(InstructionConstants.DADD);
+			break;
+		case 0x64: // isub
+			il.append(InstructionConstants.ISUB);
+			break;
+		case 0x65: // lsub
+			il.append(InstructionConstants.LSUB);
+			break;
+		case 0x66: // fsub
+			il.append(InstructionConstants.FSUB);
+			break;
+		case 0x67: // dsub
+			il.append(InstructionConstants.DSUB);
+			break;
+		case 0x68: // imul
+			il.append(InstructionConstants.IMUL);
+			break;
+		case 0x69: // lmul
+			il.append(InstructionConstants.LMUL);
+			break;
+		case 0x6a: // fmul
+			il.append(InstructionConstants.FMUL);
+			break;
+		case 0x6b: // dmul
+			il.append(InstructionConstants.DMUL);
+			break;
+		case 0x6c: // idiv
+			il.append(InstructionConstants.IDIV);
+			break;
+		case 0x6d: // ldiv
+			il.append(InstructionConstants.LDIV);
+			break;
+		case 0x6e: // fdiv
+			il.append(InstructionConstants.FDIV);
+			break;
+		case 0x6f: // ddiv
+			il.append(InstructionConstants.DDIV);
+			break;
+		case 0x70: // irem
+			il.append(InstructionConstants.IREM);
+			break;
+		case 0x71: // lrem
+			il.append(InstructionConstants.LREM);
+			break;
+		case 0x72: // frem
+			il.append(InstructionConstants.FREM);
+			break;
+		case 0x73: // drem
+			il.append(InstructionConstants.DREM);
+			break;
+		case 0x74: // ineg
+			il.append(InstructionConstants.INEG);
+			break;
+		case 0x75: // lneg
+			il.append(InstructionConstants.LNEG);
+			break;
+		case 0x76: // fneg
+			il.append(InstructionConstants.FNEG);
+			break;
+		case 0x77: // dneg
+			il.append(InstructionConstants.DNEG);
 			break;
 		case 0xac: // ireturn
 			il.append(InstructionConstants.IRETURN);
