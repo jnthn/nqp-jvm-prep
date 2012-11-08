@@ -5,8 +5,16 @@ runtime. Sort-of in order within the groups. This won't get us all the way to
 being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
-JAST Compiler
-* Write a Java program that reads it in and produces Java Bytecode with BCEL
+JAST and JAST -> Bytecode
+* Implement locals
+* Constant loading
+* Implement remaining load/store ops
+* Implement labels and branch instructions
+* Array types and array related instructions
+* Calls
+* new
+* Field access
+* Static field access
 
 Minimal QAST to JAST Compiler
 * Very basic QAST::Block handling
