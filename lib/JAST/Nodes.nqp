@@ -51,17 +51,25 @@ class JAST::Method is JAST::Node {
     has str $!name;
     has int $!static;
     has $!returns;
-    has @!argument_types;
-    has @!local_types;
+    has @!arguments;
+    has @!locals;
     has @!instructions;
     
     method BUILD(:$name!, :$returns!, :$static = 1) {
         $!name := $name;
         $!returns := $returns;
         $!static := $static;
-        @!argument_types := [];
-        @!local_types := [];
+        @!arguments := [];
+        @!locals := [];
         @!instructions := [];
+    }
+    
+    method add_argument($name, $type) {
+        nqp::push(@!arguments, [$name, $type]);
+    }
+    
+    method add_local($name, $type) {
+        nqp::push(@!locals, [$name, $type]);
     }
     
     method add_instruction($ins) {
@@ -77,22 +85,23 @@ class JAST::Method is JAST::Node {
     method name(*@value) { @value ?? ($!name := @value[0]) !! $!name }
     method static(*@value) { @value ?? ($!static := @value[0]) !! $!static }
     method returns(*@value) { @value ?? ($!returns := @value[0]) !! $!returns }
-    method argument_types() { @!argument_types }
-    method local_types() { @!local_types }
+    method arguments() { @!arguments }
+    method locals() { @!locals }
     method instructions() { @!instructions }
     
     method dump() {
         my @dumped;
-        nqp::push(@dumped, "+ method $!name");
+        nqp::push(@dumped, "+ method");
+        nqp::push(@dumped, "++ name $!name");
         nqp::push(@dumped, "++ returns $!returns");
         if $!static {
             nqp::push(@dumped, "++ static");
         }
-        for @!argument_types {
-            nqp::push(@dumped, "++ arg " ~ $_);
+        for @!arguments {
+            nqp::push(@dumped, "++ arg " ~ $_[0] ~ " " ~ $_[1]);
         }
-        for @!local_types {
-            nqp::push(@dumped, "++ local " ~ $_);
+        for @!locals {
+            nqp::push(@dumped, "++ local " ~ $_[0] ~ " " ~ $_[1]);
         }
         for @!instructions {
             nqp::push(@dumped, $_.dump());
