@@ -475,6 +475,11 @@ public class JASTToJVMBytecode {
 		case 0xb1: // return
 			il.append(InstructionConstants.RETURN);
 			break;
+		case 0xc6: // ifnull
+		case 0xc7: // ifnonnull
+		case 0xc8: // goto_w
+			emitBranchInstruction(il, labelFixups, rest, instruction);
+			break;
 		default:
 			throw new Exception("Unrecognized instruction line: " + curLine);
 		}
