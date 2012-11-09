@@ -47,6 +47,20 @@ class JAST::InstructionList {
     method instructions() { @!instructions }
 }
 
+class JAST::Local is JAST::Node {
+    has str $!name;
+    
+    method BUILD(:$name!) {
+        $!name := $name;
+    }
+    
+    method name() { $!name }
+    
+    method dump() {
+        ":$!name"
+    }
+}
+
 class JAST::Method is JAST::Node {
     has str $!name;
     has int $!static;
@@ -70,6 +84,7 @@ class JAST::Method is JAST::Node {
     
     method add_local($name, $type) {
         nqp::push(@!locals, [$name, $type]);
+        JAST::Local.new(:name($name))
     }
     
     method append($ins) {
@@ -143,7 +158,7 @@ class JAST::Instruction is JAST::Node {
     method dump() {
         my @processed;
         for @!args {
-            nqp::push(@processed, nqp::istype($_, JAST::Label)
+            nqp::push(@processed, nqp::istype($_, JAST::Node)
                 ?? $_.name
                 !! ~$_)
         }
