@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(2);
+plan(4);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -79,3 +79,38 @@ jast_test(
     'System.out.println(new Integer(JASTTest.add(39, 3)).toString());',
     "42\n",
     "Can receive and add 2 integer arguments");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('fb'), :returns('Integer'));
+        my $l := JAST::Label.new(:name('lab1'));
+        $m.append(JAST::Instruction.new( :op('goto'), $l ));
+        $m.append(JAST::Instruction.new( :op('iconst_1') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $m.append($l);
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.fb()).toString());',
+    "2\n",
+    "Forward goto code-gen works");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('fb'), :returns('Integer'));
+        my $l1 := JAST::Label.new(:name('lab1'));
+        my $l2 := JAST::Label.new(:name('lab2'));
+        $m.append(JAST::Instruction.new( :op('goto'), $l2 ));
+        $m.append($l1);
+        $m.append(JAST::Instruction.new( :op('iconst_1') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $m.append($l2);
+        $m.append(JAST::Instruction.new( :op('goto'), $l1 ));
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.fb()).toString());',
+    "1\n",
+    "Forward and backward goto code-gen works");
