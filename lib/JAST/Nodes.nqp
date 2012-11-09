@@ -110,6 +110,20 @@ class JAST::Method is JAST::Node {
     }
 }
 
+class JAST::Label is JAST::Node {
+    has str $!name;
+    
+    method BUILD(:$name!) {
+        $!name := $name;
+    }
+    
+    method name() { $!name }
+    
+    method dump() {
+        ":$!name"
+    }
+}
+
 class JAST::Instruction is JAST::Node {
     has int $!op;
     has @!args;
@@ -123,7 +137,13 @@ class JAST::Instruction is JAST::Node {
     method args() { @!args }
     
     method dump() {
-        "$!op " ~ nqp::join(", ", @!args)
+        my @processed;
+        for @!args {
+            nqp::push(@processed, nqp::istype($_, JAST::Label)
+                ?? $_.name
+                !! ~$_)
+        }
+        "$!op " ~ nqp::join(", ", @processed)
     }
 }
 
