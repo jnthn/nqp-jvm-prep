@@ -272,6 +272,33 @@ public class JASTToJVMBytecode {
 		case 0x2d: // aload_3
 			il.append(InstructionFactory.createLoad(Type.OBJECT, 3));
 			break;
+		case 0x57: // pop
+			il.append(InstructionConstants.POP);
+			break;
+		case 0x58: // pop2
+			il.append(InstructionConstants.POP2);
+			break;
+		case 0x59: // dup
+			il.append(InstructionConstants.DUP);
+			break;
+		case 0x5a: // dup_x1
+			il.append(InstructionConstants.DUP_X1);
+			break;
+		case 0x5b: // dup_x2
+			il.append(InstructionConstants.DUP_X2);
+			break;
+		case 0x5c: // dup2
+			il.append(InstructionConstants.DUP2);
+			break;
+		case 0x5d: // dup2_x1
+			il.append(InstructionConstants.DUP2_X1);
+			break;
+		case 0x5e: // dup2_x2
+			il.append(InstructionConstants.DUP2_X2);
+			break;
+		case 0x5f: // swap
+			il.append(InstructionConstants.SWAP);
+			break;
 		case 0x60: // iadd
 			il.append(InstructionConstants.IADD);
 			break;
