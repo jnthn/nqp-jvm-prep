@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(4);
+plan(5);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -116,3 +116,24 @@ jast_test(
     'System.out.println(new Integer(JASTTest.fb()).toString());',
     "1\n",
     "Forward and backward goto code-gen works");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('gt'), :returns('Integer'));
+        $m.add_argument('a', 'Integer');
+        $m.add_argument('b', 'Integer');
+        my $l := JAST::Label.new(:name('lab1'));
+        $m.append(JAST::Instruction.new( :op('iload_0') ));
+        $m.append(JAST::Instruction.new( :op('iload_1') ));
+        $m.append(JAST::Instruction.new( :op('if_icmpgt'), $l ));
+        $m.append(JAST::Instruction.new( :op('iconst_0') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $m.append($l);
+        $m.append(JAST::Instruction.new( :op('iconst_1') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.gt(2, 1)).toString());
+     System.out.println(new Integer(JASTTest.gt(1, 2)).toString());',
+    "1\n0\n",
+    "Conditonal branch (if_icmpgt)");
