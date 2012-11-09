@@ -77,6 +77,8 @@ public class JASTToJVMBytecode {
 		boolean isStatic = false;
 		List<String> argNames = new ArrayList<String>();
 		List<Type> argTypes = new ArrayList<Type>();
+		Map<String, Type> localTypes = new HashMap<String, Type>();
+		Map<String, LocalVariableGen> localVariables = new HashMap<String, LocalVariableGen>();
 		Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
 		Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
 		
@@ -108,6 +110,12 @@ public class JASTToJVMBytecode {
 					argNames.add(bits[2]);
 					argTypes.add(processType(bits[3]));
 				}
+				else if (curLine.startsWith("++ local ")) {
+					String[] bits = curLine.split("\\s", 4);
+					if (localTypes.containsKey(bits[2]))
+						throw new Exception("Duplicate local name: " + bits[2]);
+					localTypes.put(bits[2], processType(bits[3]));
+				}
 				else
 					throw new Exception("Cannot understand '" + curLine + "'");
 				continue;
@@ -130,6 +138,10 @@ public class JASTToJVMBytecode {
 						methodName, c.getClassName(),
 						il, cp);
 				 f = new InstructionFactory(c);
+				 
+				 // Add locals.
+				 for (String local : localTypes.keySet())
+					 localVariables.put(local, m.addLocalVariable(local, localTypes.get(local), null, null));
 			}
 			
 			// Check if it's a label.
@@ -142,7 +154,7 @@ public class JASTToJVMBytecode {
 			}
 			
 			// Process line as an instruction.
-			emitInstruction(il, f, labelFixups, curLine);
+			emitInstruction(il, f, labelFixups, localVariables, curLine);
 		}
 		if (inMethodHeader)
 			throw new Exception("Unexpected end of file in method header");
@@ -152,6 +164,7 @@ public class JASTToJVMBytecode {
 
 	private static void emitInstruction(InstructionList il, InstructionFactory f,
 			Map<String, ArrayList<BranchInstruction>> labelFixups,
+			Map<String, LocalVariableGen> localVariables,
 			String curLine) throws Exception {
 		// Find instruciton code and get rest of the string.
 		int endIns = curLine.indexOf(" ");
@@ -212,6 +225,31 @@ public class JASTToJVMBytecode {
 		case 0x0f: // dconst_1
 			il.append(InstructionConstants.DCONST_1);
 			break;
+		case 0x15: // iload
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createLoad(Type.INT, localVariables.get(rest).getIndex()));
+			break;
+		case 0x16: // lload
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createLoad(Type.LONG, localVariables.get(rest).getIndex()));
+			break;
+		case 0x17: // fload
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createLoad(Type.FLOAT, localVariables.get(rest).getIndex()));
+			break;
+		case 0x18: // dload
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createLoad(Type.DOUBLE, localVariables.get(rest).getIndex()));
+			break;
+		case 0x19: // aload
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createLoad(Type.OBJECT, localVariables.get(rest).getIndex()));
+			break;
 		case 0x1a: // iload_0
 			il.append(InstructionFactory.createLoad(Type.INT, 0));
 			break;
@@ -271,6 +309,91 @@ public class JASTToJVMBytecode {
 			break;
 		case 0x2d: // aload_3
 			il.append(InstructionFactory.createLoad(Type.OBJECT, 3));
+			break;
+		case 0x36: // istore
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createStore(Type.INT, localVariables.get(rest).getIndex()));
+			break;
+		case 0x37: // lstore
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createStore(Type.LONG, localVariables.get(rest).getIndex()));
+			break;
+		case 0x38: // fstore
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createStore(Type.FLOAT, localVariables.get(rest).getIndex()));
+			break;
+		case 0x39: // dstore
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createStore(Type.DOUBLE, localVariables.get(rest).getIndex()));
+			break;
+		case 0x3a: // astore
+			if (!localVariables.containsKey(rest))
+				throw new Exception("Undeclared local variable: " + rest);
+			il.append(InstructionFactory.createStore(Type.OBJECT, localVariables.get(rest).getIndex()));
+			break;
+		case 0x3b: // istore_0
+			il.append(InstructionFactory.createStore(Type.INT, 0));
+			break;
+		case 0x3c: // istore_1
+			il.append(InstructionFactory.createStore(Type.INT, 1));
+			break;
+		case 0x3d: // istore_2
+			il.append(InstructionFactory.createStore(Type.INT, 2));
+			break;
+		case 0x3e: // istore_3
+			il.append(InstructionFactory.createStore(Type.INT, 3));
+			break;
+		case 0x3f: // lstore_0
+			il.append(InstructionFactory.createStore(Type.LONG, 0));
+			break;
+		case 0x40: // lstore_1
+			il.append(InstructionFactory.createStore(Type.LONG, 1));
+			break;
+		case 0x41: // lstore_2
+			il.append(InstructionFactory.createStore(Type.LONG, 2));
+			break;
+		case 0x42: // lstore_3
+			il.append(InstructionFactory.createStore(Type.LONG, 3));
+			break;
+		case 0x43: // fstore_0
+			il.append(InstructionFactory.createStore(Type.FLOAT, 0));
+			break;
+		case 0x44: // fstore_1
+			il.append(InstructionFactory.createStore(Type.FLOAT, 1));
+			break;
+		case 0x45: // fstore_2
+			il.append(InstructionFactory.createStore(Type.FLOAT, 2));
+			break;
+		case 0x46: // fstore_3
+			il.append(InstructionFactory.createStore(Type.FLOAT, 3));
+			break;
+		case 0x47: // dstore_0
+			il.append(InstructionFactory.createStore(Type.DOUBLE, 0));
+			break;
+		case 0x48: // dstore_1
+			il.append(InstructionFactory.createStore(Type.DOUBLE, 1));
+			break;
+		case 0x49: // dstore_2
+			il.append(InstructionFactory.createStore(Type.DOUBLE, 2));
+			break;
+		case 0x4a: // dstore_3
+			il.append(InstructionFactory.createStore(Type.DOUBLE, 3));
+			break;
+		case 0x4b: // astore_0
+			il.append(InstructionFactory.createStore(Type.OBJECT, 0));
+			break;
+		case 0x4c: // astore_1
+			il.append(InstructionFactory.createStore(Type.OBJECT, 1));
+			break;
+		case 0x4d: // astore_2
+			il.append(InstructionFactory.createStore(Type.OBJECT, 2));
+			break;
+		case 0x4e: // astore_3
+			il.append(InstructionFactory.createStore(Type.OBJECT, 3));
 			break;
 		case 0x57: // pop
 			il.append(InstructionConstants.POP);

@@ -6,9 +6,7 @@ being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
 JAST and JAST -> Bytecode
-* Implement locals
 * Constant loading
-* Implement remaining load/store ops
 * Array types and array related instructions
 * Calls
 * new
