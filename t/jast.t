@@ -162,7 +162,7 @@ jast_test(
         $m.append(JAST::Instruction.new( :op('iconst_2') ));
         $m.append(JAST::Instruction.new( :op('istore'), $x ));
         $m.append(JAST::Instruction.new( :op('iconst_1') ));
-        $m.append(JAST::Instruction.new( :op('istore'), $x ));
+        $m.append(JAST::Instruction.new( :op('istore'), $y ));
         $m.append(JAST::Instruction.new( :op('iload'), $x ));
         $m.append(JAST::Instruction.new( :op('iload'), $y ));
         $m.append(JAST::Instruction.new( :op('iadd') ));
