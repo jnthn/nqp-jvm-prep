@@ -102,6 +102,8 @@ jast_test(
         my $l1 := JAST::Label.new(:name('lab1'));
         my $l2 := JAST::Label.new(:name('lab2'));
         $m.append(JAST::Instruction.new( :op('goto'), $l2 ));
+        $m.append(JAST::Instruction.new( :op('iconst_0') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
         $m.append($l1);
         $m.append(JAST::Instruction.new( :op('iconst_1') ));
         $m.append(JAST::Instruction.new( :op('ireturn') ));
