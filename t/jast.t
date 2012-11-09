@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(5);
+plan(7);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -137,3 +137,38 @@ jast_test(
      System.out.println(new Integer(JASTTest.gt(1, 2)).toString());',
     "1\n0\n",
     "Conditonal branch (if_icmpgt)");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('withLocal'), :returns('Integer'));
+        my $x := $m.add_local('x', 'Integer');
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('istore'), $x ));
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('iload'), $x ));
+        $m.append(JAST::Instruction.new( :op('iadd') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.withLocal()).toString());',
+    "4\n",
+    "Compilation of method with a local works");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('withTwoLocals'), :returns('Integer'));
+        my $x := $m.add_local('x', 'Integer');
+        my $y := $m.add_local('y', 'Integer');
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('istore'), $x ));
+        $m.append(JAST::Instruction.new( :op('iconst_1') ));
+        $m.append(JAST::Instruction.new( :op('istore'), $x ));
+        $m.append(JAST::Instruction.new( :op('iload'), $x ));
+        $m.append(JAST::Instruction.new( :op('iload'), $y ));
+        $m.append(JAST::Instruction.new( :op('iadd') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.withTwoLocals()).toString());',
+    "3\n",
+    "Compilation of method with a couple of locals works");
