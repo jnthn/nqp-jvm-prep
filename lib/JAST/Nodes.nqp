@@ -166,6 +166,39 @@ class JAST::Instruction is JAST::Node {
     }
 }
 
+class JAST::PushIVal is JAST::Node {
+    has int $!value;
+    
+    method BUILD(:$value) {
+        $!value := $value;
+    }
+    
+    method value() { $!value }
+    method dump() { ".push_ic $!value" }
+}
+
+class JAST::PushNVal is JAST::Node {
+    has num $!value;
+    
+    method BUILD(:$value) {
+        $!value := $value;
+    }
+    
+    method value() { $!value }
+    method dump() { ".push_nc $!value" }
+}
+
+class JAST::PushSVal is JAST::Node {
+    has str $!value;
+    
+    method BUILD(:$value) {
+        $!value := $value;
+    }
+    
+    method value() { $!value }
+    method dump() { ".push_sc " ~ pir::escape__Ss($!value) }
+}
+
 my %opmap := nqp::hash(
     'nop', 0x00,
     'aconst_null', 0x01,
