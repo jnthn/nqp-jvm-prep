@@ -440,12 +440,22 @@ public class JASTToJVMBytecode {
 		case 0x98: // dcmpg
 			il.append(InstructionConstants.DCMPG);
 			break;
+		case 0x99: // ifeq
+		case 0x9a: // ifne
+		case 0x9b: // iflt
+		case 0x9c: // ifge
+		case 0x9d: // ifgt
+		case 0x9e: // ifle
+		case 0x9f: // if_icmpeq
+		case 0xa0: // if_icmpne
+		case 0xa1: // if_icmplt
+		case 0xa2: // if_icmpge
+		case 0xa3: // if_icmpgt
+		case 0xa4: // if_icmple
+		case 0xa5: // if_acmpeq
+		case 0xa6: // if_acmpne
 		case 0xa7: // goto
-			BranchInstruction bi = InstructionFactory.createBranchInstruction((short)0xa7, null);
-			if (!labelFixups.containsKey(rest))
-				labelFixups.put(rest, new ArrayList<BranchInstruction>());
-			labelFixups.get(rest).add(bi);
-			il.append(bi);
+			emitBranchInstruction(il, labelFixups, rest, instruction);
 			break;
 		case 0xac: // ireturn
 			il.append(InstructionConstants.IRETURN);
@@ -468,6 +478,16 @@ public class JASTToJVMBytecode {
 		default:
 			throw new Exception("Unrecognized instruction line: " + curLine);
 		}
+	}
+
+	private static void emitBranchInstruction(InstructionList il,
+			Map<String, ArrayList<BranchInstruction>> labelFixups,
+			String label, int icode) {
+		BranchInstruction bi = InstructionFactory.createBranchInstruction((short)icode, null);
+		if (!labelFixups.containsKey(label))
+			labelFixups.put(label, new ArrayList<BranchInstruction>());
+		labelFixups.get(label).add(bi);
+		il.append(bi);
 	}
 
 	private static void finishMethod(ClassGen c, ConstantPoolGen cp,
