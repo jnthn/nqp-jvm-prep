@@ -57,8 +57,8 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') {
 jast_test(
     -> $c {
         my $m := JAST::Method.new(:name('one'), :returns('Integer'));
-        $m.add_instruction(JAST::Instruction.new( :op('iconst_1') ));
-        $m.add_instruction(JAST::Instruction.new( :op('ireturn') ));
+        $m.append(JAST::Instruction.new( :op('iconst_1') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
         $c.add_method($m);
     },
     'System.out.println(new Integer(JASTTest.one()).toString());',
@@ -70,10 +70,10 @@ jast_test(
         my $m := JAST::Method.new(:name('add'), :returns('Integer'));
         $m.add_argument('a', 'Integer');
         $m.add_argument('b', 'Integer');
-        $m.add_instruction(JAST::Instruction.new( :op('iload_0') ));
-        $m.add_instruction(JAST::Instruction.new( :op('iload_1') ));
-        $m.add_instruction(JAST::Instruction.new( :op('iadd') ));
-        $m.add_instruction(JAST::Instruction.new( :op('ireturn') ));
+        $m.append(JAST::Instruction.new( :op('iload_0') ));
+        $m.append(JAST::Instruction.new( :op('iload_1') ));
+        $m.append(JAST::Instruction.new( :op('iadd') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
         $c.add_method($m);
     },
     'System.out.println(new Integer(JASTTest.add(39, 3)).toString());',

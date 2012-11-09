@@ -72,7 +72,7 @@ class JAST::Method is JAST::Node {
         nqp::push(@!locals, [$name, $type]);
     }
     
-    method add_instruction($ins) {
+    method append($ins) {
         nqp::push(@!instructions, $ins)
     }
     
@@ -127,6 +127,10 @@ class JAST::Label is JAST::Node {
 class JAST::Instruction is JAST::Node {
     has int $!op;
     has @!args;
+    
+    method new(:$op!, *@args) {
+        self.bless(:$op, :@args)
+    }
     
     method BUILD(:$op!, :@args) {
         $!op   := opname2code($op);
