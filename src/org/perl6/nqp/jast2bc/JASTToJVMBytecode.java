@@ -77,6 +77,8 @@ public class JASTToJVMBytecode {
 		boolean isStatic = false;
 		List<String> argNames = new ArrayList<String>();
 		List<Type> argTypes = new ArrayList<Type>();
+		Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
+		Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
 		
 		MethodGen m = null;
 		InstructionFactory f = null;
@@ -87,7 +89,7 @@ public class JASTToJVMBytecode {
 			if (curLine.equals("+ method")) {
 				if (inMethodHeader)
 					throw new Exception("Unexpected + method in method header");
-				finishMethod(c, cp, il, m);
+				finishMethod(c, cp, il, m, labelIns, labelFixups);
 				return true;
 			}
 			
@@ -113,7 +115,7 @@ public class JASTToJVMBytecode {
 			
 			// Otherwise, we have an instruction. If we've been in the method
 			// header, this will be the first instruction also.
-			else if (inMethodHeader) {
+			if (inMethodHeader) {
 				// Transition to instructions mode.
 				inMethodHeader = false;
 				
@@ -130,16 +132,26 @@ public class JASTToJVMBytecode {
 				 f = new InstructionFactory(c);
 			}
 			
+			// Check if it's a label.
+			if (curLine.startsWith(":")) {
+				String labelName = curLine.substring(1);
+				if (labelIns.containsKey(labelName))
+					throw new Exception("Duplicate label: " + labelName);
+				labelIns.put(labelName, il.getEnd());
+				continue;
+			}
+			
 			// Process line as an instruction.
-			emitInstruction(il, f, curLine);
+			emitInstruction(il, f, labelFixups, curLine);
 		}
 		if (inMethodHeader)
 			throw new Exception("Unexpected end of file in method header");
-		finishMethod(c, cp, il, m);
+		finishMethod(c, cp, il, m, labelIns, labelFixups);
 		return false;
 	}
 
 	private static void emitInstruction(InstructionList il, InstructionFactory f,
+			Map<String, ArrayList<BranchInstruction>> labelFixups,
 			String curLine) throws Exception {
 		// Find instruciton code and get rest of the string.
 		int endIns = curLine.indexOf(" ");
@@ -428,6 +440,13 @@ public class JASTToJVMBytecode {
 		case 0x98: // dcmpg
 			il.append(InstructionConstants.DCMPG);
 			break;
+		case 0xa7: // goto
+			BranchInstruction bi = InstructionFactory.createBranchInstruction((short)0xa7, null);
+			if (!labelFixups.containsKey(rest))
+				labelFixups.put(rest, new ArrayList<BranchInstruction>());
+			labelFixups.get(rest).add(bi);
+			il.append(bi);
+			break;
 		case 0xac: // ireturn
 			il.append(InstructionConstants.IRETURN);
 			break;
@@ -452,10 +471,21 @@ public class JASTToJVMBytecode {
 	}
 
 	private static void finishMethod(ClassGen c, ConstantPoolGen cp,
-			InstructionList il, MethodGen m) {
-		  m.setMaxStack();
-		  c.addMethod(m.getMethod());
-		  il.dispose();
+			InstructionList il, MethodGen m, Map<String, InstructionHandle> labelIns,
+			Map<String, ArrayList<BranchInstruction>> labelFixups) throws Exception {
+		// Fix up any labels.
+		for (String label : labelFixups.keySet()) {
+			if (!labelIns.containsKey(label))
+				throw new Exception("Missing label: " + label);
+			InstructionHandle target = labelIns.get(label).getNext();
+			for (BranchInstruction bi : labelFixups.get(label))
+				bi.setTarget(target);
+		}
+		
+		// Finalize method and cleanup instruciton list.
+		m.setMaxStack();
+		c.addMethod(m.getMethod());
+		il.dispose();
 	}
 
 	private static Type processType(String typeName) {
