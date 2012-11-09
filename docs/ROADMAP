@@ -9,12 +9,12 @@ JAST and JAST -> Bytecode
 * Implement locals
 * Constant loading
 * Implement remaining load/store ops
-* Implement labels and branch instructions
 * Array types and array related instructions
 * Calls
 * new
 * Field access
 * Static field access
+* Exception throwing and handling
 
 Minimal QAST to JAST Compiler
 * Very basic QAST::Block handling
