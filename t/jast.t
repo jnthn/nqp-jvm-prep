@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(18);
+plan(19);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -331,3 +331,29 @@ jast_test(
      System.out.println(jt.get());',
     "Did you spot that dalmatian?\n",
     "Can get/put instance fields");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('ts'), :returns('Ljava/lang/String;'));
+        $m.add_argument('i', 'Integer');
+        my $l1 := JAST::Label.new(:name('lab1'));
+        my $l2 := JAST::Label.new(:name('lab2'));
+        my $l3 := JAST::Label.new(:name('lab3'));
+        $m.append(JAST::Instruction.new( :op('iload_0') ));
+        $m.append(JAST::Instruction.new( :op('tableswitch'), $l3, $l1, $l2 ));
+        $m.append($l1);
+        $m.append(JAST::PushSVal.new( :value('Yeti') ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $m.append($l2);
+        $m.append(JAST::PushSVal.new( :value('Black Hole') ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $m.append($l3);
+        $m.append(JAST::PushSVal.new( :value('Cream Stout') ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(JASTTest.ts(0));
+     System.out.println(JASTTest.ts(1));
+     System.out.println(JASTTest.ts(2));',
+    "Yeti\nBlack Hole\nCream Stout\n",
+    "Table switch");
