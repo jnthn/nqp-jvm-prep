@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(15);
+plan(16);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -272,3 +272,19 @@ jast_test(
      System.out.println(o == null ? "not ok" : "ok");',
     "ok\n",
     "Can create new instances, invoking initializer");
+
+jast_test(
+    -> $c {
+        my $m1 := JAST::Method.new(:name('callee'), :returns('Long'));
+        $m1.append(JAST::PushIVal.new( :value(101) ));
+        $m1.append(JAST::Instruction.new( :op('lreturn') ));
+        $c.add_method($m1);
+        my $m2 := JAST::Method.new(:name('caller'), :returns('Integer'));
+        $m2.append(JAST::Instruction.new( :op('invokestatic'), 'LJASTTest;', 'callee', 'Long' ));
+        $m2.append(JAST::Instruction.new( :op('l2i') ));
+        $m2.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m2);
+    },
+    'System.out.println(new Integer(JASTTest.caller()));',
+    "101\n",
+    "Static calls work");
