@@ -5,15 +5,21 @@ class JAST::Class is JAST::Node {
     has str $!name;
     has str $!super;
     has @!methods;
+    has @!fields;
     
     method BUILD(:$name!, :$super!) {
         $!name    := $name;
         $!super   := $super;
         @!methods := [];
+        @!fields  := [];
     }
     
     method add_method($method) {
         nqp::push(@!methods, $method);
+    }
+    
+    method add_field($field) {
+        nqp::push(@!fields, $field);
     }
     
     method name(*@value) { @value ?? ($!name := @value[0]) !! $!name }
@@ -24,10 +30,33 @@ class JAST::Class is JAST::Node {
         my @dumped;
         nqp::push(@dumped, "+ class $!name");
         nqp::push(@dumped, "+ super $!super");
+        for @!fields {
+            nqp::push(@dumped, $_.dump());
+        }
         for @!methods {
             nqp::push(@dumped, $_.dump());
         }
         return nqp::join("\n", @dumped);
+    }
+}
+
+class JAST::Field {
+    has str $!name;
+    has str $!type;
+    has int $!static;
+    
+    method BUILD(:$name!, :$type!, :$static = 0) {
+        $!name   := $name;
+        $!type   := $type;
+        $!static := $static;
+    }
+    
+    method name(*@value) { @value ?? ($!name := @value[0]) !! $!name }
+    method type(*@value) { @value ?? ($!type := @value[0]) !! $!type }
+    method static(*@value) { @value ?? ($!static := @value[0]) !! $!static }
+
+    method dump() {
+        "+ field $!name $!type " ~ ($!static ?? 'static' !! 'instance')
     }
 }
 
