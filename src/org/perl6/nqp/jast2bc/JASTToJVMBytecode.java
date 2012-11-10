@@ -331,6 +331,30 @@ public class JASTToJVMBytecode {
 		case 0x2d: // aload_3
 			il.append(InstructionFactory.createLoad(Type.OBJECT, 3));
 			break;
+		case 0x2e: // iaload
+			il.append(InstructionFactory.IALOAD);
+			break;
+		case 0x2f: // laload
+			il.append(InstructionFactory.LALOAD);
+			break;
+		case 0x30: // faload
+			il.append(InstructionFactory.FALOAD);
+			break;
+		case 0x31: // daload
+			il.append(InstructionFactory.DALOAD);
+			break;
+		case 0x32: // aaload
+			il.append(InstructionFactory.AALOAD);
+			break;
+		case 0x33: // baload
+			il.append(InstructionFactory.BALOAD);
+			break;
+		case 0x34: // caload
+			il.append(InstructionFactory.CALOAD);
+			break;
+		case 0x35: // saload
+			il.append(InstructionFactory.SALOAD);
+			break;
 		case 0x36: // istore
 			if (!localVariables.containsKey(rest))
 				throw new Exception("Undeclared local variable: " + rest);
@@ -415,6 +439,30 @@ public class JASTToJVMBytecode {
 			break;
 		case 0x4e: // astore_3
 			il.append(InstructionFactory.createStore(Type.OBJECT, 3));
+			break;
+		case 0x4f: // iastore
+			il.append(InstructionFactory.IASTORE);
+			break;
+		case 0x50: // lastore
+			il.append(InstructionFactory.LASTORE);
+			break;
+		case 0x51: // fastore
+			il.append(InstructionFactory.FASTORE);
+			break;
+		case 0x52: // dastore
+			il.append(InstructionFactory.DASTORE);
+			break;
+		case 0x53: // aastore
+			il.append(InstructionFactory.AASTORE);
+			break;
+		case 0x54: // bastore
+			il.append(InstructionFactory.BASTORE);
+			break;
+		case 0x55: // castore
+			il.append(InstructionFactory.CASTORE);
+			break;
+		case 0x56: // sastore
+			il.append(InstructionFactory.SASTORE);
 			break;
 		case 0x57: // pop
 			il.append(InstructionConstants.POP);
@@ -645,6 +693,13 @@ public class JASTToJVMBytecode {
 			break;
 		case 0xb1: // return
 			il.append(InstructionConstants.RETURN);
+			break;
+		case 0xbc: // newarray
+		case 0xbd: // anewarray
+			il.append(f.createNewArray(processType(rest), (short)1));
+			break;
+		case 0xbe: // arraylength
+			il.append(InstructionConstants.ARRAYLENGTH);
 			break;
 		case 0xc6: // ifnull
 		case 0xc7: // ifnonnull
