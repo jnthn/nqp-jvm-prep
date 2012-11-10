@@ -94,6 +94,7 @@ public class JASTToJVMBytecode {
 		Map<String, LocalVariableGen> localVariables = new HashMap<String, LocalVariableGen>();
 		Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
 		Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
+		Map<InstructionHandle, String> tablesToGenerate = new HashMap<InstructionHandle, String>();
 		
 		MethodGen m = null;
 		InstructionFactory f = null;
@@ -104,7 +105,7 @@ public class JASTToJVMBytecode {
 			if (curLine.equals("+ method")) {
 				if (inMethodHeader)
 					throw new Exception("Unexpected + method in method header");
-				finishMethod(c, cp, il, m, labelIns, labelFixups);
+				finishMethod(c, cp, il, m, labelIns, labelFixups, tablesToGenerate);
 				return true;
 			}
 			
@@ -192,17 +193,18 @@ public class JASTToJVMBytecode {
 			}
 			
 			// Process line as an instruction.
-			emitInstruction(il, f, labelFixups, localVariables, curLine);
+			emitInstruction(il, f, labelFixups, localVariables, tablesToGenerate, curLine);
 		}
 		if (inMethodHeader)
 			throw new Exception("Unexpected end of file in method header");
-		finishMethod(c, cp, il, m, labelIns, labelFixups);
+		finishMethod(c, cp, il, m, labelIns, labelFixups, tablesToGenerate);
 		return false;
 	}
 
 	private static void emitInstruction(InstructionList il, InstructionFactory f,
 			Map<String, ArrayList<BranchInstruction>> labelFixups,
 			Map<String, LocalVariableGen> localVariables,
+			Map<InstructionHandle, String> tablesToGenerate,
 			String curLine) throws Exception {
 		// Find instruciton code and get rest of the string.
 		int endIns = curLine.indexOf(" ");
@@ -693,6 +695,10 @@ public class JASTToJVMBytecode {
 		case 0xa7: // goto
 			emitBranchInstruction(il, labelFixups, rest, instruction);
 			break;
+		case 0xaa: // tableswitch
+			il.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+			tablesToGenerate.put(il.getEnd(), rest);
+			break;
 		case 0xac: // ireturn
 			il.append(InstructionConstants.IRETURN);
 			break;
@@ -787,7 +793,8 @@ public class JASTToJVMBytecode {
 
 	private static void finishMethod(ClassGen c, ConstantPoolGen cp,
 			InstructionList il, MethodGen m, Map<String, InstructionHandle> labelIns,
-			Map<String, ArrayList<BranchInstruction>> labelFixups) throws Exception {
+			Map<String, ArrayList<BranchInstruction>> labelFixups,
+			Map<InstructionHandle, String> tablesToGenerate) throws Exception {
 		// Fix up any labels.
 		for (String label : labelFixups.keySet()) {
 			if (!labelIns.containsKey(label))
@@ -795,6 +802,26 @@ public class JASTToJVMBytecode {
 			InstructionHandle target = labelIns.get(label).getNext();
 			for (BranchInstruction bi : labelFixups.get(label))
 				bi.setTarget(target);
+		}
+		
+		// Generate any tables.
+		for (InstructionHandle repIns : tablesToGenerate.keySet()) {
+			String tableDesc = tablesToGenerate.get(repIns);
+			String[] labels = tableDesc.split("\\s");
+			if (labels.length < 1)
+				throw new Exception("Switch table must at least have a default");
+			if (!labelIns.containsKey(labels[0]))
+				throw new Exception("Missing label: " + labels[0]);
+			InstructionHandle defaultTarget = labelIns.get(labels[0]).getNext();
+			int[] match = new int[labels.length - 1];
+			InstructionHandle[] targets = new InstructionHandle[labels.length - 1];
+			for (int i = 1; i < labels.length; i++) {
+				match[i - 1] = i - 1;
+				if (!labelIns.containsKey(labels[i]))
+					throw new Exception("Missing label: " + labels[i]);
+				targets[i - 1] = labelIns.get(labels[i]).getNext();
+			}
+			repIns.setInstruction(new TABLESWITCH(match, targets, defaultTarget));
 		}
 		
 		// Finalize method and cleanup instruciton list.
