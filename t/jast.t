@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(10);
+plan(13);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -205,3 +205,42 @@ jast_test(
     'System.out.println(JASTTest.beer());',
     "Modus Hoperandi\n",
     "SVal constant");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('al'), :returns('Integer'));
+        $m.add_argument('a', '[I');
+        $m.append(JAST::Instruction.new( :op('aload_0') ));
+        $m.append(JAST::Instruction.new( :op('arraylength') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.al(new int[10])).toString());',
+    "10\n",
+    "Can get array arguemnt and return its length");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('da'), :returns('[D'));
+        $m.append(JAST::Instruction.new( :op('iconst_2') ));
+        $m.append(JAST::Instruction.new( :op('newarray'), 'Double' ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m);
+    },
+    'double[] foo = JASTTest.da();
+     System.out.println(foo.length);',
+    "2\n",
+    "Can create arrays of primitive types");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('oa'), :returns('[LJASTTest;'));
+        $m.append(JAST::Instruction.new( :op('iconst_3') ));
+        $m.append(JAST::Instruction.new( :op('anewarray'), 'LJASTTest;' ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m);
+    },
+    'JASTTest[] bar = JASTTest.oa();
+     System.out.println(bar.length);',
+    "3\n",
+    "Can create arrays of object types");
