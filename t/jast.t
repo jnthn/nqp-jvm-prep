@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(14);
+plan(15);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -45,7 +45,7 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') {
     my $output := slurp('output.temp');
     $output := subst($output, /\r\n/, "\n", :global);
     ok($output eq $expected, $desc);
-    
+
     # Cleanup.
     try unlink('jastdump.temp');
     try unlink('JASTTest.class');
@@ -258,3 +258,17 @@ jast_test(
     'System.out.println(new Integer(JASTTest.al(new int[] { 10, 11, 12, 13, 14, 15 })).toString());',
     "14\n",
     "Can index into an array");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('create'), :returns('Ljava/lang/Object;'));
+        $m.append(JAST::Instruction.new( :op('new'), 'Ljava/lang/Object;' ));
+        $m.append(JAST::Instruction.new( :op('dup') ));
+        $m.append(JAST::Instruction.new( :op('invokespecial'), 'Ljava/lang/Object;', '<init>', 'Void' ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m);
+    },
+    'Object o = JASTTest.create();
+     System.out.println(o == null ? "not ok" : "ok");',
+    "ok\n",
+    "Can create new instances, invoking initializer");
