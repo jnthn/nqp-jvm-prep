@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(7);
+plan(10);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -172,3 +172,36 @@ jast_test(
     'System.out.println(new Integer(JASTTest.withTwoLocals()).toString());',
     "3\n",
     "Compilation of method with a couple of locals works");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('answers'), :returns('Ljava/lang/Long;'));
+        $m.append(JAST::PushIVal.new( :value(424242424242) ));
+        $m.append(JAST::Instruction.new( :op('lreturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Long(JASTTest.answers()).toString());',
+    "424242424242\n",
+    "IVal constant");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('piish'), :returns('Double'));
+        $m.append(JAST::PushNVal.new( :value(3.14) ));
+        $m.append(JAST::Instruction.new( :op('dreturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Double(JASTTest.piish()).toString());',
+    "3.14\n",
+    "NVal constant");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('beer'), :returns('String'));
+        $m.append(JAST::PushSVal.new( :value('Modus Hoperandi') ));
+        $m.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(JASTTest.beer());',
+    "Modus Hoperandi\n",
+    "SVal constant");
