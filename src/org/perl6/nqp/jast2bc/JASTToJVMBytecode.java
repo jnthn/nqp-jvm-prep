@@ -153,6 +153,27 @@ public class JASTToJVMBytecode {
 				continue;
 			}
 			
+			// Check if it's some other kind of directive.
+			if (curLine.startsWith(".")) {
+				if (curLine.startsWith(".push_ic ")) {
+					Long value = Long.parseLong(curLine.substring(".push_ic ".length()));
+					il.append(new PUSH(cp, value));
+				}
+				else if (curLine.startsWith(".push_nc ")) {
+					Double value = Double.parseDouble(curLine.substring(".push_nc ".length()));
+					il.append(new PUSH(cp, value));
+				}
+				else if (curLine.startsWith(".push_sc ")) {
+					String value = curLine.substring(".push_sc ".length());
+					// XXX Decode...
+					il.append(new PUSH(cp, value));
+				}
+				else {
+					throw new Exception("Don't understand directive: " + curLine);
+				}
+				continue;
+			}
+			
 			// Process line as an instruction.
 			emitInstruction(il, f, labelFixups, localVariables, curLine);
 		}
@@ -664,6 +685,9 @@ public class JASTToJVMBytecode {
 	}
 
 	private static Type processType(String typeName) {
+		// Long needs special treatment; getType doesn't cope with it.
+		if (typeName.equals("Long"))
+			return Type.LONG;
 		return Type.getType(typeName);
 	}
 
