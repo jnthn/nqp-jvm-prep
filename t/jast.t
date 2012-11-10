@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(16);
+plan(17);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -288,3 +288,23 @@ jast_test(
     'System.out.println(new Integer(JASTTest.caller()));',
     "101\n",
     "Static calls work");
+
+jast_test(
+    -> $c {
+        my $f := JAST::Field.new( :name('foo'), :type('Integer'), :static(1) );
+        $c.add_field($f);
+        my $m1 := JAST::Method.new(:name('set'), :returns('Void'));
+        $m1.add_argument('v', 'Integer');
+        $m1.append(JAST::Instruction.new( :op('iload_0') ));
+        $m1.append(JAST::Instruction.new( :op('putstatic'), 'LJASTTest;', 'foo', 'Integer' ));
+        $m1.append(JAST::Instruction.new( :op('return') ));
+        $c.add_method($m1);
+        my $m2 := JAST::Method.new(:name('get'), :returns('Integer'));
+        $m2.append(JAST::Instruction.new( :op('getstatic'), 'LJASTTest;', 'foo', 'Integer' ));
+        $m2.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m2);
+    },
+    'JASTTest.set(69);
+     System.out.println(new Integer(JASTTest.get()).toString());',
+    "69\n",
+    "Can get/put static fields");
