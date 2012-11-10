@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(13);
+plan(14);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -244,3 +244,17 @@ jast_test(
      System.out.println(bar.length);',
     "3\n",
     "Can create arrays of object types");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('al'), :returns('Integer'));
+        $m.add_argument('a', '[I');
+        $m.append(JAST::Instruction.new( :op('aload_0') ));
+        $m.append(JAST::PushIndex.new( :value(4) ));
+        $m.append(JAST::Instruction.new( :op('iaload') ));
+        $m.append(JAST::Instruction.new( :op('ireturn') ));
+        $c.add_method($m);
+    },
+    'System.out.println(new Integer(JASTTest.al(new int[] { 10, 11, 12, 13, 14, 15 })).toString());',
+    "14\n",
+    "Can index into an array");
