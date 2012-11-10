@@ -30,24 +30,23 @@ public class JASTToJVMBytecode {
 	
 	private static ClassGen buildClassFrom(BufferedReader in) throws Exception
 	{
-		// Read in class name and superclass.
+		// Read in class name, superclass and any fields.
 		String curLine, className = null, superName = null;
-		while ((curLine = in.readLine()) != null)
-		{
-			if (curLine.startsWith("+ class "))
-			{
+		List<String> fieldLines = new ArrayList<String>();
+		while ((curLine = in.readLine()) != null) {
+			if (curLine.startsWith("+ class ")) {
 				className = curLine.substring("+ class ".length());
 			}
-			else if (curLine.startsWith("+ super "))
-			{
+			else if (curLine.startsWith("+ super ")) {
 				superName = curLine.substring("+ super ".length());
 			}
-			else if (curLine.equals("+ method"))
-			{
+			else if (curLine.startsWith("+ field ")) {
+				fieldLines.add(curLine.substring("+ field ".length()));
+			}
+			else if (curLine.equals("+ method")) {
 				break;
 			}
-			else
-			{
+			else {
 				throw new Exception("Cannot understand '" + curLine + "'");
 			}
 		}
@@ -61,6 +60,17 @@ public class JASTToJVMBytecode {
 				Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
 		ConstantPoolGen cp = c.getConstantPool();
 		InstructionList il = new InstructionList();
+		
+		// Add the fields.
+		for (String field : fieldLines) {
+			String[] bits = field.split("\\s");
+			FieldGen fg = new FieldGen(
+					bits[2].equals("static")
+						? Constants.ACC_PUBLIC | Constants.ACC_STATIC
+						: Constants.ACC_PUBLIC,
+					processType(bits[1]), bits[0], cp);
+			c.addField(fg.getField());
+		}
 		
 		// Process all of the methods.
 		if (!curLine.equals("+ method"))
@@ -698,6 +708,18 @@ public class JASTToJVMBytecode {
 		case 0xb1: // return
 			il.append(InstructionConstants.RETURN);
 			break;
+		case 0xb2: // getstatic
+			emitFieldAccess(il, f, rest, Constants.GETSTATIC);
+			break;
+		case 0xb3: // putstatic
+			emitFieldAccess(il, f, rest, Constants.PUTSTATIC);
+			break;
+		case 0xb4: // getfield
+			emitFieldAccess(il, f, rest, Constants.GETFIELD);
+			break;
+		case 0xb5: // putfield
+			emitFieldAccess(il, f, rest, Constants.PUTFIELD);
+			break;
 		case 0xb6: // invokevirtual
 			emitCall(il, f, rest, Constants.INVOKEVIRTUAL);
 			break;
@@ -726,6 +748,15 @@ public class JASTToJVMBytecode {
 		default:
 			throw new Exception("Unrecognized instruction line: " + curLine);
 		}
+	}
+
+	private static void emitFieldAccess(InstructionList il,
+			InstructionFactory f, String fieldSpec, short accessType) {
+		String[] bits = fieldSpec.split("\\s");
+		ObjectType classType = (ObjectType)processType(bits[0]);
+		String fieldName = bits[1];
+		Type fieldType = processType(bits[2]);
+		il.append(f.createFieldAccess(classType.getClassName(), fieldName, fieldType, accessType));
 	}
 
 	private static void emitCall(InstructionList il, InstructionFactory f,
