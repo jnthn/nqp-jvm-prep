@@ -162,7 +162,7 @@ class JAST::Instruction is JAST::Node {
                 ?? $_.name
                 !! ~$_)
         }
-        "$!op " ~ nqp::join(", ", @processed)
+        "$!op " ~ nqp::join(" ", @processed)
     }
 }
 
