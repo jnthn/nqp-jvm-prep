@@ -177,6 +177,17 @@ class JAST::PushIVal is JAST::Node {
     method dump() { ".push_ic $!value" }
 }
 
+class JAST::PushIndex is JAST::Node {
+    has int $!value;
+    
+    method BUILD(:$value) {
+        $!value := $value;
+    }
+    
+    method value() { $!value }
+    method dump() { ".push_idx $!value" }
+}
+
 class JAST::PushNVal is JAST::Node {
     has num $!value;
     
