@@ -175,7 +175,7 @@ jast_test(
 
 jast_test(
     -> $c {
-        my $m := JAST::Method.new(:name('answers'), :returns('Ljava/lang/Long;'));
+        my $m := JAST::Method.new(:name('answers'), :returns('Long'));
         $m.append(JAST::PushIVal.new( :value(424242424242) ));
         $m.append(JAST::Instruction.new( :op('lreturn') ));
         $c.add_method($m);
@@ -197,7 +197,7 @@ jast_test(
 
 jast_test(
     -> $c {
-        my $m := JAST::Method.new(:name('beer'), :returns('String'));
+        my $m := JAST::Method.new(:name('beer'), :returns('Ljava/lang/String;'));
         $m.append(JAST::PushSVal.new( :value('Modus Hoperandi') ));
         $m.append(JAST::Instruction.new( :op('areturn') ));
         $c.add_method($m);
