@@ -6,8 +6,7 @@ being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
 JAST and JAST -> Bytecode
-* Field access
-* Static field access
+* Jump tables
 * Exception throwing and handling
 
 Minimal QAST to JAST Compiler
