@@ -78,6 +78,9 @@ public class JASTToJVMBytecode {
 		while (processMethod(in, c, cp, il))
 			;
 		
+		// Add empty constructor.
+		c.addEmptyConstructor(Constants.ACC_PUBLIC);
+
 		return c;
 	}
 	
