@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(17);
+plan(18);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -308,3 +308,26 @@ jast_test(
      System.out.println(new Integer(JASTTest.get()).toString());',
     "69\n",
     "Can get/put static fields");
+
+jast_test(
+    -> $c {
+        my $f := JAST::Field.new( :name('foo'), :type('Ljava/lang/String;') );
+        $c.add_field($f);
+        my $m1 := JAST::Method.new(:name('set'), :returns('Void'), :static(0));
+        $m1.add_argument('v', 'Ljava/lang/String;');
+        $m1.append(JAST::Instruction.new( :op('aload_0') ));
+        $m1.append(JAST::Instruction.new( :op('aload_1') ));
+        $m1.append(JAST::Instruction.new( :op('putfield'), 'LJASTTest;', 'foo', 'Ljava/lang/String;' ));
+        $m1.append(JAST::Instruction.new( :op('return') ));
+        $c.add_method($m1);
+        my $m2 := JAST::Method.new(:name('get'), :returns('Ljava/lang/String;'), :static(0));
+        $m2.append(JAST::Instruction.new( :op('aload_0') ));
+        $m2.append(JAST::Instruction.new( :op('getfield'), 'LJASTTest;', 'foo', 'Ljava/lang/String;' ));
+        $m2.append(JAST::Instruction.new( :op('areturn') ));
+        $c.add_method($m2);
+    },
+    'JASTTest jt = new JASTTest();
+     jt.set("Did you spot that dalmatian?");
+     System.out.println(jt.get());',
+    "Did you spot that dalmatian?\n",
+    "Can get/put instance fields");
