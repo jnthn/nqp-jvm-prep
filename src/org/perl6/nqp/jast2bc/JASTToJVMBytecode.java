@@ -168,6 +168,10 @@ public class JASTToJVMBytecode {
 					// XXX Decode...
 					il.append(new PUSH(cp, value));
 				}
+				else if (curLine.startsWith(".push_idx ")) {
+					Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
+					il.append(new PUSH(cp, value));
+				}
 				else {
 					throw new Exception("Don't understand directive: " + curLine);
 				}
