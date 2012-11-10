@@ -199,7 +199,7 @@ public class JASTToJVMBytecode {
 		else
 			rest = curLine.substring(endIns + 1);
 		int instruction = Integer.parseInt(curLine.substring(0, endIns));
-		
+
 		// Go by instruction.
 		switch (instruction) {
 		case 0x00: // nop
@@ -698,6 +698,19 @@ public class JASTToJVMBytecode {
 		case 0xb1: // return
 			il.append(InstructionConstants.RETURN);
 			break;
+		case 0xb6: // invokevirtual
+			emitCall(il, f, rest, Constants.INVOKEVIRTUAL);
+			break;
+		case 0xb7: // invokespecial
+			emitCall(il, f, rest, Constants.INVOKESPECIAL);
+			break;
+		case 0xb8: // invokestatic
+			emitCall(il, f, rest, Constants.INVOKESTATIC);
+			break;
+		case 0xbb: // new
+			ObjectType t = (ObjectType)processType(rest);
+			il.append(f.createNew(t));
+			break;
 		case 0xbc: // newarray
 		case 0xbd: // anewarray
 			il.append(f.createNewArray(processType(rest), (short)1));
@@ -713,6 +726,19 @@ public class JASTToJVMBytecode {
 		default:
 			throw new Exception("Unrecognized instruction line: " + curLine);
 		}
+	}
+
+	private static void emitCall(InstructionList il, InstructionFactory f,
+			String callSpec, short callType) {
+		String[] bits = callSpec.split("\\s");
+		ObjectType targetType = (ObjectType)processType(bits[0]);
+		String methodName = bits[1];
+		Type returnType = processType(bits[2]);
+		Type[] argumentTypes = new Type[bits.length - 3];
+		for (int i = 3; i < bits.length; i++)
+			argumentTypes[i - 3] = processType(bits[i]);
+		il.append(f.createInvoke(targetType.getClassName(),
+				methodName, returnType, argumentTypes, callType));
 	}
 
 	private static void emitBranchInstruction(InstructionList il,
