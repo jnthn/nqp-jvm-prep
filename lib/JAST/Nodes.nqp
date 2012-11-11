@@ -63,7 +63,7 @@ class JAST::Field {
 class JAST::InstructionList {
     has @!instructions;
     
-    method add_instruction($ins) {
+    method append($ins) {
         nqp::push(@!instructions, $ins)
     }
     
@@ -74,6 +74,14 @@ class JAST::InstructionList {
     }
     
     method instructions() { @!instructions }
+    
+    method dump() {
+        my @dumped;
+        for @!instructions {
+            nqp::push(@dumped, $_.dump());
+        }
+        return nqp::join("\n", @dumped);
+    }
 }
 
 class JAST::Local is JAST::Node {
@@ -240,25 +248,25 @@ class JAST::PushSVal is JAST::Node {
 }
 
 class JAST::TryCatch is JAST::Node {
-    has $!try_il;
-    has $!catch_il;
+    has $!try;
+    has $!catch;
     has str $!type;
     
-    method BUILD(:$try_il!, :$catch_il!, str :$type!) {
-        $!try_il   := $try_il;
-        $!catch_il := $catch_il;
-        $!type     := $type;
+    method BUILD(:$try!, :$catch!, str :$type!) {
+        $!try   := $try;
+        $!catch := $catch;
+        $!type  := $type;
     }
     
-    method try_il(*@value) { @value ?? ($!try_il := @value[0]) !! $!try_il }
-    method catch_il(*@value) { @value ?? ($!catch_il := @value[0]) !! $!catch_il }
+    method try(*@value) { @value ?? ($!try := @value[0]) !! $!try }
+    method catch(*@value) { @value ?? ($!catch := @value[0]) !! $!catch }
     method type(*@value) { @value ?? ($!type := @value[0]) !! $!type }
     
     method dump() {
         ".try\n" ~
-            $!try_il.dump() ~
+            $!try.dump() ~
         ".catch $!type\n" ~
-            $!catch_il.dump() ~
+            $!catch.dump() ~
         ".endtry\n"
     }
 }
