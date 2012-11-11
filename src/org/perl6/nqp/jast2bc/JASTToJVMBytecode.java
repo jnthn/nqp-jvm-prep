@@ -749,6 +749,9 @@ public class JASTToJVMBytecode {
 		case 0xbe: // arraylength
 			il.append(InstructionConstants.ARRAYLENGTH);
 			break;
+		case 0xbf: // athrow
+			il.append(InstructionConstants.ATHROW);
+			break;
 		case 0xc6: // ifnull
 		case 0xc7: // ifnonnull
 		case 0xc8: // goto_w
