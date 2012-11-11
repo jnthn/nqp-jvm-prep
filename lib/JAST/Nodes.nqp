@@ -239,6 +239,30 @@ class JAST::PushSVal is JAST::Node {
     method dump() { ".push_sc " ~ pir::escape__Ss($!value) }
 }
 
+class JAST::TryCatch is JAST::Node {
+    has $!try_il;
+    has $!catch_il;
+    has str $!type;
+    
+    method BUILD(:$try_il!, :$catch_il!, str :$type!) {
+        $!try_il   := $try_il;
+        $!catch_il := $catch_il;
+        $!type     := $type;
+    }
+    
+    method try_il(*@value) { @value ?? ($!try_il := @value[0]) !! $!try_il }
+    method catch_il(*@value) { @value ?? ($!catch_il := @value[0]) !! $!catch_il }
+    method type(*@value) { @value ?? ($!type := @value[0]) !! $!type }
+    
+    method dump() {
+        ".try\n" ~
+            $!try_il.dump() ~
+        ".catch $!type\n" ~
+            $!catch_il.dump() ~
+        ".endtry\n"
+    }
+}
+
 my %opmap := nqp::hash(
     'nop', 0x00,
     'aconst_null', 0x01,
