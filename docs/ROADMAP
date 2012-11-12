@@ -5,9 +5,6 @@ runtime. Sort-of in order within the groups. This won't get us all the way to
 being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
-JAST and JAST -> Bytecode
-* Exception throwing and handling
-
 Minimal QAST to JAST Compiler
 * Very basic QAST::Block handling
 * IVal, SVal, NVal - just push to the stack
