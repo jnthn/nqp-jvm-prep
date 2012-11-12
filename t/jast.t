@@ -2,7 +2,7 @@
 
 use JASTNodes;
 
-plan(19);
+plan(20);
 
 sub spurt($file, $stuff) {
     my $fh := pir::new__Ps('FileHandle');
@@ -357,3 +357,29 @@ jast_test(
      System.out.println(JASTTest.ts(2));',
     "Yeti\nBlack Hole\nCream Stout\n",
     "Table switch");
+
+jast_test(
+    -> $c {
+        my $m := JAST::Method.new(:name('tc'), :returns('Ljava/lang/String;'));
+        $m.add_argument('throw', 'Integer');
+        my $l := JAST::Label.new( :name('lab1') );
+        my $try := JAST::InstructionList.new();
+        $try.append(JAST::Instruction.new( :op('iload_0') ));
+        $try.append(JAST::Instruction.new( :op('ifeq'), $l ));
+        $try.append(JAST::Instruction.new( :op('new'), 'Ljava/lang/Exception;' ));
+        $try.append(JAST::Instruction.new( :op('dup') ));
+        $try.append(JAST::Instruction.new( :op('invokespecial'), 'Ljava/lang/Exception;', '<init>', 'Void' ));
+        $try.append(JAST::Instruction.new( :op('athrow') ));
+        $try.append($l);
+        $try.append(JAST::PushSVal.new( :value('did not throw') ));
+        $try.append(JAST::Instruction.new( :op('areturn') ));
+        my $catch := JAST::InstructionList.new();
+        $catch.append(JAST::PushSVal.new( :value('caught') ));
+        $catch.append(JAST::Instruction.new( :op('areturn') ));
+        $m.append(JAST::TryCatch.new( :$try, :$catch, :type('Ljava/lang/Exception;') ));
+        $c.add_method($m);
+    },
+    'System.out.println(JASTTest.tc(0));
+     System.out.println(JASTTest.tc(1));',
+    "did not throw\ncaught\n",
+    "Can throw and catch exceptions");
