@@ -95,6 +95,9 @@ public class JASTToJVMBytecode {
 		Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
 		Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
 		Map<InstructionHandle, String> tablesToGenerate = new HashMap<InstructionHandle, String>();
+		Stack<InstructionHandle> tryStartStack = new Stack<InstructionHandle>();
+		Stack<InstructionHandle> tryEndStack = new Stack<InstructionHandle>();
+		Stack<ObjectType> catchTypeStack = new Stack<ObjectType>();
 		
 		MethodGen m = null;
 		InstructionFactory f = null;
@@ -185,6 +188,25 @@ public class JASTToJVMBytecode {
 				else if (curLine.startsWith(".push_idx ")) {
 					Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
 					il.append(new PUSH(cp, value));
+				}
+				else if (curLine.equals(".try")) {
+					if (il.getEnd() == null)
+						il.append(new NOP());
+					tryStartStack.push(il.getEnd());
+				}
+				else if (curLine.startsWith(".catch ")) {
+					il.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, null));
+					tryEndStack.push(il.getEnd());
+					catchTypeStack.push((ObjectType)processType(curLine.substring(".catch ".length())));
+				}
+				else if (curLine.equals(".endtry")) {
+					InstructionHandle tryStart = tryStartStack.pop().getNext();
+					InstructionHandle tryEnd = tryEndStack.pop();
+					InstructionHandle catchStart = tryEnd.getNext();
+					ObjectType catchType = catchTypeStack.pop();
+					m.addExceptionHandler(tryStart, tryEnd, catchStart, catchType);
+					il.append(new NOP());
+					((BranchInstruction)tryEnd.getInstruction()).setTarget(il.getEnd());
 				}
 				else {
 					throw new Exception("Don't understand directive: " + curLine);
