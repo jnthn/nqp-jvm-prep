@@ -38,6 +38,32 @@ class QAST::Operations::JAST {
 }
 
 class QAST::Compiler::JAST {
+    my class CodeRefBuilder {
+        has $!cur_idx;
+        has %!cuid_to_idx;
+        has @!cuids;
+        has @!names;
+        
+        method BUILD() {
+            $!cur_idx := 0;
+            %!cuid_to_idx := {};
+            @!cuids := [];
+            @!names := [];
+        }
+        
+        method register_method($jastmeth, $cuid, $name) {
+            %!cuid_to_idx{$cuid} := $!cur_idx;
+            nqp::push(@!cuids, $cuid);
+            nqp::push(@!names, $name);
+            $!cur_idx := $!cur_idx + 1;
+        }
+        
+        method jastify() {
+            # XXX Here we emit the coderef delegation table, coderef construction,
+            # and so forth.
+        }
+    }
+    
     method jast($source, *%adverbs) {
         # Wrap $source in a QAST::Block if it's not already a viable root node.
         $source := QAST::Block.new($source)
@@ -50,11 +76,16 @@ class QAST::Compiler::JAST {
             :super('org.perl6.nqp.runtime.CompilationUnit')
         );
         
+        # We'll also need to keep track of all the blocks we compile into Java
+        # methods; the CodeRefBuilder takes care of that.
+        my $*CODEREFS := CodeRefBuilder.new();
+        
         # Now compile $source. By the end of this, the various data structures
         # set up above will be fully populated.
         self.as_jast($source);
         
-        # XXX Stuffs...
+        # Make various code-ref/dispatch related things.
+        $*CODEREFS.jastify();
         
         # Finally, we hand back the finished class.
         return $*JCLASS
@@ -142,5 +173,15 @@ class QAST::Compiler::JAST {
         }
 
         $block_jast
+    }
+    
+    multi method as_jast(QAST::Block $node, :$want) {
+        # Create JAST method and register it with the block's compilation unit
+        # unique ID and name.
+        # XXX return type below just for during getting something to work at all...
+        my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Integer') );
+        $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
+        
+        nqp::die("block compilation NYI");
     }
 }
