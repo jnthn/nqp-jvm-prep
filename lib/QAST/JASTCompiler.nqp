@@ -42,8 +42,22 @@ class QAST::Compiler::JAST {
         # Wrap $source in a QAST::Block if it's not already a viable root node.
         $source := QAST::Block.new($source)
             unless nqp::istype($source, QAST::CompUnit) || nqp::istype($source, QAST::Block);
-        # Now compile $source and return the result.
+        
+        # Set up a JAST::Class that will hold all the blocks (which become Java
+        # methods) that we shall compile.
+        my $*JCLASS := JAST::Class.new(
+            :name('QAST2JASTOutput'), # XXX Need unique names
+            :super('org.perl6.nqp.runtime.CompilationUnit')
+        );
+        
+        # Now compile $source. By the end of this, the various data structures
+        # set up above will be fully populated.
         self.as_jast($source);
+        
+        # XXX Stuffs...
+        
+        # Finally, we hand back the finished class.
+        return $*JCLASS
     }
 
     our $serno;
@@ -53,11 +67,11 @@ class QAST::Compiler::JAST {
     
     method unique($prefix = '') { $prefix ~ $serno++ }
 
-    proto method as_post($node, :$want) {
+    proto method as_jast($node, :$want) {
         my $*WANT := $want;
         if $want {
             if nqp::istype($node, QAST::Want) {
-                self.coerce(self.as_post(want($node, $want)), $want)
+                self.coerce(self.as_jast(want($node, $want)), $want)
             }
             else {
                 self.coerce({*}, $want)
@@ -66,5 +80,67 @@ class QAST::Compiler::JAST {
         else {
             {*}
         }
+    }
+    
+    multi method as_jast(QAST::CompUnit $cu, :$want) {
+        # Set HLL.
+        my $*HLL := '';
+        if $cu.hll {
+            $*HLL := $cu.hll;
+        }
+        
+        # Should have a single child which is the outer block.
+        if +@($cu) != 1 || !nqp::istype($cu[0], QAST::Block) {
+            nqp::die("QAST::CompUnit should have one child that is a QAST::Block");
+        }
+
+        # Compile the block.
+        my $block_jast := self.as_jast($cu[0]);
+        
+        # If we are in compilation mode, or have pre-deserialization or
+        # post-deserialization tasks, handle those. Overall, the process
+        # is to desugar this into simpler QAST nodes, then compile those.
+        my $comp_mode := $cu.compilation_mode;
+        my @pre_des   := $cu.pre_deserialize;
+        my @post_des  := $cu.post_deserialize;
+        if $comp_mode || @pre_des || @post_des {
+            # Create a block into which we'll install all of the other
+            # pieces.
+            my $block := QAST::Block.new( :blocktype('raw') );
+            
+            # Add pre-deserialization tasks, each as a QAST::Stmt.
+            for @pre_des {
+                $block.push(QAST::Stmt.new($_));
+            }
+            
+            # If we need to do deserialization, emit code for that.
+            if $comp_mode {
+                $block.push(self.deserialization_code($cu.sc(), $cu.code_ref_blocks()));
+            }
+            
+            # Add post-deserialization tasks.
+            for @post_des {
+                $block.push(QAST::Stmt.new($_));
+            }
+            
+            # Compile to JAST and register this block as the deserialization
+            # handler.
+            my $sc_jast := self.as_jast($block);
+            nqp::die("QAST2JAST: Deserialization/fixup block handling NYI");
+        }
+        
+        # Compile and include load-time logic, if any.
+        if nqp::defined($cu.load) {
+            my $load_jast := self.as_jast(QAST::Block.new( :blocktype('raw'), $cu.load ));
+            nqp::die("QAST2JAST: Load time handling NYI");
+        }
+        
+        # Compile and include main-time logic, if any.
+        if nqp::defined($cu.main) {
+            my $main_jast := self.as_jast(QAST::Block.new( :blocktype('raw'), $cu.main ));
+            nqp::die("QAST2JAST: Main handling NYI");
+        }
+
+        $block_jast
     }
 }
