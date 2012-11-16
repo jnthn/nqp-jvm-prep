@@ -1,7 +1,7 @@
 use JASTNodes;
 use QASTNode;
 
-class QAST::Operations::JAST {
+class QAST::OperationsJAST {
     # Maps operations to code that will handle them. Hash of code.
     my %core_ops;
     
@@ -37,7 +37,7 @@ class QAST::Operations::JAST {
     }
 }
 
-class QAST::Compiler::JAST {
+class QAST::CompilerJAST {
     my class CodeRefBuilder {
         has $!cur_idx;
         has %!cuid_to_idx;
