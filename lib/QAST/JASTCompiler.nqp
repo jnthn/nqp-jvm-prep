@@ -207,23 +207,35 @@ class QAST::CompilerJAST {
             nqp::die("QAST2JAST: Load time handling NYI");
         }
         
-        # Compile and include main-time logic, if any.
+        # Compile and include main-time logic, if any, and then add a Java
+        # Main that will lead to its invocation.
         if nqp::defined($cu.main) {
-            my $main_jast := self.as_jast(QAST::Block.new( :blocktype('raw'), $cu.main ));
-            nqp::die("QAST2JAST: Main handling NYI");
+            my $main_block := QAST::Block.new( :blocktype('raw'), $cu.main );
+            self.as_jast($main_block);
+            my $main_meth := JAST::Method.new( :name('main'), :returns('Void') );
+            $main_meth.add_argument('argv', "[$TYPE_STR");
+            $main_meth.append(JAST::Instruction.new( :op('return') ));
+            $*JCLASS.add_method($main_meth);
         }
-
-        $block_jast
+        
+        return $*JCLASS;
     }
     
     multi method as_jast(QAST::Block $node, :$want) {
         # Create JAST method and register it with the block's compilation unit
-        # unique ID and name.
-        # XXX return type below just for during getting something to work at all...
-        my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Integer') );
+        # unique ID and name. (Note, always void return here as return values
+        # are handled out of band).
+        my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Void') );
         $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
         
-        nqp::die("block compilation NYI");
+        # Always take ThreadContext as argument.
+        $*JMETH.add_argument('tc', $TYPE_TC);
+        
+        # XXX do lots of stuff
+        
+        # Finalize method and add it to the class.
+        $*JMETH.append(JAST::Instruction.new( :op('return') ));
+        $*JCLASS.add_method($*JMETH);
     }
 
     # Emits an exception throw.
