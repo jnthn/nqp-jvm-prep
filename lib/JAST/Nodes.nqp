@@ -192,6 +192,11 @@ class JAST::Instruction is JAST::Node {
     method op() { $!op }
     method args() { @!args }
     
+    method push($arg) { nqp::push(@!args, $arg); }
+    method pop() { nqp::pop(@!args); }
+    method unshift($arg) { nqp::unshift(@!args, $arg); }
+    method shift() { nqp::shift(@!args); }
+    
     method dump() {
         my @processed;
         for @!args {
