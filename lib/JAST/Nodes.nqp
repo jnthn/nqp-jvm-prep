@@ -252,6 +252,17 @@ class JAST::PushSVal is JAST::Node {
     method dump() { ".push_sc " ~ pir::escape__Ss($!value) }
 }
 
+class JAST::PushCVal is JAST::Node {
+    has str $!value;
+    
+    method BUILD(:$value) {
+        $!value := $value;
+    }
+    
+    method value() { $!value }
+    method dump() { ".push_cc $!value" }
+}
+
 class JAST::TryCatch is JAST::Node {
     has $!try;
     has $!catch;

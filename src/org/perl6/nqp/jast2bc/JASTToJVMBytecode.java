@@ -19,6 +19,7 @@ public class JASTToJVMBytecode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(argv[0])));
 			ClassGen c = buildClassFrom(in);
 			in.close();
+			c.setMajor(49);
 			c.getJavaClass().dump(argv[1]);
 		}
 		catch (Exception e)
@@ -184,6 +185,10 @@ public class JASTToJVMBytecode {
 					String value = curLine.substring(".push_sc ".length());
 					// XXX Decode...
 					il.append(new PUSH(cp, value));
+				}
+				else if (curLine.startsWith(".push_cc ")) {
+					String className = curLine.substring(".push_sc ".length());
+					il.append(new LDC(cp.addClass((ObjectType)processType(className))));
 				}
 				else if (curLine.startsWith(".push_idx ")) {
 					Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
