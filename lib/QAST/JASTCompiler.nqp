@@ -222,11 +222,11 @@ class QAST::CompilerJAST {
             my $main_meth := JAST::Method.new( :name('main'), :returns('Void') );
             $main_meth.add_argument('argv', "[$TYPE_STR");
             $main_meth.append(JAST::PushCVal.new( :value('L' ~ $*JCLASS.name ~ ';') ));
-            $main_meth.append(JAST::PushIVal.new( :value($*CODEREFS.cuid_to_idx($main_block.cuid)) ));
+            $main_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($main_block.cuid)) ));
             $main_meth.append(JAST::Instruction.new( :op('aload_0') ));
             $main_meth.append(JAST::Instruction.new( :op('invokestatic'),
                 $TYPE_CU, 'enterFromMain',
-                'Void', 'Ljava/lang/Class;', 'Long', "[$TYPE_STR"));
+                'Void', 'Ljava/lang/Class;', 'Integer', "[$TYPE_STR"));
             $main_meth.append(JAST::Instruction.new( :op('return') ));
             $*JCLASS.add_method($main_meth);
         }
