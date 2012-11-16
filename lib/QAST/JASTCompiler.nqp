@@ -38,29 +38,70 @@ class QAST::OperationsJAST {
 }
 
 class QAST::CompilerJAST {
+    # Some common types we'll need.
+    my $TYPE_TC  := 'Lorg/perl6/nqp/runtime/ThreadContext;';
+    my $TYPE_STR := 'Ljava/lang/String;';
+
+    # Responsible for handling issues around code references, building the
+    # switch statement dispatcher, etc.
     my class CodeRefBuilder {
-        has $!cur_idx;
+        has int $!cur_idx;
         has %!cuid_to_idx;
+        has @!jastmeth_names;
         has @!cuids;
         has @!names;
         
         method BUILD() {
             $!cur_idx := 0;
             %!cuid_to_idx := {};
+            @!jastmeth_names := [];
             @!cuids := [];
             @!names := [];
         }
         
         method register_method($jastmeth, $cuid, $name) {
             %!cuid_to_idx{$cuid} := $!cur_idx;
+            nqp::push(@!jastmeth_names, $jastmeth.name);
             nqp::push(@!cuids, $cuid);
             nqp::push(@!names, $name);
             $!cur_idx := $!cur_idx + 1;
         }
         
         method jastify() {
-            # XXX Here we emit the coderef delegation table, coderef construction,
-            # and so forth.
+            self.invoker();
+            # XXX Here we emit the coderef construction and so forth.
+        }
+        
+        # Emits the invocation switch statement.
+        method invoker() {
+            my $inv := JAST::Method.new( :name('InvokeCode'), :returns('Void'), :static(0) );
+            $inv.add_argument('tc', $TYPE_TC);
+            $inv.add_argument('idx', 'Integer');
+            
+            # Load ThreadContext onto the stack for passing, and index
+            # for the dispatch.
+            $inv.append(JAST::Instruction.new( :op('aload_1') ));
+            $inv.append(JAST::Instruction.new( :op('iload_2') ));
+            
+            # Build dispatch table.
+            my $fail_lab := JAST::Label.new( :name('fail') );
+            my $ts := JAST::Instruction.new( :op('tableswitch'), $fail_lab );
+            $inv.append($ts);
+            for @!jastmeth_names {
+                my $lab := JAST::Label.new( :name("l_$_") );
+                $ts.push($lab);
+                $inv.append($lab);
+                $inv.append(JAST::Instruction.new( :op('invokestatic'),
+                    'L' ~ $*JCLASS.name ~ ';', $_, 'Void', $TYPE_TC));
+                $inv.append(JAST::Instruction.new( :op('return') ));
+            }
+            
+            # Add default failure handling.
+            $inv.append($fail_lab);
+            emit_throw($inv);
+            
+            # Add to class.
+            $*JCLASS.add_method($inv);
         }
     }
     
@@ -183,5 +224,13 @@ class QAST::CompilerJAST {
         $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
         
         nqp::die("block compilation NYI");
+    }
+
+    # Emits an exception throw.
+    sub emit_throw($il, $type = 'Ljava/lang/Exception;') {
+        $il.append(JAST::Instruction.new( :op('new'), $type ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('invokespecial'), $type, '<init>', 'Void' ));
+        $il.append(JAST::Instruction.new( :op('athrow') ));
     }
 }
