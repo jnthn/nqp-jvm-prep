@@ -40,6 +40,7 @@ class QAST::OperationsJAST {
 class QAST::CompilerJAST {
     # Some common types we'll need.
     my $TYPE_TC  := 'Lorg/perl6/nqp/runtime/ThreadContext;';
+    my $TYPE_CU  := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
     my $TYPE_STR := 'Ljava/lang/String;';
 
     # Responsible for handling issues around code references, building the
@@ -65,6 +66,12 @@ class QAST::CompilerJAST {
             nqp::push(@!cuids, $cuid);
             nqp::push(@!names, $name);
             $!cur_idx := $!cur_idx + 1;
+        }
+        
+        method cuid_to_idx($cuid) {
+            nqp::existskey(%!cuid_to_idx, $cuid)
+                ?? %!cuid_to_idx{$cuid}
+                !! nqp::die("Unknown CUID '$cuid'")
         }
         
         method jastify() {
@@ -208,12 +215,18 @@ class QAST::CompilerJAST {
         }
         
         # Compile and include main-time logic, if any, and then add a Java
-        # Main that will lead to its invocation.
+        # main that will lead to its invocation.
         if nqp::defined($cu.main) {
             my $main_block := QAST::Block.new( :blocktype('raw'), $cu.main );
             self.as_jast($main_block);
             my $main_meth := JAST::Method.new( :name('main'), :returns('Void') );
             $main_meth.add_argument('argv', "[$TYPE_STR");
+            $main_meth.append(JAST::PushCVal.new( :value('L' ~ $*JCLASS.name ~ ';') ));
+            $main_meth.append(JAST::PushIVal.new( :value($*CODEREFS.cuid_to_idx($main_block.cuid)) ));
+            $main_meth.append(JAST::Instruction.new( :op('aload_0') ));
+            $main_meth.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_CU, 'enterFromMain',
+                'Void', 'Ljava/lang/Class;', 'Long', "[$TYPE_STR"));
             $main_meth.append(JAST::Instruction.new( :op('return') ));
             $*JCLASS.add_method($main_meth);
         }
