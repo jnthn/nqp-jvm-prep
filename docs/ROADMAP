@@ -6,17 +6,14 @@ being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
 Minimal QAST to JAST Compiler
-* Very basic QAST::Block handling
-* IVal, SVal, NVal - just push to the stack
 * QAST::Stmts, QAST::Stmt
-* QAST::Op infrastructure
-* Basic 6model ops
 * Basic arithmetic ops
 * Basic flow control ops
 * QAST::Var locals
+* Basic 6model ops
 * QAST::Var lexicals and contextual
-* QAST::BVal, calling
-* Parameters and return values
+* Parameters
+* Return values
 * QAST::Want
 
 6model
