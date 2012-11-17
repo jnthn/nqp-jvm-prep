@@ -6,6 +6,7 @@ my $TYPE_TC  := 'Lorg/perl6/nqp/runtime/ThreadContext;';
 my $TYPE_CU  := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
 my $TYPE_CR  := 'Lorg/perl6/nqp/runtime/CodeRef;';
 my $TYPE_OPS := 'Lorg/perl6/nqp/runtime/Ops;';
+my $TYPE_SMO := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR := 'Ljava/lang/String;';
 
 # Represents the result of turning some QAST into JAST. That includes any
@@ -29,7 +30,7 @@ sub result($jast, int $type) {
     nqp::bindattr_s($r, Result, '$!local', '');
     $r
 }
-my @jtypes := ['Lorg/perl6/nqp/sixmodel/SixModelObject;', 'Long', 'Double', $TYPE_STR];
+my @jtypes := [$TYPE_SMO, 'Long', 'Double', $TYPE_STR];
 sub jtype($type_idx) { @jtypes[$type_idx] }
 
 class QAST::OperationsJAST {
@@ -104,6 +105,26 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
     $il.append($njast.jast);
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'say', $jtype, $jtype ));
     result($il, $njast.type)
+});
+
+QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
+    if +@($node) != 1 {
+        nqp::die("Operation 'call' supports neither names nor arguments");
+    }
+
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    
+    # Get thing to call.
+    my $invokee := $qastcomp.as_jast($node[0]);
+    nqp::die("First 'call' operand must be object") unless $invokee.type == $RT_OBJ;
+    $il.append($invokee.jast);
+    
+    # Emit call and put result value on the stack.
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO ));
+    $il.append(JAST::Instruction.new( :op('aconst_null') )); # XXX to do: return values
+    
+    result($il, $RT_OBJ)
 });
 
 class QAST::CompilerJAST {
