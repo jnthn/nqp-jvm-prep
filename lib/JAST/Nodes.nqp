@@ -64,7 +64,9 @@ class JAST::InstructionList {
     has @!instructions;
     
     method append($ins) {
-        nqp::push(@!instructions, $ins)
+        nqp::istype($ins, JAST::InstructionList)
+            ?? self.push_instructions($ins)
+            !! nqp::push(@!instructions, $ins)
     }
     
     method push_instructions($ilist) {
@@ -125,7 +127,9 @@ class JAST::Method is JAST::Node {
     }
     
     method append($ins) {
-        nqp::push(@!instructions, $ins)
+        nqp::istype($ins, JAST::InstructionList)
+            ?? self.push_instructions($ins)
+            !! nqp::push(@!instructions, $ins)
     }
     
     method push_instructions($ilist) {
