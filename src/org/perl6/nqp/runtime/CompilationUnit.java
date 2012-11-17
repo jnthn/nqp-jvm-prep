@@ -1,11 +1,18 @@
 package org.perl6.nqp.runtime;
 
+import java.util.*;
+
 /**
  * All compilation units inherit from this class. A compilation unit contains
  * code generated from a single QAST::CompUnit, with each QAST::Block turning
  * into a method in the compilation unit.
  */
 public abstract class CompilationUnit {
+	/**
+	 * Mapping of compilation unit unqiue IDs to matching code reference.
+	 */
+	private Map<String, CodeRef> cuidToCodeRef = new HashMap<String, CodeRef>(); 
+	
 	/**
 	 * When a compilation unit is serving as the main entry point, its main
 	 * method will just delegate to here. Thus this needs to trigger some
@@ -24,7 +31,25 @@ public abstract class CompilationUnit {
 	public static CompilationUnit setupCompilationUnit(Class<?> cuType)
 			throws InstantiationException, IllegalAccessException {
 		CompilationUnit cu = (CompilationUnit)cuType.newInstance();
+		cu.initializeCompilationUnit();
 		return cu;
+	}
+	
+	/**
+	 * Does initialization work for the compilation unit.
+	 */
+	private void initializeCompilationUnit() {
+		/* Place code references into a lookup table by unique ID. */
+		CodeRef[] codeRefs = getCodeRefs();
+		for (CodeRef c : codeRefs)
+			cuidToCodeRef.put(c.UniqueId, c);
+	}
+	
+	/**
+	 * Turns a compilation unit unique ID into the matching code-ref.
+	 */
+	public CodeRef lookupCodeRef(String uniqueId) {
+		return cuidToCodeRef.get(uniqueId);
 	}
 
 	/**
@@ -36,4 +61,10 @@ public abstract class CompilationUnit {
 	 * invocation, but the next call along can be non-virtual.
 	 */
 	public abstract void InvokeCode(ThreadContext tc, int idx);
+	
+	/**
+	 * Code generation emits this to build up the various CodeRef related
+	 * data structures.
+	 */
+	public abstract CodeRef[] getCodeRefs();
 }

@@ -41,6 +41,7 @@ class QAST::CompilerJAST {
     # Some common types we'll need.
     my $TYPE_TC  := 'Lorg/perl6/nqp/runtime/ThreadContext;';
     my $TYPE_CU  := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
+    my $TYPE_CR  := 'Lorg/perl6/nqp/runtime/CodeRef;';
     my $TYPE_STR := 'Ljava/lang/String;';
 
     # Responsible for handling issues around code references, building the
@@ -76,7 +77,7 @@ class QAST::CompilerJAST {
         
         method jastify() {
             self.invoker();
-            # XXX Here we emit the coderef construction and so forth.
+            self.coderef_array();
         }
         
         # Emits the invocation switch statement.
@@ -109,6 +110,37 @@ class QAST::CompilerJAST {
             
             # Add to class.
             $*JCLASS.add_method($inv);
+        }
+        
+        # Emits the code-ref array construction.
+        method coderef_array() {
+            my $cra := JAST::Method.new( :name('getCodeRefs'), :returns("[$TYPE_CR;"), :static(0) );
+            
+            # Create array.
+            $cra.append(JAST::PushIndex.new( :value($!cur_idx) ));
+            $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CR ));
+            
+            # Add all the code-refs.
+            my int $i := 0;
+            while $i < $!cur_idx {
+                $cra.append(JAST::Instruction.new( :op('dup') )); # The target array
+                $cra.append(JAST::PushIndex.new( :value($i) ));  # The array index
+                $cra.append(JAST::Instruction.new( :op('new'), $TYPE_CR ));
+                $cra.append(JAST::Instruction.new( :op('dup') ));
+                $cra.append(JAST::Instruction.new( :op('aload_0') ));
+                $cra.append(JAST::PushIndex.new( :value($i) ));
+                $cra.append(JAST::PushSVal.new( :value(@!names[$i]) ));
+                $cra.append(JAST::PushSVal.new( :value(@!cuids[$i]) ));
+                $cra.append(JAST::Instruction.new( :op('invokespecial'),
+                    $TYPE_CR, '<init>',
+                    'Void', $TYPE_CU, 'Integer', $TYPE_STR, $TYPE_STR ));
+                $cra.append(JAST::Instruction.new( :op('aastore') )); # Push to the array
+                $i++;
+            }
+            
+            # Return the array. Add method to class.
+            $cra.append(JAST::Instruction.new( :op('areturn') ));
+            $*JCLASS.add_method($cra);
         }
     }
     
@@ -244,11 +276,15 @@ class QAST::CompilerJAST {
         # Always take ThreadContext as argument.
         $*JMETH.add_argument('tc', $TYPE_TC);
         
-        # XXX do lots of stuff
+        # Compile method body.
+        my $body := self.compile_all_the_stmts($node.list, :node($node.node));
         
         # Finalize method and add it to the class.
         $*JMETH.append(JAST::Instruction.new( :op('return') ));
         $*JCLASS.add_method($*JMETH);
+    }
+    
+    method compile_all_the_stmts(@stmts, $resultchild?, :$node) {
     }
 
     # Emits an exception throw.
