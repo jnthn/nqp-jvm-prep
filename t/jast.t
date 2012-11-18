@@ -126,12 +126,12 @@ jast_test(
 jast_test(
     -> $c {
         my $m := JAST::Method.new(:name('answers'), :returns('Long'));
-        $m.append(JAST::PushIVal.new( :value(424242424242) ));
+        $m.append(JAST::PushIVal.new( :value(42424242) ));
         $m.append(JAST::Instruction.new( :op('lreturn') ));
         $c.add_method($m);
     },
     'System.out.println(new Long(JASTTest.answers()).toString());',
-    "424242424242\n",
+    "42424242\n",
     "IVal constant");
 
 jast_test(
