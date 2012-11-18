@@ -93,6 +93,32 @@ class QAST::OperationsJAST {
         }
         return %core_inlinability{$op} // 0;
     }
+    
+    # Adds an nqp:: op provided directly by a JVM op.
+    method map_jvm_core_op($op, $jvm_op, @stack_in, $stack_out) {
+        my int $expected_args := +@stack_in;
+        self.add_core_op($op, -> $qastcomp, $node {
+            if +@($node) != $expected_args {
+                nqp::die("Operation '$op' requires $expected_args operands");
+            }
+            
+            # Emit operands.
+            my $il := JAST::InstructionList.new();
+            my int $i := 0;
+            while $i < $expected_args {
+                my $type := @stack_in[$i];
+                my $operand := $node[$i];
+                my $operand_res := $qastcomp.as_jast($node[$i]);
+                # XXX coercion...
+                $il.append($operand_res.jast);
+                $i++;
+            }
+            
+            # Emit operation.
+            $il.append(JAST::Instruction.new( :op($jvm_op) ));
+            result($il, $stack_out)
+        });
+    }
 }
 
 QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
