@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(4);
+plan(5);
 
 qast_test(
     -> {
@@ -72,6 +72,26 @@ qast_test(
     },
     "69\n",
     "Integer addition works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('mul_n'),
+                    QAST::NVal.new( :value(1.5) ),
+                    QAST::NVal.new( :value(3) )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "4.5\n",
+    "Floating point multiplication works");
 
 # ~~ Test Infrastructure ~~
 
