@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(3);
+plan(4);
 
 qast_test(
     -> {
@@ -52,6 +52,26 @@ qast_test(
     },
     "6.9\n",
     "Basic block call and say of an num literal");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('add_i'),
+                    QAST::IVal.new( :value(42) ),
+                    QAST::IVal.new( :value(27) )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "69\n",
+    "Integer addition works");
 
 # ~~ Test Infrastructure ~~
 
