@@ -421,6 +421,15 @@ class QAST::CompilerJAST {
         $*JCLASS.add_method($*JMETH);
     }
     
+    multi method as_jast(QAST::Stmts $node, :$want) {
+        self.compile_all_the_stmts($node.list, $node.resultchild, :node($node.node))
+    }
+    
+    multi method as_jast(QAST::Stmt $node, :$want) {
+        # XXX needs allocator boundary
+        self.compile_all_the_stmts($node.list, $node.resultchild, :node($node.node))
+    }
+    
     method compile_all_the_stmts(@stmts, $resultchild?, :$node) {
         my $last_res;
         my $il := JAST::InstructionList.new();
