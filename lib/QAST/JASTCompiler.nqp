@@ -11,10 +11,11 @@ my $TYPE_STR := 'Ljava/lang/String;';
 
 # Represents the result of turning some QAST into JAST. That includes any
 # instructions, but also some metadata that goes with them.
-my $RT_OBJ := 0;
-my $RT_INT := 1;
-my $RT_NUM := 2;
-my $RT_STR := 3;
+my $RT_OBJ  := 0;
+my $RT_INT  := 1;
+my $RT_NUM  := 2;
+my $RT_STR  := 3;
+my $RT_VOID := -1;
 my class Result {
     has $!jast;         # The JAST
     has int $!type;     # Result type (obj/int/num/str)
@@ -32,6 +33,15 @@ sub result($jast, int $type) {
 }
 my @jtypes := [$TYPE_SMO, 'Long', 'Double', $TYPE_STR];
 sub jtype($type_idx) { @jtypes[$type_idx] }
+
+# Mapping of QAST::Want type identifiers to $RT_*.
+my %WANTMAP := nqp::hash(
+    'v', $RT_VOID,
+    'I', $RT_INT, 'i', $RT_INT,
+    'N', $RT_NUM, 'n', $RT_NUM,
+    'S', $RT_STR, 's', $RT_STR,
+    'P', $RT_OBJ, 'p', $RT_OBJ
+);
 
 class QAST::OperationsJAST {
     # Maps operations to code that will handle them. Hash of code.
@@ -306,10 +316,10 @@ class QAST::CompilerJAST {
         my $*WANT := $want;
         if $want {
             if nqp::istype($node, QAST::Want) {
-                self.coerce(self.as_jast(want($node, $want)), $want)
+                self.coerce(self.as_jast(want($node, $want)), %WANTMAP{$want})
             }
             else {
-                self.coerce({*}, $want)
+                self.coerce({*}, %WANTMAP{$want})
             }
         }
         else {
@@ -479,6 +489,19 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('invokevirtual'),
             $TYPE_CU, 'lookupCodeRef', $TYPE_CR, $TYPE_STR ));
         result($il, $RT_OBJ)
+    }
+    
+    method coerce($res, $desired) {
+        return $res if $desired eq $RT_VOID;
+        my $got := $res.type;
+        if $got == $desired {
+            # Exact match
+            return $res;
+        }
+        # XXX many more cases to come...
+        else {
+            nqp::die("Coercion from type '$got' to '$desired' NYI");
+        }
     }
 
     # Emits an exception throw.
