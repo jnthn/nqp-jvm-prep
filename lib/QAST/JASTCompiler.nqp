@@ -104,16 +104,35 @@ class QAST::OperationsJAST {
         return %core_inlinability{$op} // 0;
     }
     
-    # Adds an nqp:: op provided directly by a JVM op.
+    # Adds a core nqp:: op provided directly by a JVM op.
     method map_jvm_core_op($op, $jvm_op, @stack_in, $stack_out) {
+        my $ins := JAST::Instruction.new( :op($jvm_op) );
+        self.add_core_op($op, op_mapper($op, $ins, @stack_in, $stack_out));
+    }
+    
+    # Adds a HLL nqp:: op provided directly by a JVM op.
+    method map_jvm_hll_op($hll, $op, $jvm_op, @stack_in, $stack_out) {
+        my $ins := JAST::Instruction.new( :op($jvm_op) );
+        self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out));
+    }
+    
+    # Geneartes an operation mapper. Covers a range of operations,
+    # including those provided by calling a method and those that are
+    # just JVM op invocations.
+    sub op_mapper($op, $instruction, @stack_in, $stack_out, :$tc = 0) {
         my int $expected_args := +@stack_in;
-        self.add_core_op($op, -> $qastcomp, $node {
+        return -> $qastcomp, $node {
             if +@($node) != $expected_args {
                 nqp::die("Operation '$op' requires $expected_args operands");
             }
             
-            # Emit operands.
+            # Add thread context argument if needed.
             my $il := JAST::InstructionList.new();
+            if $tc {
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+            }
+            
+            # Emit operands.
             my int $i := 0;
             while $i < $expected_args {
                 my $type := @stack_in[$i];
@@ -125,9 +144,9 @@ class QAST::OperationsJAST {
             }
             
             # Emit operation.
-            $il.append(JAST::Instruction.new( :op($jvm_op) ));
+            $il.append($instruction);
             result($il, $stack_out)
-        });
+        }
     }
 }
 
