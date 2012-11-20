@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(10);
+plan(11);
 
 qast_test(
     -> {
@@ -192,6 +192,25 @@ qast_test(
     },
     "123\n",
     "abs_i works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('sqrt_n'),
+                    QAST::NVal.new( :value(256) )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "16.0\n",
+    "sqrt_n works");
 
 # ~~ Test Infrastructure ~~
 
