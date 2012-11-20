@@ -2,12 +2,13 @@ use JASTNodes;
 use QASTNode;
 
 # Some common types we'll need.
-my $TYPE_TC  := 'Lorg/perl6/nqp/runtime/ThreadContext;';
-my $TYPE_CU  := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
-my $TYPE_CR  := 'Lorg/perl6/nqp/runtime/CodeRef;';
-my $TYPE_OPS := 'Lorg/perl6/nqp/runtime/Ops;';
-my $TYPE_SMO := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
-my $TYPE_STR := 'Ljava/lang/String;';
+my $TYPE_TC   := 'Lorg/perl6/nqp/runtime/ThreadContext;';
+my $TYPE_CU   := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
+my $TYPE_CR   := 'Lorg/perl6/nqp/runtime/CodeRef;';
+my $TYPE_OPS  := 'Lorg/perl6/nqp/runtime/Ops;';
+my $TYPE_SMO  := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
+my $TYPE_STR  := 'Ljava/lang/String;';
+my $TYPE_MATH := 'Ljava/lang/Math;';
 
 # Represents the result of turning some QAST into JAST. That includes any
 # instructions, but also some metadata that goes with them.
@@ -113,6 +114,30 @@ class QAST::OperationsJAST {
     # Adds a HLL nqp:: op provided directly by a JVM op.
     method map_jvm_hll_op($hll, $op, $jvm_op, @stack_in, $stack_out) {
         my $ins := JAST::Instruction.new( :op($jvm_op) );
+        self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out));
+    }
+    
+    # Adds a core nqp:: op provided by a static method in the
+    # class library.
+    method map_classlib_core_op($op, $class, $method, @stack_in, $stack_out) {
+        my @jtypes_in;
+        for @stack_in {
+            nqp::push(@jtypes_in, jtype($_));
+        }
+        my $ins := JAST::Instruction.new( :op('invokestatic'),
+            $class, $method, jtype($stack_out), |@jtypes_in );
+        self.add_core_op($op, op_mapper($op, $ins, @stack_in, $stack_out));
+    }
+    
+    # Adds a core nqp:: op provided by a static method in the
+    # class library.
+    method map_classlib_hll_op($hll, $op, $class, $method, @stack_in, $stack_out) {
+        my @jtypes_in;
+        for @stack_in {
+            nqp::push(@jtypes_in, jtype($_));
+        }
+        my $ins := JAST::Instruction.new( :op('invokestatic'),
+            $class, $method, jtype($stack_out), |@jtypes_in );
         self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out));
     }
     
