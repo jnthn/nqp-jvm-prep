@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(7);
+plan(10);
 
 qast_test(
     -> {
@@ -35,6 +35,23 @@ qast_test(
     },
     "42\n",
     "Basic block call and say of an int literal");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::IVal.new( :value(-42) )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "-42\n",
+    "Same, but with a negative int literal");
 
 qast_test(
     -> {
@@ -136,6 +153,45 @@ qast_test(
     },
     "Yeti\nModus Hoperandi\n",
     "QAST::Stmt evalutes to the last value");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('pow_n'),
+                    QAST::NVal.new( :value(2) ),
+                    QAST::NVal.new( :value(10) )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1024.0\n",
+    "pow_n works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('abs_i'),
+                    QAST::IVal.new( :value(-123) )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "123\n",
+    "abs_i works");
 
 # ~~ Test Infrastructure ~~
 
