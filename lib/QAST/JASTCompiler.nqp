@@ -187,6 +187,7 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
     result($il, $njast.type)
 });
 
+# Calling
 QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     if +@($node) != 1 {
         nqp::die("Operation 'call' supports neither names nor arguments");
@@ -205,6 +206,23 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     $il.append(JAST::Instruction.new( :op('aconst_null') )); # XXX to do: return values
     
     result($il, $RT_OBJ)
+});
+
+# Binding
+QAST::OperationsJAST.add_core_op('bind', -> $qastcomp, $op {
+    # Sanity checks.
+    my @children := $op.list;
+    if +@children != 2 {
+        nqp::die("A 'bind' op must have exactly two children");
+    }
+    unless nqp::istype(@children[0], QAST::Var) {
+        nqp::die("First child of a 'bind' op must be a QAST::Var");
+    }
+    
+    # Set the QAST of the think we're to bind, then delegate to
+    # the compilation of the QAST::Var to handle the rest.
+    my $*BINDVAL := @children[1];
+    $qastcomp.as_jast(@children[0])
 });
 
 # Arithmetic ops
