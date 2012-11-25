@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(11);
+plan(12);
 
 qast_test(
     -> {
@@ -211,6 +211,30 @@ qast_test(
     },
     "16.0\n",
     "sqrt_n works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('msg'), :scope('local'), :decl('var'), :returns(str) ),
+                    QAST::SVal.new( :value('Your friendly local...variable') )
+                ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Var.new( :name('msg'), :scope('local') )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Your friendly local...variable\n",
+    "Local string variable");
 
 # ~~ Test Infrastructure ~~
 
