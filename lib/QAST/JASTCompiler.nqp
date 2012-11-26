@@ -39,6 +39,25 @@ sub rttype_from_typeobj($typeobj) {
     @rttypes[pir::repr_get_primitive_type_spec__IP($typeobj)]
 }
 
+# Various typed instructions.
+my @store_ins := ['astore', 'lstore', 'dstore', 'astore'];
+sub store_ins($type) {
+    @store_ins[$type]
+}
+my @load_ins := ['aload', 'lload', 'dload', 'aload'];
+sub load_ins($type) {
+    @load_ins[$type]
+}
+my @dup_ins := [
+    JAST::Instruction.new( :op('dup') ),
+    JAST::Instruction.new( :op('dup2') ),
+    JAST::Instruction.new( :op('dup2') ),
+    JAST::Instruction.new( :op('dup') )
+];
+sub dup_ins($type) {
+    @dup_ins[$type]
+}
+
 # Mapping of QAST::Want type identifiers to $RT_*.
 my %WANTMAP := nqp::hash(
     'v', $RT_VOID,
@@ -469,12 +488,12 @@ class QAST::CompilerJAST {
 
     proto method as_jast($node, :$want) {
         my $*WANT := $want;
-        if $want {
+        if nqp::defined($want) {
             if nqp::istype($node, QAST::Want) {
-                self.coerce(self.as_jast(want($node, $want)), %WANTMAP{$want})
+                self.coerce(self.as_jast(want($node, $want)), %WANTMAP{$want} // $want)
             }
             else {
-                self.coerce({*}, %WANTMAP{$want})
+                self.coerce({*}, %WANTMAP{$want} // $want)
             }
         }
         else {
@@ -578,6 +597,11 @@ class QAST::CompilerJAST {
             $body := self.compile_all_the_stmts($node.list, :node($node.node));
         }
         
+        # Add all the locals.
+        for $block.locals {
+            $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
+        }
+        
         # Add method body JAST.
         $*JMETH.append($body.jast);
         
@@ -634,13 +658,13 @@ class QAST::CompilerJAST {
         my $result;
         my $err;
         try $hll := $*HLL;
-        try {
+        #try {
             $result := QAST::OperationsJAST.compile_op(self, $hll, $node);
-            CATCH { $err := $! }
-        }
-        if $err {
-            nqp::die("Error while compiling op " ~ $node.op ~ ": $err");
-        }
+        #    CATCH { $err := $! }
+        #}
+        #if $err {
+        #    nqp::die("Error while compiling op " ~ $node.op ~ ": $err");
+        #}
         $result
     }
     
@@ -703,14 +727,19 @@ class QAST::CompilerJAST {
         
         # Now go by scope.
         if $scope eq 'local' {
-            if $*BLOCK.local_type($name) -> $type {
+            my $type := $*BLOCK.local_type($name);
+            if nqp::defined($type) {
                 my $il := JAST::InstructionList.new();
                 if $*BINDVAL {
-                    my $valres := self.as_jast_clear_bindval($*BINDVAL, :want(nqp::lc($type)));
-                    
+                    my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($type));
+                    $il.append($valres.jast);
+                    $il.append(dup_ins($type));
+                    $il.append(JAST::Instruction.new( :op(store_ins($type)), $name ));
                 }
-             
-                return $il;
+                else {
+                    $il.append(JAST::Instruction.new( :op(load_ins($type)), $name ));
+                }
+                return result($il, $type);
             }
             else {
                 nqp::die("Cannot reference undeclared local '$name'");
