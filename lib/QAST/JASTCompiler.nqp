@@ -34,6 +34,10 @@ sub result($jast, int $type) {
 }
 my @jtypes := [$TYPE_SMO, 'Long', 'Double', $TYPE_STR];
 sub jtype($type_idx) { @jtypes[$type_idx] }
+my @rttypes := [$RT_OBJ, $RT_INT, $RT_NUM, $RT_STR];
+sub rttype_from_typeobj($typeobj) {
+    @rttypes[pir::repr_get_primitive_type_spec__IP($typeobj)]
+}
 
 # Mapping of QAST::Want type identifiers to $RT_*.
 my %WANTMAP := nqp::hash(
@@ -358,6 +362,77 @@ class QAST::CompilerJAST {
         }
     }
     
+    # Holds information about the QAST::Block we're currently compiling.
+    my class BlockInfo {
+        has $!qast;             # The QAST::Block
+        has $!outer;            # Outer block's BlockInfo
+        has @!params;           # QAST::Var nodes of params
+        has @!locals;           # QAST::Var nodes of declared locals
+        has @!lexicals;         # QAST::Var nodes of declared lexicals
+        has %!local_types;      # Mapping of local registers to type names
+        has %!lexical_types;    # Mapping of lexical names to types
+        
+        method new($qast, $outer) {
+            my $obj := nqp::create(self);
+            $obj.BUILD($qast, $outer);
+            $obj
+        }
+        
+        method BUILD($qast, $outer) {
+            $!qast := $qast;
+            $!outer := $outer;
+            @!params := nqp::list();
+            @!locals := nqp::list();
+            @!lexicals := nqp::list();
+            %!local_types := nqp::hash();
+            %!lexical_types := nqp::hash();
+        }
+        
+        method add_param($var) {
+            if $var.scope eq 'local' {
+                self.register_local($var);
+            }
+            else {
+                self.register_lexical($var);
+            }
+            @!params[+@!params] := $var;
+        }
+        
+        method add_lexical($var) {
+            self.register_lexical($var);
+            @!lexicals[+@!lexicals] := $var;
+        }
+        
+        method add_local($var) {
+            self.register_local($var);
+            @!locals[+@!locals] := $var;
+        }
+        
+        method register_lexical($var, $reg?) {
+            my $name := $var.name;
+            if nqp::existskey(%!lexical_types, $name) {
+                nqp::die("Lexical '$name' already declared");
+            }
+            %!lexical_types{$name} := rttype_from_typeobj($var.returns);
+        }
+        
+        method register_local($var) {
+            my $name := $var.name;
+            if nqp::existskey(%!local_types, $name) {
+                nqp::die("Local '$name' already declared");
+            }
+            %!local_types{$name} := rttype_from_typeobj($var.returns);
+        }
+        
+        method qast() { $!qast }
+        method outer() { $!outer }
+        method params() { @!params }
+        method lexicals() { @!lexicals }
+        method locals() { @!locals }
+        
+        method local_type($name) { %!local_types{$name} }
+    }
+    
     method jast($source, *%adverbs) {
         # Wrap $source in a QAST::Block if it's not already a viable root node.
         $source := QAST::Block.new($source)
@@ -481,6 +556,11 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::Block $node, :$want) {
+        # Block gets fresh BlockInfo.
+        my $*BINDVAL  := 0;
+        my $outer     := try $*BLOCK;
+        my $block     := BlockInfo.new($node, $outer);
+        
         # Create JAST method and register it with the block's compilation unit
         # unique ID and name. (Note, always void return here as return values
         # are handled out of band).
@@ -491,7 +571,12 @@ class QAST::CompilerJAST {
         $*JMETH.add_argument('tc', $TYPE_TC);
         
         # Compile method body.
-        my $body := self.compile_all_the_stmts($node.list, :node($node.node));
+        my $body;
+        {
+            my $*BLOCK := $block;
+            my $*WANT;
+            $body := self.compile_all_the_stmts($node.list, :node($node.node));
+        }
         
         # Add method body JAST.
         $*JMETH.append($body.jast);
@@ -557,6 +642,98 @@ class QAST::CompilerJAST {
             nqp::die("Error while compiling op " ~ $node.op ~ ": $err");
         }
         $result
+    }
+    
+    multi method as_jast(QAST::Var $node, :$want) {
+        self.compile_var($node)
+    }
+    
+    method compile_var($node) {
+        my $scope := $node.scope;
+        my $decl  := $node.decl;
+        
+        # Handle any declarations; after this, we fall through to the
+        # lookup code.
+        if $decl {
+            # If it's a parameter, add it to the things we should bind
+            # at block entry.
+            if $decl eq 'param' {
+                if $scope eq 'local' || $scope eq 'lexical' {
+                    $*BLOCK.add_param($node);
+                }
+                else {
+                    nqp::die("Parameter cannot have scope '$scope'; use 'local' or 'lexical'");
+                }
+            }
+            elsif $decl eq 'var' {
+                if $scope eq 'local' {
+                    $*BLOCK.add_local($node);
+                }
+                elsif $scope eq 'lexical' {
+                    $*BLOCK.add_lexical($node);
+                }
+                else {
+                    nqp::die("Cannot declare variable with scope '$scope'; use 'local' or 'lexical'");
+                }
+            }
+            else {
+                nqp::die("Don't understand declaration type '$decl'");
+            }
+        }
+        
+        # If there's no scope, figure it out from the symbol tables if
+        # possible.
+        my $name := $node.name;
+        if $scope eq '' {
+            my $cur_block := $*BLOCK;
+            while nqp::istype($cur_block, BlockInfo) {
+                my %sym := $cur_block.qast.symbol($name);
+                if %sym {
+                    $scope := %sym<scope>;
+                    $cur_block := NQPMu;
+                }
+                else {
+                    $cur_block := $cur_block.outer();
+                }
+            }
+            if $scope eq '' {
+                nqp::die("No scope specified or locatable in the symbol table for '$name'");
+            }
+        }
+        
+        # Now go by scope.
+        if $scope eq 'local' {
+            if $*BLOCK.local_type($name) -> $type {
+                my $il := JAST::InstructionList.new();
+                if $*BINDVAL {
+                    my $valres := self.as_jast_clear_bindval($*BINDVAL, :want(nqp::lc($type)));
+                    
+                }
+             
+                return $il;
+            }
+            else {
+                nqp::die("Cannot reference undeclared local '$name'");
+            }
+        }
+        elsif $scope eq 'positional' {
+            return self.as_jast_clear_bindval($*BINDVAL
+                ?? QAST::Op.new( :op('positional_bind'), |$node.list, $*BINDVAL)
+                !! QAST::Op.new( :op('positional_get'), |$node.list));
+        }
+        elsif $scope eq 'associative' {
+            return self.as_jast_clear_bindval($*BINDVAL
+                ?? QAST::Op.new( :op('associative_bind'), |$node.list, $*BINDVAL)
+                !! QAST::Op.new( :op('associative_get'), |$node.list));
+        }
+        else {
+            nqp::die("QAST::Var with scope '$scope' NYI");
+        }
+    }
+    
+    method as_jast_clear_bindval($node, :$want) {
+        my $*BINDVAL := 0;
+        $want ?? self.as_jast($node, :$want) !! self.as_jast($node)
     }
     
     multi method as_jast(QAST::IVal $node, :$want) {
