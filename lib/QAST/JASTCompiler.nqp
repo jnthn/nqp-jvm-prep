@@ -30,6 +30,7 @@ sub result($jast, int $type) {
     nqp::bindattr($r, Result, '$!jast', $jast);
     nqp::bindattr_i($r, Result, '$!type', $type);
     nqp::bindattr_s($r, Result, '$!local', '');
+    $*STACK.push($r);
     $r
 }
 my @jtypes := [$TYPE_SMO, 'Long', 'Double', $TYPE_STR];
@@ -182,6 +183,7 @@ class QAST::OperationsJAST {
             
             # Emit operands.
             my int $i := 0;
+            my @arg_res;
             while $i < $expected_args {
                 my $type := @stack_in[$i];
                 my $operand := $node[$i];
@@ -189,9 +191,11 @@ class QAST::OperationsJAST {
                 # XXX coercion...
                 $il.append($operand_res.jast);
                 $i++;
+                nqp::push(@arg_res, $operand_res);
             }
             
             # Emit operation.
+            $*STACK.obtain(|@arg_res);
             $il.append($instruction);
             result($il, $stack_out)
         }
@@ -206,6 +210,7 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
     my $njast := $qastcomp.as_jast($node[0]);
     my $jtype := jtype($njast.type);
     $il.append($njast.jast);
+    $*STACK.obtain($njast);
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'say', $jtype, $jtype ));
     result($il, $njast.type)
 });
@@ -225,6 +230,7 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     $il.append($invokee.jast);
     
     # Emit call and put result value on the stack.
+    $*STACK.obtain($invokee);
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO ));
     $il.append(JAST::Instruction.new( :op('aconst_null') )); # XXX to do: return values
     
@@ -478,6 +484,39 @@ class QAST::CompilerJAST {
         # Finally, we hand back the finished class.
         return $*JCLASS
     }
+    
+    # Tracks what is currently on the stack.
+    my class StackState {
+        has @!stack;
+        
+        method push($result) {
+            nqp::istype($result, Result)
+                ?? nqp::push(@!stack, $result)
+                !! nqp::die("Can only push a result onto the stack")
+        }
+        
+        method obtain(*@things) {
+            # See if the things we need are all on the stack.
+            if +@!stack >= @things {
+                my int $sp := @!stack - +@things;
+                my int $tp := 0;
+                my int $ok := 1;
+                while $tp < +@things {
+                    unless nqp::eqaddr(@!stack[$sp], @things[$tp]) {
+                        $ok := 0;
+                        last;
+                    }
+                    $sp++, $tp++;
+                }
+                if $ok {
+                    return 1;
+                }
+            }
+            
+            # Otherwise, we need to do a little more work.
+            nqp::die("Unhandled re-use of stack items");
+        }
+    }
 
     our $serno;
     INIT {
@@ -591,6 +630,7 @@ class QAST::CompilerJAST {
         
         # Compile method body.
         my $body;
+        my $*STACK := StackState.new();
         {
             my $*BLOCK := $block;
             my $*WANT;
@@ -650,6 +690,7 @@ class QAST::CompilerJAST {
             }
             $i := $i + 1;
         }
+        $*STACK.obtain($last_res);
         result($il, $last_res.type)
     }
     
@@ -733,6 +774,7 @@ class QAST::CompilerJAST {
                 if $*BINDVAL {
                     my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($type));
                     $il.append($valres.jast);
+                    $*STACK.obtain($valres);
                     $il.append(dup_ins($type));
                     $il.append(JAST::Instruction.new( :op(store_ins($type)), $name ));
                 }
