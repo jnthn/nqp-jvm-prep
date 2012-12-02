@@ -245,7 +245,9 @@ for <if unless> -> $op_name {
         $*STACK.obtain($cond);
         unless $*WANT == $RT_VOID || $operands == 3 {
             $il.append(dup_ins($cond.type));
-            nqp::die("2-operand if/unless NYI");
+            $res_type := $cond.type;
+            $res_temp := fresh($res_type);
+            $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
         }
         
         # Emit test.
@@ -298,7 +300,7 @@ for <if unless> -> $op_name {
             $il.append($else.jast);
             $*STACK.obtain($else);
             if $*WANT == $RT_VOID {
-                $il.append(pop_ins($then.type));
+                $il.append(pop_ins($else.type));
             }
             else {
                 $il.append($qastcomp.coercion($then, $res_type));
@@ -306,7 +308,34 @@ for <if unless> -> $op_name {
             }
         }
         else {
-            nqp::die("2-operand if NYI");
+            # If void context, just pop the result and we're done.
+            # Otherwise, need to find a common type between it and
+            # the condition.
+            $*STACK.obtain($then);
+            if $*WANT == $RT_VOID {
+                $il.append(pop_ins($then.type));
+                $il.append($else_lbl);
+            }
+            elsif $then.type == $res_type {
+                # Already have a common type.
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
+                $il.append($else_lbl);
+            }
+            else {
+                # Need a new result, and to coerce both condition and
+                # result of then to it as needed (basically, add an else
+                # that handles coercion).
+                my $old_res_type := $res_type;
+                my $old_res_temp := $res_temp;
+                $res_type := $RT_OBJ;
+                $res_temp := fresh($res_type);
+                $il.append($qastcomp.coercion($then, $res_type));
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
+                $il.append($else_lbl);
+                $il.append(JAST::Instruction.new( :op(store_ins($old_res_type)), $old_res_temp ));
+                $il.append($qastcomp.coercion($cond, $res_type));
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
+            }
         }
         
         # Add final label and load result if neded.
