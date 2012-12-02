@@ -1038,6 +1038,11 @@ class QAST::CompilerJAST {
         $want ?? self.as_jast($node, :$want) !! self.as_jast($node)
     }
     
+    multi method as_jast(QAST::Want $node, :$want) {
+        # If we're not in a coercive context, take the default.
+        self.as_jast($node[0])
+    }
+    
     multi method as_jast(QAST::IVal $node, :$want) {
         result(JAST::PushIVal.new( :value($node.value) ), $RT_INT)
     }
