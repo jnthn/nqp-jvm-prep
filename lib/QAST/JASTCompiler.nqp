@@ -526,13 +526,14 @@ class QAST::CompilerJAST {
     method unique($prefix = '') { $prefix ~ $serno++ }
 
     proto method as_jast($node, :$want) {
-        my $*WANT := $want;
+        my $*WANT;
         if nqp::defined($want) {
+            $*WANT := %WANTMAP{$want} // $want;
             if nqp::istype($node, QAST::Want) {
-                self.coerce(self.as_jast(want($node, $want)), %WANTMAP{$want} // $want)
+                self.coerce(self.as_jast(want($node, $*WANT)))
             }
             else {
-                self.coerce({*}, %WANTMAP{$want} // $want)
+                self.coerce({*}, $*WANT)
             }
         }
         else {
