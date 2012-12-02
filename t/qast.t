@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(15);
+plan(17);
 
 qast_test(
     -> {
@@ -326,6 +326,68 @@ qast_test(
     },
     "begin\nfalse\ntrue\nend\n",
     "Use of unless with integer condition, void context, then/else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::IVal.new( :value(1) ),
+                        QAST::SVal.new( :value('Vilnius') ),
+                        QAST::SVal.new( :value('Riga') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::IVal.new( :value(0) ),
+                        QAST::SVal.new( :value('Vilnius') ),
+                        QAST::SVal.new( :value('Riga') )
+                    ))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Vilnius\nRiga\n",
+    "Use of if with integer condition, result context, then/else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unless'),
+                        QAST::IVal.new( :value(1) ),
+                        QAST::SVal.new( :value('Vilnius') ),
+                        QAST::SVal.new( :value('Riga') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unless'),
+                        QAST::IVal.new( :value(0) ),
+                        QAST::SVal.new( :value('Vilnius') ),
+                        QAST::SVal.new( :value('Riga') )
+                    ))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Riga\nVilnius\n",
+    "Use of unless with integer condition, result context, then/else");
 
 # ~~ Test Infrastructure ~~
 
