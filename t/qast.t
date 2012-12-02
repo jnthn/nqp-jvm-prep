@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(13);
+plan(15);
 
 qast_test(
     -> {
@@ -269,6 +269,64 @@ qast_test(
     "1001\n2001\n",
     "Can re-bind locals to new values");
 
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('begin') ) ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::IVal.new( :value(0) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('end') ) )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "begin\ntrue\nfalse\nend\n",
+    "Use of if with integer condition, void context, then/else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('begin') ) ),
+                QAST::Op.new(
+                    :op('unless'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('unless'),
+                    QAST::IVal.new( :value(0) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('end') ) )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "begin\nfalse\ntrue\nend\n",
+    "Use of unless with integer condition, void context, then/else");
+
 # ~~ Test Infrastructure ~~
 
 sub qast_test($qast_maker, $expected, $desc = '') {
@@ -284,7 +342,14 @@ sub qast_test($qast_maker, $expected, $desc = '') {
         'QAST2JASTOutput',
         '> QAST2JASTOutput.output');
     my $output := subst(slurp('QAST2JASTOutput.output'), /\r\n/, "\n", :global);
-    ok($output eq $expected, $desc);
+    if $output eq $expected {
+        ok(1, $desc);
+    }
+    else {
+        ok(0, $desc);
+        say("# got: $output");
+        say("# expected: $expected");
+    }
     #unlink('QAST2JASTOutput.dump');
     #unlink('QAST2JASTOutput.class');
     unlink('QAST2JASTOutput.output');
