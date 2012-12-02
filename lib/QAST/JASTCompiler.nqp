@@ -58,6 +58,15 @@ my @dup_ins := [
 sub dup_ins($type) {
     @dup_ins[$type]
 }
+my @pop_ins := [
+    JAST::Instruction.new( :op('pop') ),
+    JAST::Instruction.new( :op('pop2') ),
+    JAST::Instruction.new( :op('pop2') ),
+    JAST::Instruction.new( :op('pop') )
+];
+sub pop_ins($type) {
+    @pop_ins[$type]
+}
 
 # Mapping of QAST::Want type identifiers to $RT_*.
 my %WANTMAP := nqp::hash(
@@ -207,6 +216,109 @@ class QAST::OperationsJAST {
             result($il, $stack_out)
         }
     }
+}
+
+# Set of sequential statements
+QAST::OperationsJAST.add_core_op('stmts', -> $qastcomp, $op {
+    $qastcomp.as_post(QAST::Stmts.new( |@($op) ))
+});
+
+# Conditionals.
+for <if unless> -> $op_name {
+    QAST::OperationsJAST.add_core_op($op_name, -> $qastcomp, $op {
+        # Check operand count.
+        my $operands := +$op.list;
+        nqp::die("Operation '$op_name' needs either 2 or 3 operands")
+            if $operands < 2 || $operands > 3;
+        
+        # Create labels and a place to store the overall result.
+        my $if_id    := $qastcomp.unique($op_name);
+        my $else_lbl := JAST::Label.new(:name($if_id ~ '_else'));
+        my $end_lbl  := JAST::Label.new(:name($if_id ~ '_end'));
+        my $res_temp;
+        my $res_type;
+        
+        # Compile conditional expression and saving of it if we need to.
+        my $il := JAST::InstructionList.new();
+        my $cond := $qastcomp.as_jast($op[0]);
+        $il.append($cond.jast);
+        $*STACK.obtain($cond);
+        unless $*WANT == $RT_VOID || $operands == 3 {
+            $il.append(dup_ins($cond.type));
+            nqp::die("2-operand if/unless NYI");
+        }
+        
+        # Emit test.
+        my int $cond_type := $cond.type;
+        if $cond_type == $RT_INT {
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+        }
+        elsif $cond_type == $RT_NUM {
+            $il.append(JAST::PushNVal.new( :value(0.0) ));
+            $il.append(JAST::Instruction.new( :op('dcmpl') ));
+        }
+        elsif $cond_type == $RT_STR {
+            nqp::die("if/unless on str NYI");
+        }
+        else {
+            nqp::die("Invalid type for test while compiling conditional");
+        }
+        $il.append(JAST::Instruction.new($else_lbl,
+            :op($op_name eq 'if' ?? 'ifeq' !! 'ifne')));
+        
+        # Compile the "then".
+        my $then := $qastcomp.as_jast($op[1]);
+        $il.append($then.jast);
+        
+        # What comes next depends on whether there's an else.
+        if $operands == 3 {
+            # A little care needed here; we make sure we obtain the
+            # result of the then, but before we actually use it we
+            # compile the else branch so we can see what result type
+            # is needed. It's fine as we don't append the else JAST
+            # until later.
+            $*STACK.obtain($then);
+            my $else := $qastcomp.as_jast($op[2]);
+            if $*WANT == $RT_VOID {
+                $il.append(pop_ins($then.type));
+            }
+            else {
+                $res_type := $then.type == $else.type ?? $then.type !! $RT_OBJ;
+                $res_temp := fresh($res_type);
+                $il.append($qastcomp.coercion($then, $res_type));
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
+            }
+            
+            # Then branch needs to go to the loop end.
+            $il.append(JAST::Instruction.new( :op('goto'), $end_lbl ));
+            
+            # Emit the else branch.
+            $il.append($else_lbl);
+            $il.append($else.jast);
+            $*STACK.obtain($else);
+            if $*WANT == $RT_VOID {
+                $il.append(pop_ins($then.type));
+            }
+            else {
+                $il.append($qastcomp.coercion($then, $res_type));
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
+            }
+        }
+        else {
+            nqp::die("2-operand if NYI");
+        }
+        
+        # Add final label and load result if neded.
+        $il.append($end_lbl);
+        if $res_temp {
+            $il.append(JAST::Instruction.new( :op(load_ins($res_type)), $res_temp ));
+            result($il, $res_type);
+        }
+        else {
+            result($il, $RT_VOID);
+        }
+    });
 }
 
 QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
