@@ -922,13 +922,30 @@ class QAST::CompilerJAST {
         return $res if $desired eq $RT_VOID;
         my $got := $res.type;
         if $got == $desired {
-            # Exact match
             return $res;
         }
-        # XXX many more cases to come...
+        else {
+            my $coerced := JAST::InstructionList.new();
+            $coerced.append($res);
+            $*STACK.obtain($res);
+            $coerced.append(self.coercion($res, $desired));
+            return result($coerced, $desired);
+        }
+    }
+    
+    # Expects that the value in need of coercing has already been
+    # obtained (and thus is on the stack top). Produces instructions
+    # to coerce it. Doesn't touch the stack tracking.
+    method coercion($res, $desired) {
+        my $il := JAST::InstructionList.new();
+        my $got := $res.type;
+        if $got == $desired {
+            # Nothing to do.
+        }
         else {
             nqp::die("Coercion from type '$got' to '$desired' NYI");
         }
+        $il
     }
 
     # Emits an exception throw.
