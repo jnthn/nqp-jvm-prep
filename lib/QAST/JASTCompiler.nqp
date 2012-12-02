@@ -68,6 +68,13 @@ my %WANTMAP := nqp::hash(
     'P', $RT_OBJ, 'p', $RT_OBJ
 );
 
+# Utility for getting a fresh temporary by type.
+my @fresh_methods := ["fresh_o", "fresh_i", "fresh_n", "fresh_s"];
+sub fresh($type) {
+    my $meth := @fresh_methods[$type];
+    $*TA."$meth"()
+}
+
 class QAST::OperationsJAST {
     # Maps operations to code that will handle them. Hash of code.
     my %core_ops;
@@ -458,6 +465,81 @@ class QAST::CompilerJAST {
         method local_type($name) { %!local_types{$name} }
     }
     
+    my class BlockTempAlloc {
+        has int $!cur_i;
+        has int $!cur_n;
+        has int $!cur_s;
+        has int $!cur_o;
+        has @!free_i;
+        has @!free_n;
+        has @!free_s;
+        has @!free_o;
+        
+        method fresh_i() {
+            @!free_i ?? nqp::pop(@!free_i) !! "__TMP_I_" ~ $!cur_i++
+        }
+        
+        method fresh_n() {
+            @!free_n ?? nqp::pop(@!free_n) !! "__TMP_N_" ~ $!cur_n++
+        }
+        
+        method fresh_s() {
+            @!free_s ?? nqp::pop(@!free_s) !! "__TMP_S_" ~ $!cur_s++
+        }
+        
+        method fresh_o() {
+            @!free_o ?? nqp::pop(@!free_o) !! "__TMP_O_" ~ $!cur_o++
+        }
+        
+        method release(@i, @n, @s, @o) {
+            for @i { nqp::push(@!free_i, $_) }
+            for @n { nqp::push(@!free_n, $_) }
+            for @s { nqp::push(@!free_s, $_) }
+            for @o { nqp::push(@!free_o, $_) }
+        }
+        
+        method add_temps_to_method($jmeth) {
+            sub temps($prefix, $n, $type) {
+                my int $i := 0;
+                while $i < $n {
+                    $jmeth.add_local("$prefix$i", $type);
+                    $i++;
+                }
+            }
+            temps("__TMP_I_", $!cur_i, 'Long');
+            temps("__TMP_N_", $!cur_n, 'Double');
+            temps("__TMP_S_", $!cur_s, $TYPE_STR);
+            temps("__TMP_O_", $!cur_o, $TYPE_SMO);
+        }
+    }
+    
+    my class StmtTempAlloc {
+        has @!used_i;
+        has @!used_n;
+        has @!used_s;
+        has @!used_o;
+        
+        method fresh_i() {
+            nqp::push(@!used_i, $*BLOCK_TA.fresh_i())
+        }
+        
+        method fresh_n() {
+            nqp::push(@!used_n, $*BLOCK_TA.fresh_n())
+        }
+        
+        method fresh_s() {
+            nqp::push(@!used_s, $*BLOCK_TA.fresh_s())
+        }
+        
+        method fresh_o() {
+            nqp::push(@!used_o, $*BLOCK_TA.fresh_o())
+        }
+        
+        method release() {
+            $*BLOCK_TA.release(@!used_i, @!used_n, @!used_s, @!used_o)
+        }
+    }
+    
     method jast($source, *%adverbs) {
         # Wrap $source in a QAST::Block if it's not already a viable root node.
         $source := QAST::Block.new($source)
@@ -629,6 +711,10 @@ class QAST::CompilerJAST {
         # Always take ThreadContext as argument.
         $*JMETH.add_argument('tc', $TYPE_TC);
         
+        # Set up temporaries allocator.
+        my $*BLOCK_TA := BlockTempAlloc.new();
+        my $*TA := $*BLOCK_TA;
+        
         # Compile method body.
         my $body;
         my $*STACK := StackState.new();
@@ -642,6 +728,7 @@ class QAST::CompilerJAST {
         for $block.locals {
             $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
         }
+        $*BLOCK_TA.add_temps_to_method($*JMETH);
         
         # Add method body JAST.
         $*JMETH.append($body.jast);
@@ -656,8 +743,10 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::Stmt $node, :$want) {
-        # XXX needs allocator boundary
-        self.compile_all_the_stmts($node.list, $node.resultchild, :node($node.node))
+        my $*TA := StmtTempAlloc.new();
+        my $result := self.compile_all_the_stmts($node.list, $node.resultchild, :node($node.node));
+        $*TA.release();
+        $result
     }
     
     method compile_all_the_stmts(@stmts, $resultchild?, :$node) {
