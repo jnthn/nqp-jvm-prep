@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(17);
+plan(19);
 
 qast_test(
     -> {
@@ -388,6 +388,62 @@ qast_test(
     },
     "Riga\nVilnius\n",
     "Use of unless with integer condition, result context, then/else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('begin') ) ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('yes') ) )
+                ),
+                QAST::Op.new(
+                    :op('unless'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('oops') ) ),
+                ),
+                QAST::Op.new( :op('say'), QAST::SVal.new( :value('end') ) )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "begin\nyes\nend\n",
+    "Void context if/unless without else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::IVal.new( :value(42) ),
+                        QAST::IVal.new( :value(21) )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unless'),
+                        QAST::IVal.new( :value(42) ),
+                        QAST::IVal.new( :value(21) )
+                    ))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "21\n42\n",
+    "Result context if/unless without else");
 
 # ~~ Test Infrastructure ~~
 
