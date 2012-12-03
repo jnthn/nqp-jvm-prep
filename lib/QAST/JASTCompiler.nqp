@@ -473,6 +473,7 @@ class QAST::CompilerJAST {
         has @!jastmeth_names;
         has @!cuids;
         has @!names;
+        has @!lexical_name_lists;
         
         method BUILD() {
             $!cur_idx := 0;
@@ -480,13 +481,16 @@ class QAST::CompilerJAST {
             @!jastmeth_names := [];
             @!cuids := [];
             @!names := [];
+            @!lexical_name_lists := [];
         }
         
+        my $nolex := [[],[],[],[]];
         method register_method($jastmeth, $cuid, $name) {
             %!cuid_to_idx{$cuid} := $!cur_idx;
             nqp::push(@!jastmeth_names, $jastmeth.name);
             nqp::push(@!cuids, $cuid);
             nqp::push(@!names, $name);
+            nqp::push(@!lexical_name_lists, $nolex);
             $!cur_idx := $!cur_idx + 1;
         }
         
@@ -494,6 +498,10 @@ class QAST::CompilerJAST {
             nqp::existskey(%!cuid_to_idx, $cuid)
                 ?? %!cuid_to_idx{$cuid}
                 !! nqp::die("Unknown CUID '$cuid'")
+        }
+        
+        method set_lexical_names($cuid, @ilex, @nlex, @slex, @olex) {
+            @!lexical_name_lists[self.cuid_to_idx($cuid)] := [@ilex, @nlex, @slex, @olex];
         }
         
         method jastify() {
@@ -543,6 +551,7 @@ class QAST::CompilerJAST {
             $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CR ));
             
             # Add all the code-refs.
+            my $TYPE_STRARR := "[$TYPE_STR;";
             my int $i := 0;
             while $i < $!cur_idx {
                 $cra.append(JAST::Instruction.new( :op('dup') )); # The target array
@@ -553,9 +562,18 @@ class QAST::CompilerJAST {
                 $cra.append(JAST::PushIndex.new( :value($i) ));
                 $cra.append(JAST::PushSVal.new( :value(@!names[$i]) ));
                 $cra.append(JAST::PushSVal.new( :value(@!cuids[$i]) ));
+                for @!lexical_name_lists[$i] {
+                    if $_ {
+                        nqp::die("Cannot emit lexical names yet.");
+                    }
+                    else {
+                        $cra.append(JAST::Instruction.new( :op('aconst_null') ));
+                    }
+                }
                 $cra.append(JAST::Instruction.new( :op('invokespecial'),
                     $TYPE_CR, '<init>',
-                    'Void', $TYPE_CU, 'Integer', $TYPE_STR, $TYPE_STR ));
+                    'Void', $TYPE_CU, 'Integer', $TYPE_STR, $TYPE_STR,
+                    $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR));
                 $cra.append(JAST::Instruction.new( :op('aastore') )); # Push to the array
                 $i++;
             }
