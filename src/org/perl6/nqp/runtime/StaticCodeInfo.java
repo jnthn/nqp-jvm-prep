@@ -4,22 +4,22 @@ public class StaticCodeInfo {
 	/**
 	 * The compilation unit where the code lives.
 	 */
-	public CompilationUnit CompUnit;
+	public CompilationUnit compUnit;
 	
 	/**
 	 * The index of the code reference in the compilation unit.
 	 */
-	public int Idx;
+	public int idx;
 	
 	/**
 	 * The (human-readable) name of the code-ref.
 	 */
-	public String Name;
+	public String name;
 	
 	/**
 	 * The compilation-unit unique ID of the routine (from QAST cuuid).
 	 */
-	public String UniqueId;
+	public String uniqueId;
 	
 	/**
 	 * Names of the lexicals we have of each of the base types.
@@ -32,10 +32,10 @@ public class StaticCodeInfo {
 	public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
 			String[] iLexicalNames, String[] nLexicalNames,
 			String[] sLexicalNames, String[] oLexicalNames) {
-		this.CompUnit = compUnit;
-		this.Idx = idx;
-		this.Name = name;
-		this.UniqueId = uniqueId;
+		this.compUnit = compUnit;
+		this.idx = idx;
+		this.name = name;
+		this.uniqueId = uniqueId;
 		this.iLexicalNames = iLexicalNames;
 		this.nLexicalNames = nLexicalNames;
 		this.sLexicalNames = sLexicalNames;

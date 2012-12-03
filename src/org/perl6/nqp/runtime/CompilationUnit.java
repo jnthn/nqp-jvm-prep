@@ -42,7 +42,7 @@ public abstract class CompilationUnit {
 		/* Place code references into a lookup table by unique ID. */
 		CodeRef[] codeRefs = getCodeRefs();
 		for (CodeRef c : codeRefs)
-			cuidToCodeRef.put(c.staticInfo.UniqueId, c);
+			cuidToCodeRef.put(c.staticInfo.uniqueId, c);
 	}
 	
 	/**

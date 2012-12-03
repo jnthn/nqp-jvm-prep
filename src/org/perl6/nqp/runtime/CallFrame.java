@@ -9,15 +9,15 @@ public class CallFrame {
 	/**
 	 * Call site descriptor, describing the kinds of arguments being passed.
 	 */
-	public CallSiteDescriptor CallSite;
+	public CallSiteDescriptor callSite;
 	
 	/**
 	 * The next entry in the static (lexical) chain.
 	 */
-	public CallFrame Outer;
+	public CallFrame outer;
 	
 	/**
 	 * The next entry in the dynamic (caller) chain.
 	 */
-	public CallFrame Caller;
+	public CallFrame caller;
 }
