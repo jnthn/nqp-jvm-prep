@@ -7,32 +7,14 @@ import org.perl6.nqp.sixmodel.*;
  */
 public class CodeRef extends SixModelObject {
 	/**
-	 * The compilation unit where the code lives.
+	 * The static data about this code reference.
 	 */
-	public CompilationUnit CompUnit;
+	public StaticCodeInfo staticInfo;
 	
 	/**
-	 * The index of the code reference in the compilation unit.
+	 * The captured outer frame, if any.
 	 */
-	public int Idx;
-	
-	/**
-	 * The (human-readable) name of the code-ref.
-	 */
-	public String Name;
-	
-	/**
-	 * The compilation-unit unique ID of the routine (from QAST cuuid).
-	 */
-	public String UniqueId;
-	
-	/**
-	 * Names of the lexicals we have of each of the base types.
-	 */
-	public String[] iLexicalNames;
-	public String[] nLexicalNames;
-	public String[] sLexicalNames;
-	public String[] oLexicalNames;
+	public CallFrame outer;
 	
 	/**
 	 * Sets up the code-ref data structure.
@@ -40,13 +22,7 @@ public class CodeRef extends SixModelObject {
 	public CodeRef(CompilationUnit compUnit, int idx, String name, String uniqueId,
 			String[] iLexicalNames, String[] nLexicalNames,
 			String[] sLexicalNames, String[] oLexicalNames) {
-		this.CompUnit = compUnit;
-		this.Idx = idx;
-		this.Name = name;
-		this.UniqueId = uniqueId;
-		this.iLexicalNames = iLexicalNames;
-		this.nLexicalNames = nLexicalNames;
-		this.sLexicalNames = sLexicalNames;
-		this.oLexicalNames = oLexicalNames;
+		staticInfo = new StaticCodeInfo(compUnit, idx, name,uniqueId,
+				iLexicalNames, nLexicalNames, sLexicalNames, oLexicalNames);
 	}
 }

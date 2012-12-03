@@ -26,6 +26,7 @@ public final class Ops {
 		if (!(invokee instanceof CodeRef))
 			throw new Exception("Can only invoke direct CodeRefs so far");
 		CodeRef cr = (CodeRef)invokee;
-		cr.CompUnit.InvokeCode(tc, cr.Idx);
+		StaticCodeInfo sci = cr.staticInfo;
+		sci.CompUnit.InvokeCode(tc, sci.Idx);
 	}
 }
