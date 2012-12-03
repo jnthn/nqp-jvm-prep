@@ -564,7 +564,15 @@ class QAST::CompilerJAST {
                 $cra.append(JAST::PushSVal.new( :value(@!cuids[$i]) ));
                 for @!lexical_name_lists[$i] {
                     if $_ {
-                        nqp::die("Cannot emit lexical names yet.");
+                        $cra.append(JAST::PushIndex.new( :value(+$_) ));
+                        $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+                        my int $i := 0;
+                        for $_ {
+                            $cra.append(JAST::Instruction.new( :op('dup') ));
+                            $cra.append(JAST::PushIndex.new( :value($i++) ));
+                            $cra.append(JAST::PushSVal.new( :value($_) ));
+                            $cra.append(JAST::Instruction.new( :op('aastore') ));
+                        }
                     }
                     else {
                         $cra.append(JAST::Instruction.new( :op('aconst_null') ));
@@ -593,6 +601,7 @@ class QAST::CompilerJAST {
         has @!lexicals;         # QAST::Var nodes of declared lexicals
         has %!local_types;      # Mapping of local registers to type names
         has %!lexical_types;    # Mapping of lexical names to types
+        has @!lexical_names;    # List by type of lexial name lists.
         
         method new($qast, $outer) {
             my $obj := nqp::create(self);
@@ -608,6 +617,7 @@ class QAST::CompilerJAST {
             @!lexicals := nqp::list();
             %!local_types := nqp::hash();
             %!lexical_types := nqp::hash();
+            @!lexical_names := nqp::list([],[],[],[]);
         }
         
         method add_param($var) {
@@ -632,10 +642,12 @@ class QAST::CompilerJAST {
         
         method register_lexical($var, $reg?) {
             my $name := $var.name;
+            my $type := rttype_from_typeobj($var.returns);
             if nqp::existskey(%!lexical_types, $name) {
                 nqp::die("Lexical '$name' already declared");
             }
-            %!lexical_types{$name} := rttype_from_typeobj($var.returns);
+            %!lexical_types{$name} := $type;
+            nqp::push(@!lexical_names[$type], $name);
         }
         
         method register_local($var) {
@@ -653,6 +665,7 @@ class QAST::CompilerJAST {
         method locals() { @!locals }
         
         method local_type($name) { %!local_types{$name} }
+        method lexical_names_by_type() { @!lexical_names }
     }
     
     my class BlockTempAlloc {
@@ -919,6 +932,9 @@ class QAST::CompilerJAST {
             $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
         }
         $*BLOCK_TA.add_temps_to_method($*JMETH);
+        
+        # Stash lexical names.
+        $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
         
         # Add method body JAST.
         $*JMETH.append($body.jast);
