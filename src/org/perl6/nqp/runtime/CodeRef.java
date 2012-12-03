@@ -20,9 +20,9 @@ public class CodeRef extends SixModelObject {
 	 * Sets up the code-ref data structure.
 	 */
 	public CodeRef(CompilationUnit compUnit, int idx, String name, String uniqueId,
-			String[] iLexicalNames, String[] nLexicalNames,
-			String[] sLexicalNames, String[] oLexicalNames) {
+			String[] oLexicalNames, String[] iLexicalNames,
+			String[] nLexicalNames, String[] sLexicalNames) {
 		staticInfo = new StaticCodeInfo(compUnit, idx, name,uniqueId,
-				iLexicalNames, nLexicalNames, sLexicalNames, oLexicalNames);
+				oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames);
 	}
 }

@@ -43,14 +43,14 @@ public final class Ops {
 		}
 		
 		/* Set up lexical storage. */
+		if (sci.oLexicalNames != null)
+			cf.oLex = new SixModelObject[sci.oLexicalNames.length];
 		if (sci.iLexicalNames != null)
 			cf.iLex = new long[sci.iLexicalNames.length];
 		if (sci.nLexicalNames != null)
 			cf.nLex = new double[sci.nLexicalNames.length];
 		if (sci.sLexicalNames != null)
 			cf.sLex = new String[sci.sLexicalNames.length];
-		if (sci.oLexicalNames != null)
-			cf.oLex = new SixModelObject[sci.oLexicalNames.length];
 
 		// Current call frame becomes this new one.
 		tc.curFrame = cf;

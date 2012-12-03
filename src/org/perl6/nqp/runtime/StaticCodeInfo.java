@@ -24,21 +24,21 @@ public class StaticCodeInfo {
 	/**
 	 * Names of the lexicals we have of each of the base types.
 	 */
+	public String[] oLexicalNames;
 	public String[] iLexicalNames;
 	public String[] nLexicalNames;
 	public String[] sLexicalNames;
-	public String[] oLexicalNames;
 	
 	public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
-			String[] iLexicalNames, String[] nLexicalNames,
-			String[] sLexicalNames, String[] oLexicalNames) {
+			String[] oLexicalNames, String[] iLexicalNames,
+			String[] nLexicalNames, String[] sLexicalNames) {
 		this.compUnit = compUnit;
 		this.idx = idx;
 		this.name = name;
 		this.uniqueId = uniqueId;
+		this.oLexicalNames = oLexicalNames;
 		this.iLexicalNames = iLexicalNames;
 		this.nLexicalNames = nLexicalNames;
 		this.sLexicalNames = sLexicalNames;
-		this.oLexicalNames = oLexicalNames;
 	}
 }

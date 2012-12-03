@@ -26,8 +26,8 @@ public class CallFrame {
 	/**
 	 * Lexical storage, by type.
 	 */
+	public SixModelObject[] oLex;
 	public long[] iLex;
 	public double[] nLex;
 	public String[] sLex;
-	public SixModelObject[] oLex;
 }
