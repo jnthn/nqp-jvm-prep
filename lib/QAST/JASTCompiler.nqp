@@ -5,6 +5,7 @@ use QASTNode;
 my $TYPE_TC   := 'Lorg/perl6/nqp/runtime/ThreadContext;';
 my $TYPE_CU   := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
 my $TYPE_CR   := 'Lorg/perl6/nqp/runtime/CodeRef;';
+my $TYPE_CF   := 'Lorg/perl6/nqp/runtime/CallFrame;';
 my $TYPE_OPS  := 'Lorg/perl6/nqp/runtime/Ops;';
 my $TYPE_SMO  := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR  := 'Ljava/lang/String;';
@@ -39,6 +40,8 @@ my @rttypes := [$RT_OBJ, $RT_INT, $RT_NUM, $RT_STR];
 sub rttype_from_typeobj($typeobj) {
     @rttypes[pir::repr_get_primitive_type_spec__IP($typeobj)]
 }
+my @typechars := ['o', 'i', 'n', 's'];
+sub typechar($type_idx) { @typechars[$type_idx] }
 
 # Various typed instructions.
 my @store_ins := ['astore', 'lstore', 'dstore', 'astore'];
@@ -601,7 +604,8 @@ class QAST::CompilerJAST {
         has @!lexicals;         # QAST::Var nodes of declared lexicals
         has %!local_types;      # Mapping of local registers to type names
         has %!lexical_types;    # Mapping of lexical names to types
-        has @!lexical_names;    # List by type of lexial name lists.
+        has %!lexical_idxs;     # Lexical indexes (but have to know type too)
+        has @!lexical_names;    # List by type of lexial name lists
         
         method new($qast, $outer) {
             my $obj := nqp::create(self);
@@ -617,6 +621,7 @@ class QAST::CompilerJAST {
             @!lexicals := nqp::list();
             %!local_types := nqp::hash();
             %!lexical_types := nqp::hash();
+            %!lexical_idxs := nqp::hash();
             @!lexical_names := nqp::list([],[],[],[]);
         }
         
@@ -647,6 +652,7 @@ class QAST::CompilerJAST {
                 nqp::die("Lexical '$name' already declared");
             }
             %!lexical_types{$name} := $type;
+            %!lexical_idxs{$name} := +@!lexical_names[$type];
             nqp::push(@!lexical_names[$type], $name);
         }
         
@@ -665,6 +671,8 @@ class QAST::CompilerJAST {
         method locals() { @!locals }
         
         method local_type($name) { %!local_types{$name} }
+        method lexical_type($name) { %!lexical_types{$name} }
+        method lexical_idx($name) { %!lexical_idxs{$name} }
         method lexical_names_by_type() { @!lexical_names }
     }
     
@@ -936,6 +944,12 @@ class QAST::CompilerJAST {
         # Stash lexical names.
         $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
         
+        # Emit prelude.
+        $*JMETH.add_local('cf', $TYPE_CF);
+        $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
+        $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC, 'curFrame', $TYPE_CF ));
+        $*JMETH.append(JAST::Instruction.new( :op('astore'), 'cf' ));
+        
         # Add method body JAST.
         $*JMETH.append($body.jast);
         
@@ -1082,6 +1096,35 @@ class QAST::CompilerJAST {
             else {
                 nqp::die("Cannot reference undeclared local '$name'");
             }
+        }
+        elsif $scope eq 'lexical' {
+            my $type  := $*BLOCK.lexical_type($name);
+            my $jtype := jtype($type);
+            my $c     := typechar($type);
+            my $il    := JAST::InstructionList.new();
+            
+            # If binding, always want the thing we're binding evaluated.
+            if $*BINDVAL {
+                my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($type));
+                $il.append($valres.jast);
+                $*STACK.obtain($valres);
+            }
+            
+            # If it's declared in the local scope...
+            if nqp::defined($type) {
+                $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                $il.append(JAST::PushIndex.new( :value($*BLOCK.lexical_idx($name)) ));
+                $il.append($*BINDVAL
+                    ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "bindlex_$c", $jtype, $jtype, $TYPE_CF, 'Integer' )
+                    !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "getlex_$c", $jtype, $TYPE_CF, 'Integer' ));
+            }
+            else {
+                nqp::die("Lexical lookup in outers NYI");
+            }
+
+            return result($il, $type);
         }
         elsif $scope eq 'positional' {
             return self.as_jast_clear_bindval($*BINDVAL

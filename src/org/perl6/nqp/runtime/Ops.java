@@ -7,21 +7,33 @@ import org.perl6.nqp.sixmodel.*;
  * JVM makes available.
  */
 public final class Ops {
+	/* Various forms of say. */
 	public static long say(long v) {
 		System.out.println(v);
 		return v;
 	}
-	
 	public static double say(double v) {
 		System.out.println(v);
 		return v;
 	}
-	
 	public static String say(String v) {
 		System.out.println(v);
 		return v;
 	}
 	
+	/* Lexical lookup in current scope. */
+	public static long getlex_i(CallFrame cf, int i) { return cf.iLex[i]; }
+	public static double getlex_n(CallFrame cf, int i) { return cf.nLex[i]; }
+	public static String getlex_s(CallFrame cf, int i) { return cf.sLex[i]; }
+	public static SixModelObject getlex_o(CallFrame cf, int i) { return cf.oLex[i]; }
+	
+	/* Lexical binding in current scope. */
+	public static long bindlex_i(long v, CallFrame cf, int i) { cf.iLex[i] = v; return v; }
+	public static double bindlex_n(double v, CallFrame cf, int i) { cf.nLex[i] = v; return v; }
+	public static String bindlex_s(String v, CallFrame cf, int i) { cf.sLex[i] = v; return v; }
+	public static SixModelObject bindlex_o(SixModelObject v, CallFrame cf, int i) { cf.oLex[i] = v; return v; }
+	
+	/* Invocation. */
 	public static void invoke(ThreadContext tc, SixModelObject invokee) throws Exception {
 		// Get the code ref.
 		if (!(invokee instanceof CodeRef))
