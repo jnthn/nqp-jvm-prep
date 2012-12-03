@@ -1065,14 +1065,13 @@ class QAST::CompilerJAST {
     }
     
     method coerce($res, $desired) {
-        return $res if $desired eq $RT_VOID;
         my $got := $res.type;
         if $got == $desired {
             return $res;
         }
         else {
             my $coerced := JAST::InstructionList.new();
-            $coerced.append($res);
+            $coerced.append($res.jast);
             $*STACK.obtain($res);
             $coerced.append(self.coercion($res, $desired));
             return result($coerced, $desired);
@@ -1087,6 +1086,9 @@ class QAST::CompilerJAST {
         my $got := $res.type;
         if $got == $desired {
             # Nothing to do.
+        }
+        elsif $desired == $RT_VOID {
+            $il.append(pop_ins($got));
         }
         else {
             nqp::die("Coercion from type '$got' to '$desired' NYI");
