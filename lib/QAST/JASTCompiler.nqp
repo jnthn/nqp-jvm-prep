@@ -350,6 +350,32 @@ for <if unless> -> $op_name {
     });
 }
 
+QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("The 'ifnull' op expects two children");
+    }
+    
+    # Compile the expression.
+    my $il   := JAST::InstructionList.new();
+    my $expr := $qastcomp.as_jast($op[0], :want($RT_OBJ));
+    $il.append($expr.jast);
+    
+    # Emit null check.
+    my $lbl := JAST::Label.new( :name($qastcomp.unique('ifnull_')) );
+    $*STACK.obtain($expr);
+    $il.append(JAST::Instruction.new( :op('dup') ));
+    $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
+    
+    # Emit "then" part.
+    $il.append(JAST::Instruction.new( :op('pop') ));
+    my $then := $qastcomp.as_jast($op[1], :want($RT_OBJ));
+    $il.append($then.jast);
+    $*STACK.obtain($then);
+    $il.append($lbl);
+    
+    result($il, $RT_OBJ);
+});
+
 QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
     if +@($node) != 1 {
         nqp::die("Operation 'say' expects 1 operand");
@@ -432,6 +458,11 @@ QAST::OperationsJAST.map_classlib_core_op('acos_n', $TYPE_MATH, 'acos', [$RT_NUM
 QAST::OperationsJAST.map_classlib_core_op('tan_n', $TYPE_MATH, 'tan', [$RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_classlib_core_op('atan_n', $TYPE_MATH, 'atan', [$RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_classlib_core_op('atan2_n', $TYPE_MATH, 'atan', [$RT_NUM, $RT_NUM], $RT_NUM);
+
+# object opcodes
+QAST::OperationsJAST.map_jvm_core_op('null', 'aconst_null', [], $RT_OBJ);
+QAST::OperationsJAST.map_jvm_core_op('null_s', 'aconst_null', [], $RT_STR);
+
 
 class QAST::CompilerJAST {
     # Responsible for handling issues around code references, building the
