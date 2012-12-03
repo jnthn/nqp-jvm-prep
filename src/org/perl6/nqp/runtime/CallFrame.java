@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import org.perl6.nqp.sixmodel.SixModelObject;
+
 /**
  * Represents a call frame that is to be or is currently executing, and holds
  * state relating to it. Call frames are created by the caller and arguments
@@ -20,4 +22,12 @@ public class CallFrame {
 	 * The next entry in the dynamic (caller) chain.
 	 */
 	public CallFrame caller;
+	
+	/**
+	 * Lexical storage, by type.
+	 */
+	public long[] iLex;
+	public double[] nLex;
+	public String[] sLex;
+	public SixModelObject[] oLex;
 }
