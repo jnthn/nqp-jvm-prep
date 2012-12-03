@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(19);
+plan(20);
 
 qast_test(
     -> {
@@ -444,6 +444,29 @@ qast_test(
     },
     "21\n42\n",
     "Result context if/unless without else");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('ifnull'),
+                QAST::Op.new( :op('null') ),
+                QAST::Stmts.new(
+                    QAST::Op.new(
+                        :op('say'),
+                        QAST::SVal.new( :value('cookies') )
+                    ),
+                    QAST::Op.new( :op('null') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "cookies\n",
+    "Simple test for ifnull and null");
 
 # ~~ Test Infrastructure ~~
 
