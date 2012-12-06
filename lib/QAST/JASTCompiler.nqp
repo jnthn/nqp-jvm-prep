@@ -1162,12 +1162,45 @@ class QAST::CompilerJAST {
             }
         }
         elsif $scope eq 'lexical' {
-            my $type  := $*BLOCK.lexical_type($name);
+            # See if it's declared in the local scope.
+            my int $local  := 0;
+            my int $scopes := 0;
+            my $type       := $*BLOCK.lexical_type($name);
+            my $declarer;
+            if nqp::defined($type) {
+                # It is. Nothing more to do.
+                $local := 1;
+            }
+            else {
+                # Try to find it in an outer scope.
+                my int $i := 1;
+                my $cur_block := $*BLOCK.outer();
+                while nqp::istype($cur_block, BlockInfo) {
+                    $type := $cur_block.lexical_type($name);
+                    if nqp::defined($type) {
+                        $scopes := $i;
+                        $declarer := $cur_block;
+                        $cur_block := NQPMu;
+                    }
+                    else {
+                        $cur_block := $cur_block.outer();
+                        $i++;
+                    }
+                }
+            }
+            
+            # If we didn't find it anywhere, it musta been explicitly marked as
+            # lexical. Take the type from .returns.
+            unless $local || $scopes {
+                $type := $node.returns;
+            }
+            
+            # Map type in a couple of ways we'll need.
             my $jtype := jtype($type);
             my $c     := typechar($type);
-            my $il    := JAST::InstructionList.new();
             
             # If binding, always want the thing we're binding evaluated.
+            my $il := JAST::InstructionList.new();
             if $*BINDVAL {
                 my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($type));
                 $il.append($valres.jast);
@@ -1175,7 +1208,7 @@ class QAST::CompilerJAST {
             }
             
             # If it's declared in the local scope...
-            if nqp::defined($type) {
+            if $local {
                 $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
                 $il.append(JAST::PushIndex.new( :value($*BLOCK.lexical_idx($name)) ));
                 $il.append($*BINDVAL
@@ -1184,8 +1217,22 @@ class QAST::CompilerJAST {
                     !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "getlex_$c", $jtype, $TYPE_CF, 'Integer' ));
             }
+            
+            # Otherwise it may we a known number of scopes out.
+            elsif $scopes {
+                $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                $il.append(JAST::PushIndex.new( :value($declarer.lexical_idx($name)) ));
+                $il.append(JAST::PushIndex.new( :value($scopes) ));
+                $il.append($*BINDVAL
+                    ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "bindlex_{$c}_si", $jtype, $jtype, $TYPE_CF, 'Integer', 'Integer' )
+                    !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "getlex_{$c}_si", $jtype, $TYPE_CF, 'Integer', 'Integer' ));
+            }
+            
+            # Otherwise, named lookup.
             else {
-                nqp::die("Lexical lookup in outers NYI");
+                nqp::die("Lexical lookup by name NYI");
             }
 
             return result($il, $type);

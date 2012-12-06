@@ -33,6 +33,54 @@ public final class Ops {
 	public static String bindlex_s(String v, CallFrame cf, int i) { cf.sLex[i] = v; return v; }
 	public static SixModelObject bindlex_o(SixModelObject v, CallFrame cf, int i) { cf.oLex[i] = v; return v; }
 	
+	/* Lexical lookup in outer scope. */
+	public static long getlex_i_si(CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		return cf.iLex[i];
+	}
+	public static double getlex_n_si(CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		return cf.nLex[i];
+	}
+	public static String getlex_s_si(CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		return cf.sLex[i];
+	}
+	public static SixModelObject getlex_o_si(CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		return cf.oLex[i];
+	}
+	
+	/* Lexical binding in outer scope. */
+	public static long bindlex_i_sc(long v, CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		cf.iLex[i] = v; 
+		return v; 
+	}
+	public static double bindlex_n_sc(double v, CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		cf.nLex[i] = v; 
+		return v; 
+	}
+	public static String bindlex_s_sc(String v, CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		cf.sLex[i] = v; 
+		return v; 
+	}
+	public static SixModelObject bindlex_o_sc(SixModelObject v, CallFrame cf, int i, int si) {
+		while (si-- > 0)
+			cf = cf.outer;
+		cf.oLex[i] = v; 
+		return v; 
+	}
+	
 	/* Invocation. */
 	public static void invoke(ThreadContext tc, SixModelObject invokee) throws Exception {
 		// Get the code ref.
