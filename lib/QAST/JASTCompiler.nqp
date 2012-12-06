@@ -477,6 +477,7 @@ class QAST::CompilerJAST {
         has @!cuids;
         has @!names;
         has @!lexical_name_lists;
+        has @!outer_mappings;
         
         method BUILD() {
             $!cur_idx := 0;
@@ -485,6 +486,7 @@ class QAST::CompilerJAST {
             @!cuids := [];
             @!names := [];
             @!lexical_name_lists := [];
+            @!outer_mappings := [];
         }
         
         my $nolex := [[],[],[],[]];
@@ -507,9 +509,15 @@ class QAST::CompilerJAST {
             @!lexical_name_lists[self.cuid_to_idx($cuid)] := [@ilex, @nlex, @slex, @olex];
         }
         
+        method set_outer($cuid, $outer_cuid) {
+            nqp::push(@!outer_mappings,
+                [self.cuid_to_idx($cuid), self.cuid_to_idx($outer_cuid)]);
+        }
+        
         method jastify() {
             self.invoker();
             self.coderef_array();
+            self.outer_map_array();
         }
         
         # Emits the invocation switch statement.
@@ -592,6 +600,30 @@ class QAST::CompilerJAST {
             # Return the array. Add method to class.
             $cra.append(JAST::Instruction.new( :op('areturn') ));
             $*JCLASS.add_method($cra);
+        }
+        
+        # Emits the mappings of code refs to their outer code refs.
+        method outer_map_array() {
+            my $oma := JAST::Method.new( :name('getOuterMap'), :returns("[Integer;"), :static(0) );
+            
+            # Create array.
+            $oma.append(JAST::PushIndex.new( :value(2 * @!outer_mappings) ));
+            $oma.append(JAST::Instruction.new( :op('newarray'), 'Integer' ));
+            
+            # Add all the mappings.
+            my int $i := 0;
+            for @!outer_mappings -> @m {
+                for @m {
+                    $oma.append(JAST::Instruction.new( :op('dup') ));
+                    $oma.append(JAST::PushIndex.new( :value($i++) ));
+                    $oma.append(JAST::PushIndex.new( :value($_) ));
+                    $oma.append(JAST::Instruction.new( :op('iastore') ));
+                }
+            }
+            
+            # Return the array. Add method to class.
+            $oma.append(JAST::Instruction.new( :op('areturn') ));
+            $*JCLASS.add_method($oma);
         }
     }
     
@@ -926,6 +958,11 @@ class QAST::CompilerJAST {
             # are handled out of band).
             my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Void'), :static(0) );
             $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
+            
+            # Set outer if we have one.
+            if nqp::istype($outer, BlockInfo) {
+                $*CODEREFS.set_outer($node.cuid, $outer.qast.cuid);
+            }
             
             # Always take ThreadContext as argument.
             $*JMETH.add_argument('tc', $TYPE_TC);

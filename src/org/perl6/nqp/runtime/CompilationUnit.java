@@ -43,6 +43,12 @@ public abstract class CompilationUnit {
 		CodeRef[] codeRefs = getCodeRefs();
 		for (CodeRef c : codeRefs)
 			cuidToCodeRef.put(c.staticInfo.uniqueId, c);
+		
+		/* Wire up outer relationships. */
+		int[] outerMap = getOuterMap();
+		for (int i = 0; i < outerMap.length; i += 2)
+			codeRefs[outerMap[i]].staticInfo.outerStaticInfo = 
+				codeRefs[outerMap[i + 1]].staticInfo; 
 	}
 	
 	/**
@@ -67,4 +73,10 @@ public abstract class CompilationUnit {
 	 * data structures.
 	 */
 	public abstract CodeRef[] getCodeRefs();
+	
+	/**
+	 * Code generation emits this to describe outer relationships between
+	 * the static code references.
+	 */
+	public abstract int[] getOuterMap();
 }

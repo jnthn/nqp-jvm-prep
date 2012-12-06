@@ -22,6 +22,11 @@ public class StaticCodeInfo {
 	public String uniqueId;
 	
 	/**
+	 * Static outer.
+	 */
+	public StaticCodeInfo outerStaticInfo;
+	
+	/**
 	 * Names of the lexicals we have of each of the base types.
 	 */
 	public String[] oLexicalNames;
