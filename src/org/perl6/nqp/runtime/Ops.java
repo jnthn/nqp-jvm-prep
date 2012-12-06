@@ -132,4 +132,19 @@ public final class Ops {
 		// Do the invocation.
 		sci.compUnit.InvokeCode(tc, sci.idx);
 	}
+	
+	/* Basic 6model operations. */
+	public static SixModelObject what(SixModelObject o) {
+		return o.st.WHAT;
+	}
+	public static SixModelObject how(SixModelObject o) {
+		return o.st.HOW;
+	}
+	public static SixModelObject who(SixModelObject o) {
+		return o.st.WHO;
+	}
+	public static SixModelObject setwho(SixModelObject o, SixModelObject who) {
+		o.st.WHO = who;
+		return o;
+	}
 }

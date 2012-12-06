@@ -465,7 +465,10 @@ QAST::OperationsJAST.map_classlib_core_op('atan2_n', $TYPE_MATH, 'atan', [$RT_NU
 # object opcodes
 QAST::OperationsJAST.map_jvm_core_op('null', 'aconst_null', [], $RT_OBJ);
 QAST::OperationsJAST.map_jvm_core_op('null_s', 'aconst_null', [], $RT_STR);
-
+QAST::OperationsJAST.map_classlib_core_op('what', $TYPE_OPS, 'what', [$RT_OBJ], $RT_OBJ);
+QAST::OperationsJAST.map_classlib_core_op('how', $TYPE_OPS, 'how', [$RT_OBJ], $RT_OBJ);
+QAST::OperationsJAST.map_classlib_core_op('who', $TYPE_OPS, 'who', [$RT_OBJ], $RT_OBJ);
+QAST::OperationsJAST.map_classlib_core_op('setwho', $TYPE_OPS, 'setwho', [$RT_OBJ, $RT_OBJ], $RT_OBJ);
 
 class QAST::CompilerJAST {
     # Responsible for handling issues around code references, building the
