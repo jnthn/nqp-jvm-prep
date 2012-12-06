@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(22);
+plan(23);
 
 qast_test(
     -> {
@@ -516,6 +516,37 @@ qast_test(
             )))
     },
     "The panda is the cucumber's enemy\n",
+    "Lexical string variable in outer scope");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('$msg'), :scope('lexical'), :decl('var'), :returns(str) ),
+                    QAST::SVal.new( :value("Oops") )
+                ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('bind'),
+                            QAST::Var.new( :name('$msg'), :scope('lexical') ),
+                            QAST::SVal.new( :value("Everybody loves Magical Trevor") )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Var.new( :name('$msg'), :scope('lexical') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Everybody loves Magical Trevor\n",
     "Lexical string variable in outer scope");
 
 # ~~ Test Infrastructure ~~
