@@ -6,12 +6,13 @@ being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
 what is needed.
 
 Minimal QAST to JAST Compiler
-* null, ifnull
 * loops
 * Basic 6model ops
-* QAST::Var lexicals and contextuals
+* QAST::Var contextuals
 * Parameters
 * Return values
+* Closures
+* Named lexical lookup fallback
 
 6model
 * Design work for REPRs
@@ -23,7 +24,6 @@ Minimal QAST to JAST Compiler
 
 Runtime
 * Design work for calling conventions
-* Design work for lexicals and callframes
 * Implement required call frame and arg passing bits
 * Implement ops for lexical handling
 * Implement various 6model ops
