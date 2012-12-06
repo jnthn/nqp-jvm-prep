@@ -24,6 +24,11 @@ public class CallFrame {
 	public CallFrame caller;
 	
 	/**
+	 * The code reference for this frame.
+	 */
+	public CodeRef codeRef;
+	
+	/**
 	 * Lexical storage, by type.
 	 */
 	public SixModelObject[] oLex;

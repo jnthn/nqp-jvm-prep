@@ -43,6 +43,7 @@ public final class Ops {
 		
 		// Create a new call frame and set caller.
 		CallFrame cf = new CallFrame();
+		cf.codeRef = cr;
 		cf.caller = tc.curFrame;
 		
 		// Set outer; if it's explicitly in the code ref, use that. If not,
@@ -51,7 +52,20 @@ public final class Ops {
 			cf.outer = cr.outer;
 		}
 		else {
-			/* TODO */
+			StaticCodeInfo wanted = cr.staticInfo.outerStaticInfo;
+			if (wanted != null) {
+				CallFrame checkFrame = tc.curFrame;
+				while (checkFrame != null) {
+					if (checkFrame.codeRef.staticInfo == wanted) {
+						cf.outer = checkFrame;
+						break;
+					}
+					checkFrame = checkFrame.caller;
+				}
+				if (cf.outer == null)
+					throw new Exception("Could not locate an outer for code reference " +
+						cr.staticInfo.uniqueId);
+			}
 		}
 		
 		/* Set up lexical storage. */
