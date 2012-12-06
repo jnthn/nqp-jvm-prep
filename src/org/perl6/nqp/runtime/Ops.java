@@ -56,25 +56,25 @@ public final class Ops {
 	}
 	
 	/* Lexical binding in outer scope. */
-	public static long bindlex_i_sc(long v, CallFrame cf, int i, int si) {
+	public static long bindlex_i_si(long v, CallFrame cf, int i, int si) {
 		while (si-- > 0)
 			cf = cf.outer;
 		cf.iLex[i] = v; 
 		return v; 
 	}
-	public static double bindlex_n_sc(double v, CallFrame cf, int i, int si) {
+	public static double bindlex_n_si(double v, CallFrame cf, int i, int si) {
 		while (si-- > 0)
 			cf = cf.outer;
 		cf.nLex[i] = v; 
 		return v; 
 	}
-	public static String bindlex_s_sc(String v, CallFrame cf, int i, int si) {
+	public static String bindlex_s_si(String v, CallFrame cf, int i, int si) {
 		while (si-- > 0)
 			cf = cf.outer;
 		cf.sLex[i] = v; 
 		return v; 
 	}
-	public static SixModelObject bindlex_o_sc(SixModelObject v, CallFrame cf, int i, int si) {
+	public static SixModelObject bindlex_o_si(SixModelObject v, CallFrame cf, int i, int si) {
 		while (si-- > 0)
 			cf = cf.outer;
 		cf.oLex[i] = v; 
