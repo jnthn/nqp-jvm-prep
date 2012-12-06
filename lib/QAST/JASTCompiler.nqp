@@ -806,6 +806,11 @@ class QAST::CompilerJAST {
                 }
             }
             
+            # Ensure we didn't fail due to an empty or undersized stack.
+            if +@!stack < +@things {
+                nqp::die("Cannot obtain from empty or undersized stack");
+            }
+            
             # Otherwise, we need to do a little more work.
             nqp::die("Unhandled re-use of stack items");
         }
