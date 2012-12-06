@@ -913,54 +913,76 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::Block $node, :$want) {
-        # Block gets fresh BlockInfo.
-        my $*BINDVAL  := 0;
-        my $outer     := try $*BLOCK;
-        my $block     := BlockInfo.new($node, $outer);
-        
-        # Create JAST method and register it with the block's compilation unit
-        # unique ID and name. (Note, always void return here as return values
-        # are handled out of band).
-        my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Void'), :static(0) );
-        $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
-        
-        # Always take ThreadContext as argument.
-        $*JMETH.add_argument('tc', $TYPE_TC);
-        
-        # Set up temporaries allocator.
-        my $*BLOCK_TA := BlockTempAlloc.new();
-        my $*TA := $*BLOCK_TA;
-        
-        # Compile method body.
-        my $body;
-        my $*STACK := StackState.new();
+        # Do block compilation in a tested block, so we can produce a result based on
+        # the containing block's stack.
         {
-            my $*BLOCK := $block;
-            my $*WANT;
-            $body := self.compile_all_the_stmts($node.list, :node($node.node));
+            # Block gets fresh BlockInfo.
+            my $*BINDVAL  := 0;
+            my $outer     := try $*BLOCK;
+            my $block     := BlockInfo.new($node, $outer);
+            
+            # Create JAST method and register it with the block's compilation unit
+            # unique ID and name. (Note, always void return here as return values
+            # are handled out of band).
+            my $*JMETH := JAST::Method.new( :name(self.unique('qb_')), :returns('Void'), :static(0) );
+            $*CODEREFS.register_method($*JMETH, $node.cuid, $node.name);
+            
+            # Always take ThreadContext as argument.
+            $*JMETH.add_argument('tc', $TYPE_TC);
+            
+            # Set up temporaries allocator.
+            my $*BLOCK_TA := BlockTempAlloc.new();
+            my $*TA := $*BLOCK_TA;
+            
+            # Compile method body.
+            my $body;
+            my $*STACK := StackState.new();
+            {
+                my $*BLOCK := $block;
+                my $*WANT;
+                $body := self.compile_all_the_stmts($node.list, :node($node.node));
+            }
+            
+            # Add all the locals.
+            for $block.locals {
+                $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
+            }
+            $*BLOCK_TA.add_temps_to_method($*JMETH);
+            
+            # Stash lexical names.
+            $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
+            
+            # Emit prelude.
+            $*JMETH.add_local('cf', $TYPE_CF);
+            $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
+            $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC, 'curFrame', $TYPE_CF ));
+            $*JMETH.append(JAST::Instruction.new( :op('astore'), 'cf' ));
+            
+            # Add method body JAST.
+            $*JMETH.append($body.jast);
+            
+            # Finalize method and add it to the class.
+            $*JMETH.append(JAST::Instruction.new( :op('return') ));
+            $*JCLASS.add_method($*JMETH);
         }
-        
-        # Add all the locals.
-        for $block.locals {
-            $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
+
+        # Now go by block type for producing a result; also need to special-case
+        # the top-level, where we need no result.
+        if nqp::istype((try $*STACK), StackState) {
+            my $blocktype := $node.blocktype;
+            if $blocktype eq '' || $blocktype eq 'declaration' {
+                return self.as_jast(QAST::BVal.new( :value($node) ));
+            }
+            elsif $blocktype eq 'immediate' {
+                return self.as_jast(QAST::Op.new( :op('call'), QAST::BVal.new( :value($node) ) ));
+            }
+            elsif $blocktype eq 'raw' {
+                return self.as_jast(QAST::Op.new( :op('null') ));
+            }
+            else {
+                nqp::die("Unrecognized block type '$blocktype'");
+            }
         }
-        $*BLOCK_TA.add_temps_to_method($*JMETH);
-        
-        # Stash lexical names.
-        $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
-        
-        # Emit prelude.
-        $*JMETH.add_local('cf', $TYPE_CF);
-        $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
-        $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC, 'curFrame', $TYPE_CF ));
-        $*JMETH.append(JAST::Instruction.new( :op('astore'), 'cf' ));
-        
-        # Add method body JAST.
-        $*JMETH.append($body.jast);
-        
-        # Finalize method and add it to the class.
-        $*JMETH.append(JAST::Instruction.new( :op('return') ));
-        $*JCLASS.add_method($*JMETH);
     }
     
     multi method as_jast(QAST::Stmts $node, :$want) {
