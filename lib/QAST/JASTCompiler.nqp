@@ -7,6 +7,7 @@ my $TYPE_CU   := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
 my $TYPE_CR   := 'Lorg/perl6/nqp/runtime/CodeRef;';
 my $TYPE_CF   := 'Lorg/perl6/nqp/runtime/CallFrame;';
 my $TYPE_OPS  := 'Lorg/perl6/nqp/runtime/Ops;';
+my $TYPE_CSD  := 'Lorg/perl6/nqp/runtime/CallSiteDescriptor;';
 my $TYPE_SMO  := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR  := 'Ljava/lang/String;';
 my $TYPE_MATH := 'Ljava/lang/Math;';
@@ -86,6 +87,14 @@ sub fresh($type) {
     my $meth := @fresh_methods[$type];
     $*TA."$meth"()
 }
+
+# Argument flags.
+my $ARG_OBJ   := 0;
+my $ARG_INT   := 1;
+my $ARG_NUM   := 2;
+my $ARG_STR   := 4;
+my $ARG_NAMED := 8;
+my $ARG_FLAT  := 16;
 
 class QAST::OperationsJAST {
     # Maps operations to code that will handle them. Hash of code.
@@ -412,6 +421,7 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     # Process the arguments, computing each of them. Note we don't worry about
     # putting them into the buffers just yet (that'll happen in the next step).
     my @arg_results;
+    my @callsite;
     my int $o_args := 0;
     my int $i_args := 0;
     my int $n_args := 0;
@@ -437,6 +447,7 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
         else {
             nqp::die("Invalid argument type");
         }
+        nqp::push(@callsite, $type);
         $i++;
     }
 
@@ -476,9 +487,13 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
             jtype($type), "[" ~ jtype($type), 'Integer' ));
     }
     
+    # Get callsite index (which may create it if needed).
+    my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite);
+    
     # Emit call and put result value on the stack.
     $*STACK.obtain($invokee);
-    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO ));
+    $il.append(JAST::PushIndex.new( :value($cs_idx) ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
     $il.append(JAST::Instruction.new( :op('aconst_null') )); # XXX to do: return values
     
     result($il, $RT_OBJ)
@@ -552,6 +567,8 @@ class QAST::CompilerJAST {
         has @!lexical_name_lists;
         has @!outer_mappings;
         has @!max_arg_lists;
+        has @!callsites;
+        has %!callsite_map;
         
         method BUILD() {
             $!cur_idx := 0;
@@ -562,6 +579,8 @@ class QAST::CompilerJAST {
             @!lexical_name_lists := [];
             @!max_arg_lists := [];
             @!outer_mappings := [];
+            @!callsites := [];
+            %!callsite_map := [];
         }
         
         my $nolex := [[],[],[],[]];
@@ -595,10 +614,24 @@ class QAST::CompilerJAST {
                 [self.cuid_to_idx($cuid), self.cuid_to_idx($outer_cuid)]);
         }
         
+        method get_callsite_idx(@arg_types) {
+            my $key := nqp::join("-", @arg_types);
+            if nqp::existskey(%!callsite_map, $key) {
+                return %!callsite_map{$key};
+            }
+            else {
+                my $idx := +@!callsites;
+                nqp::push(@!callsites, @arg_types);
+                %!callsite_map{$key} := $idx;
+                return $idx;
+            }
+        }
+        
         method jastify() {
             self.invoker();
             self.coderef_array();
             self.outer_map_array();
+            self.callsites();
         }
         
         # Emits the invocation switch statement.
@@ -710,6 +743,40 @@ class QAST::CompilerJAST {
             # Return the array. Add method to class.
             $oma.append(JAST::Instruction.new( :op('areturn') ));
             $*JCLASS.add_method($oma);
+        }
+        
+        method callsites() {
+            my $csa := JAST::Method.new( :name('getCallSites'), :returns("[$TYPE_CSD"), :static(0) );
+            
+            # Create array.
+            $csa.append(JAST::PushIndex.new( :value(+@!callsites) ));
+            $csa.append(JAST::Instruction.new( :op('newarray'), $TYPE_CSD ));
+            
+            # All all the callsites
+            my int $i := 0;
+            for @!callsites -> @cs {
+                $csa.append(JAST::Instruction.new( :op('dup') )); # Target array.
+                $csa.append(JAST::PushIndex.new( :value($i++) )); # Index.
+                $csa.append(JAST::Instruction.new( :op('new'), $TYPE_CSD ));
+                $csa.append(JAST::Instruction.new( :op('dup') ));
+                $csa.append(JAST::PushIndex.new( :value(+@cs) ));
+                $csa.append(JAST::Instruction.new( :op('newarray'), 'Byte' ));
+                my int $j := 0;
+                for @cs {
+                    $csa.append(JAST::Instruction.new( :op('dup') ));
+                    $csa.append(JAST::PushIndex.new( :value($j++) ));
+                    $csa.append(JAST::PushIndex.new( :value($_) ));
+                    $csa.append(JAST::Instruction.new( :op('i2b') ));
+                    $csa.append(JAST::Instruction.new( :op('bastore') ));
+                }
+                $csa.append(JAST::Instruction.new( :op('invokespecial'),
+                    $TYPE_CSD, '<init>', 'Void', '[Byte'));
+                $csa.append(JAST::Instruction.new( :op('aastore') ));
+            }
+            
+            # Return the array. Add method to class.
+            $csa.append(JAST::Instruction.new( :op('areturn') ));
+            $*JCLASS.add_method($csa);
         }
     }
     

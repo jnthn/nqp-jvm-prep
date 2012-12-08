@@ -14,6 +14,11 @@ public abstract class CompilationUnit {
 	private Map<String, CodeRef> cuidToCodeRef = new HashMap<String, CodeRef>(); 
 	
 	/**
+	 * Call site descriptors used in this compilation unit.
+	 */
+	public CallSiteDescriptor[] callSites;
+	
+	/**
 	 * When a compilation unit is serving as the main entry point, its main
 	 * method will just delegate to here. Thus this needs to trigger some
 	 * initialization work and then invoke the required main code.
@@ -49,6 +54,9 @@ public abstract class CompilationUnit {
 		for (int i = 0; i < outerMap.length; i += 2)
 			codeRefs[outerMap[i]].staticInfo.outerStaticInfo = 
 				codeRefs[outerMap[i + 1]].staticInfo; 
+		
+		/* Build callsite descriptors. */
+		callSites = getCallSites();
 	}
 	
 	/**
@@ -79,4 +87,10 @@ public abstract class CompilationUnit {
 	 * the static code references.
 	 */
 	public abstract int[] getOuterMap();
+	
+	/**
+	 * Code generation emits this to build up all the callsite descriptors
+	 * that are used by this compilation unit.
+	 */
+	public abstract CallSiteDescriptor[] getCallSites();
 }

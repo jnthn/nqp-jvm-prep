@@ -88,17 +88,21 @@ public final class Ops {
 	public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
 	
 	/* Invocation. */
-	public static void invoke(ThreadContext tc, SixModelObject invokee) throws Exception {
+	public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
 		// Get the code ref.
 		if (!(invokee instanceof CodeRef))
 			throw new Exception("Can only invoke direct CodeRefs so far");
 		CodeRef cr = (CodeRef)invokee;
 		StaticCodeInfo sci = cr.staticInfo;
 		
-		// Create a new call frame and set caller.
+		// Create a new call frame and set caller and callsite.
+		// TODO Find a smarter way to do this without all the pointer chasing.
 		CallFrame cf = new CallFrame();
 		cf.codeRef = cr;
-		cf.caller = tc.curFrame;
+		if (tc.curFrame != null) {
+			cf.caller = tc.curFrame;
+			cf.callSite = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
+		}
 		
 		// Set outer; if it's explicitly in the code ref, use that. If not,
 		// go hunting for one.

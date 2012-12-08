@@ -15,4 +15,8 @@ public class CallSiteDescriptor {
 	
 	/* Flags, one per argument that is being passed. */
 	public byte[] argFlags;
+	
+	public CallSiteDescriptor(byte[] flags) {
+		argFlags = flags;
+	}
 }
