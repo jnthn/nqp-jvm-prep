@@ -14,6 +14,11 @@ public abstract class CompilationUnit {
 	private Map<String, CodeRef> cuidToCodeRef = new HashMap<String, CodeRef>(); 
 	
 	/**
+	 * Array of all code references.
+	 */
+	public CodeRef[] codeRefs;
+	
+	/**
 	 * Call site descriptors used in this compilation unit.
 	 */
 	public CallSiteDescriptor[] callSites;
@@ -24,10 +29,10 @@ public abstract class CompilationUnit {
 	 * initialization work and then invoke the required main code.
 	 */
 	public static void enterFromMain(Class<?> cuType, int entryCodeRefIdx, String[] argv)
-			throws InstantiationException, IllegalAccessException {
+			throws Exception {
 		CompilationUnit cu = setupCompilationUnit(cuType);
 		ThreadContext tc = new ThreadContext();
-		cu.InvokeCode(tc, entryCodeRefIdx);
+		Ops.invoke(tc, cu.codeRefs[entryCodeRefIdx], -1);
 	}
 	
 	/**
@@ -45,7 +50,7 @@ public abstract class CompilationUnit {
 	 */
 	private void initializeCompilationUnit() {
 		/* Place code references into a lookup table by unique ID. */
-		CodeRef[] codeRefs = getCodeRefs();
+		codeRefs = getCodeRefs();
 		for (CodeRef c : codeRefs)
 			cuidToCodeRef.put(c.staticInfo.uniqueId, c);
 		
