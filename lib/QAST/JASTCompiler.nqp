@@ -846,6 +846,7 @@ class QAST::CompilerJAST {
                     $sp++, $tp++;
                 }
                 if $ok {
+                    for @things { nqp::pop(@!stack) }
                     return 1;
                 }
             }
