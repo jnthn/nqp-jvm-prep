@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(23);
+plan(24);
 
 qast_test(
     -> {
@@ -548,6 +548,32 @@ qast_test(
     },
     "Everybody loves Magical Trevor\n",
     "Lexical string variable in outer scope");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&say'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('a_param'), :scope('local'), :decl('param'), :returns(str) )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&say'),                    
+                    QAST::SVal.new( :value("Ailse 2! That's the place where we sell the Ragu!") )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Ailse 2! That's the place where we sell the Ragu!\n",
+    "Passing a string argument");
 
 # ~~ Test Infrastructure ~~
 
