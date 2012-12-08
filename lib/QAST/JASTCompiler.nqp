@@ -671,10 +671,10 @@ class QAST::CompilerJAST {
         
         method add_param($var) {
             if $var.scope eq 'local' {
-                self.register_local($var);
+                self.add_local($var);
             }
             else {
-                self.register_lexical($var);
+                self.add_lexical($var);
             }
             @!params[+@!params] := $var;
         }
