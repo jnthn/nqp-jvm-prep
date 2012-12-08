@@ -95,6 +95,8 @@ my $ARG_NUM   := 2;
 my $ARG_STR   := 4;
 my $ARG_NAMED := 8;
 my $ARG_FLAT  := 16;
+my @arg_types := [$ARG_OBJ, $ARG_INT, $ARG_NUM, $ARG_STR];
+sub arg_type($t) { @arg_types[$t] }
 
 class QAST::OperationsJAST {
     # Maps operations to code that will handle them. Hash of code.
@@ -447,7 +449,7 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
         else {
             nqp::die("Invalid argument type");
         }
-        nqp::push(@callsite, $type);
+        nqp::push(@callsite, arg_type($type));
         $i++;
     }
 
@@ -1376,7 +1378,7 @@ class QAST::CompilerJAST {
             # If we didn't find it anywhere, it musta been explicitly marked as
             # lexical. Take the type from .returns.
             unless $local || $scopes {
-                $type := $node.returns;
+                $type := rttype_from_typeobj($node.returns);
             }
             
             # Map type in a couple of ways we'll need.
