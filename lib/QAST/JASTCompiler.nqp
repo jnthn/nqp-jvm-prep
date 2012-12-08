@@ -1181,6 +1181,66 @@ class QAST::CompilerJAST {
             }
             $*JMETH.append(JAST::Instruction.new( :op('astore'), 'cf' ));
             
+            # Analyze parameters to get count of required/optional and make sure
+            # all is in order.
+            my int $pos_required := 0;
+            my int $pos_accepted := 0;
+            for $block.params {
+                if $_.named {
+                    nqp::die("Named parameters NYI");
+                }
+                elsif $_.slurpy {
+                    nqp::die("Slurpy parameters NYI");
+                }
+                elsif $_.default {
+                    $pos_accepted++;
+                    nqp::die("Optional parameters NYI");
+                }
+                else {
+                    if $pos_accepted != $pos_required {
+                        nqp::die("Optional positionals must come after all required positionals");
+                    }
+                    $pos_accepted++;
+                    $pos_required++;
+                }
+            }
+            
+            # Emit arity check instruction.
+            $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+            $*JMETH.append(JAST::PushIndex.new( :value($pos_required) ));
+            $*JMETH.append(JAST::PushIndex.new( :value($pos_accepted) ));
+            $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "checkarity", 'Void', $TYPE_CF, 'Integer', 'Integer' ));
+            
+            # Emit instructions to load each parameter.
+            my int $param_idx := 0;
+            for $block.params {
+                if $_.named {
+                    nqp::die("Named parameters NYI");
+                }
+                elsif $_.slurpy {
+                    nqp::die("Slurpy parameters NYI");
+                }
+                elsif $_.default {
+                    nqp::die("Optional parameters NYI");
+                }
+                else {
+                    my $type := rttype_from_typeobj($_.returns);
+                    my $jt   := jtype($type);
+                    my $tc   := typechar($type);
+                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $*JMETH.append(JAST::PushIndex.new( :value($param_idx) ));
+                    $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        "posparam_$tc", $jt, $TYPE_CF, 'Integer' ));
+                    if $_.scope eq 'local' {
+                        $*JMETH.append(JAST::Instruction.new( :op('astore'), $_.name ));
+                    }
+                    else {
+                        nqp::die("Lexical parameters NYI");
+                    }
+                }
+            }
+            
             # Add method body JAST.
             $*JMETH.append($body.jast);
             

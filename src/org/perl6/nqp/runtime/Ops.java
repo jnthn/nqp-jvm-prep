@@ -87,7 +87,46 @@ public final class Ops {
 	public static void arg(String v, String[] args, int i) { args[i] = v; }
 	public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
 	
+	/* Invocation arity check. */
+	public static void checkarity(CallFrame cf, int required, int accepted) throws Exception {
+		int positionals = cf.callSite.numPositionals;
+		if (positionals < required || positionals > accepted)
+			throw new Exception("Wrong number of arguments passed; expected " +
+				required + ".." + accepted + ", but got " + positionals);
+	}
+	
+	/* Positional parameter fetching. */
+	public static SixModelObject posparam_o(CallFrame cf, int idx) throws Exception {
+		CallSiteDescriptor cs = cf.callSite;
+		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
+			return cf.caller.oArg[cs.argIdx[idx]];
+		else
+			throw new Exception("Argument coercion NYI");
+	}
+	public static long posparam_i(CallFrame cf, int idx) throws Exception {
+		CallSiteDescriptor cs = cf.callSite;
+		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_INT)
+			return cf.caller.iArg[cs.argIdx[idx]];
+		else
+			throw new Exception("Argument coercion NYI");
+	}
+	public static double posparam_n(CallFrame cf, int idx) throws Exception {
+		CallSiteDescriptor cs = cf.callSite;
+		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_NUM)
+			return cf.caller.nArg[cs.argIdx[idx]];
+		else
+			throw new Exception("Argument coercion NYI");
+	}
+	public static String posparam_s(CallFrame cf, int idx) throws Exception {
+		CallSiteDescriptor cs = cf.callSite;
+		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_STR)
+			return cf.caller.sArg[cs.argIdx[idx]];
+		else
+			throw new Exception("Argument coercion NYI");
+	}
+	
 	/* Invocation. */
+	private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0]);
 	public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
 		// Get the code ref.
 		if (!(invokee instanceof CodeRef))
@@ -102,6 +141,9 @@ public final class Ops {
 		if (tc.curFrame != null) {
 			cf.caller = tc.curFrame;
 			cf.callSite = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
+		}
+		else {
+			cf.callSite = emptyCallSite;
 		}
 		
 		// Set outer; if it's explicitly in the code ref, use that. If not,
