@@ -9,7 +9,9 @@ Minimal QAST to JAST Compiler
 * loops
 * Basic 6model ops
 * QAST::Var contextuals
-* Parameters
+* Optional parameters
+* Named arguments/parameters
+* Slurpy parameters
 * Return values
 * Closures
 * Named lexical lookup fallback
@@ -23,9 +25,11 @@ Minimal QAST to JAST Compiler
 * P6opaque REPR
 
 Runtime
-* Design work for calling conventions
-* Implement required call frame and arg passing bits
-* Implement ops for lexical handling
+* Implementation of optional params
+* Implementation of named args/params
+* Implementation of flattening args
+* Implementation of slurpy params
+* Implement ops for lexical handling byname
 * Implement various 6model ops
 
 SCs
