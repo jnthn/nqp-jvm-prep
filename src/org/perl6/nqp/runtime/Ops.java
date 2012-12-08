@@ -81,6 +81,12 @@ public final class Ops {
 		return v; 
 	}
 	
+	/* Argument setting. */
+	public static void arg(long v, long[] args, int i) { args[i] = v; }
+	public static void arg(double v, double[] args, int i) { args[i] = v; }
+	public static void arg(String v, String[] args, int i) { args[i] = v; }
+	public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
+	
 	/* Invocation. */
 	public static void invoke(ThreadContext tc, SixModelObject invokee) throws Exception {
 		// Get the code ref.

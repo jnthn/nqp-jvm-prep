@@ -394,17 +394,87 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
 
 # Calling
 QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
-    if +@($node) != 1 {
-        nqp::die("Operation 'call' supports neither names nor arguments");
-    }
-
     my $il := JAST::InstructionList.new();
     $il.append(JAST::Instruction.new( :op('aload_1') ));
     
     # Get thing to call.
-    my $invokee := $qastcomp.as_jast($node[0]);
-    nqp::die("First 'call' operand must be object") unless $invokee.type == $RT_OBJ;
+    my $invokee;
+    if $node.name ne "" {
+        $invokee := $qastcomp.as_jast(QAST::Var.new( :name($node.name), :scope('lexical') ));
+    }
+    else {
+        nqp::die("A 'call' node must have a name or at least one child") unless +@($node) >= 1;
+        $invokee := $qastcomp.as_jast($node[0]);
+    }
+    nqp::die("Invocation target must be an object") unless $invokee.type == $RT_OBJ;
     $il.append($invokee.jast);
+    
+    # Process the arguments, computing each of them. Note we don't worry about
+    # putting them into the buffers just yet (that'll happen in the next step).
+    my @arg_results;
+    my int $o_args := 0;
+    my int $i_args := 0;
+    my int $n_args := 0;
+    my int $s_args := 0;
+    my int $i := $node.name eq "" ?? 1 !! 0;
+    while $i < +@($node) {
+        my $arg_res := $qastcomp.as_jast($node[$i]);
+        $il.append($arg_res.jast);
+        nqp::push(@arg_results, $arg_res);
+        my int $type := $arg_res.type;
+        if $type == $RT_OBJ {
+            $o_args++;
+        }
+        elsif $type == $RT_INT {
+            $i_args++;
+        }
+        elsif $type == $RT_NUM {
+            $n_args++;
+        }
+        elsif $type == $RT_STR {
+            $s_args++;
+        }
+        else {
+            nqp::die("Invalid argument type");
+        }
+        $i++;
+    }
+
+    # If we have more arguments than the maximums for this block so far, update
+    # those maximums.
+    if $o_args > $*MAX_ARGS_O { $*MAX_ARGS_O := $o_args }
+    if $i_args > $*MAX_ARGS_I { $*MAX_ARGS_I := $i_args }
+    if $n_args > $*MAX_ARGS_N { $*MAX_ARGS_N := $n_args }
+    if $s_args > $*MAX_ARGS_S { $*MAX_ARGS_S := $s_args }
+    
+    # Get the arguments onto the stack and copy them into the needed buffers.
+    $*STACK.obtain(|@arg_results);
+    while @arg_results {
+        my $arg_res := nqp::pop(@arg_results);
+        my int $type := $arg_res.type;
+        if $type == $RT_OBJ {
+            $o_args--;
+            $il.append(JAST::Instruction.new( :op('aload'), 'oArgs' ));
+            $il.append(JAST::PushIndex.new( :value($o_args) ));
+        }
+        elsif $type == $RT_INT {
+            $i_args--;
+            $il.append(JAST::Instruction.new( :op('aload'), 'iArgs' ));
+            $il.append(JAST::PushIndex.new( :value($i_args) ));
+        }
+        elsif $type == $RT_NUM {
+            $n_args--;
+            $il.append(JAST::Instruction.new( :op('aload'), 'nArgs' ));
+            $il.append(JAST::PushIndex.new( :value($n_args) ));
+        }
+        elsif $type == $RT_STR {
+            $s_args--;
+            $il.append(JAST::Instruction.new( :op('aload'), 'sArgs' ));
+            $il.append(JAST::PushIndex.new( :value($s_args) ));
+        }
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'arg', 'Void',
+            jtype($type), "[" ~ jtype($type), 'Integer' ));
+    }
     
     # Emit call and put result value on the stack.
     $*STACK.obtain($invokee);
@@ -514,6 +584,10 @@ class QAST::CompilerJAST {
         
         method set_lexical_names($cuid, @ilex, @nlex, @slex, @olex) {
             @!lexical_name_lists[self.cuid_to_idx($cuid)] := [@ilex, @nlex, @slex, @olex];
+        }
+        
+        method set_max_args($cuid, $iMax, $nMax, $sMax, $oMax) {
+            @!max_arg_lists[self.cuid_to_idx($cuid)] := [$oMax, $iMax, $nMax, $sMax];
         }
         
         method set_outer($cuid, $outer_cuid) {
@@ -986,11 +1060,16 @@ class QAST::CompilerJAST {
             
             # Compile method body.
             my $body;
+            my $*MAX_ARGS_I := 0;
+            my $*MAX_ARGS_N := 0;
+            my $*MAX_ARGS_S := 0;
+            my $*MAX_ARGS_O := 0;
             my $*STACK := StackState.new();
             {
                 my $*BLOCK := $block;
                 my $*WANT;
                 $body := self.compile_all_the_stmts($node.list, :node($node.node));
+                $*CODEREFS.set_max_args($node.cuid, $*MAX_ARGS_I, $*MAX_ARGS_N, $*MAX_ARGS_S, $*MAX_ARGS_O);
             }
             
             # Add all the locals.
@@ -1002,10 +1081,35 @@ class QAST::CompilerJAST {
             # Stash lexical names.
             $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
             
-            # Emit prelude.
+            # Emit prelude. This populates the cf (callframe) field as well as having
+            # locals for the argument buffers for easy/fast access later on.
             $*JMETH.add_local('cf', $TYPE_CF);
             $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
             $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC, 'curFrame', $TYPE_CF ));
+            if $*MAX_ARGS_O {
+                $*JMETH.add_local('oArgs', "[$TYPE_SMO");
+                $*JMETH.append(JAST::Instruction.new( :op('dup') ));
+                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'oArg', "[$TYPE_SMO" ));
+                $*JMETH.append(JAST::Instruction.new( :op('astore'), 'oArgs' ));
+            }
+            if $*MAX_ARGS_I {
+                $*JMETH.add_local('iArgs', "[Ljava/lang/Long;");
+                $*JMETH.append(JAST::Instruction.new( :op('dup') ));
+                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'iArg', "[Ljava/lang/Long;" ));
+                $*JMETH.append(JAST::Instruction.new( :op('astore'), 'iArgs' ));
+            }
+            if $*MAX_ARGS_N {
+                $*JMETH.add_local('nArgs', "[Double");
+                $*JMETH.append(JAST::Instruction.new( :op('dup') ));
+                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'nArg', "[Double" ));
+                $*JMETH.append(JAST::Instruction.new( :op('astore'), 'nArgs' ));
+            }
+            if $*MAX_ARGS_S {
+                $*JMETH.add_local('sArgs', "[$TYPE_STR");
+                $*JMETH.append(JAST::Instruction.new( :op('dup') ));
+                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'sArg', "[$TYPE_STR" ));
+                $*JMETH.append(JAST::Instruction.new( :op('astore'), 'sArgs' ));
+            }
             $*JMETH.append(JAST::Instruction.new( :op('astore'), 'cf' ));
             
             # Add method body JAST.
