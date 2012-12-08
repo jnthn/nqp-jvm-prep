@@ -29,6 +29,14 @@ public class StaticCodeInfo {
 	public StaticCodeInfo outerStaticInfo;
 	
 	/**
+	 * Maximum argument counts by argument type.
+	 */
+	public short oMaxArgs;
+	public short iMaxArgs;
+	public short nMaxArgs;
+	public short sMaxArgs;
+	
+	/**
 	 * Names of the lexicals we have of each of the base types.
 	 */
 	public String[] oLexicalNames;
@@ -90,7 +98,8 @@ public class StaticCodeInfo {
 	 */
 	public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
 			String[] oLexicalNames, String[] iLexicalNames,
-			String[] nLexicalNames, String[] sLexicalNames) {
+			String[] nLexicalNames, String[] sLexicalNames,
+			short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs) {
 		this.compUnit = compUnit;
 		this.idx = idx;
 		this.name = name;
@@ -99,5 +108,9 @@ public class StaticCodeInfo {
 		this.iLexicalNames = iLexicalNames;
 		this.nLexicalNames = nLexicalNames;
 		this.sLexicalNames = sLexicalNames;
+		this.oMaxArgs = oMaxArgs;
+		this.iMaxArgs = iMaxArgs;
+		this.nMaxArgs = nMaxArgs;
+		this.sMaxArgs = sMaxArgs;
 	}
 }

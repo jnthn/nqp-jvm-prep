@@ -116,7 +116,7 @@ public final class Ops {
 			}
 		}
 		
-		/* Set up lexical storage. */
+		// Set up lexical storage.
 		if (sci.oLexicalNames != null)
 			cf.oLex = new SixModelObject[sci.oLexicalNames.length];
 		if (sci.iLexicalNames != null)
@@ -126,6 +126,16 @@ public final class Ops {
 		if (sci.sLexicalNames != null)
 			cf.sLex = new String[sci.sLexicalNames.length];
 
+		// Set up argument buffers. */
+		if (sci.oMaxArgs > 0)
+			cf.oArg = new SixModelObject[sci.oMaxArgs];
+		if (sci.iMaxArgs > 0)
+			cf.iArg = new long[sci.iMaxArgs];
+		if (sci.nMaxArgs > 0)
+			cf.nArg = new double[sci.nMaxArgs];
+		if (sci.sMaxArgs > 0)
+			cf.sArg = new String[sci.sMaxArgs];
+		
 		// Current call frame becomes this new one.
 		tc.curFrame = cf;
 		

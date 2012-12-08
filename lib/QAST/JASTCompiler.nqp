@@ -481,6 +481,7 @@ class QAST::CompilerJAST {
         has @!names;
         has @!lexical_name_lists;
         has @!outer_mappings;
+        has @!max_arg_lists;
         
         method BUILD() {
             $!cur_idx := 0;
@@ -489,16 +490,19 @@ class QAST::CompilerJAST {
             @!cuids := [];
             @!names := [];
             @!lexical_name_lists := [];
+            @!max_arg_lists := [];
             @!outer_mappings := [];
         }
         
         my $nolex := [[],[],[],[]];
+        my $noargs := [0,0,0,0];
         method register_method($jastmeth, $cuid, $name) {
             %!cuid_to_idx{$cuid} := $!cur_idx;
             nqp::push(@!jastmeth_names, $jastmeth.name);
             nqp::push(@!cuids, $cuid);
             nqp::push(@!names, $name);
             nqp::push(@!lexical_name_lists, $nolex);
+            nqp::push(@!max_arg_lists, $noargs);
             $!cur_idx := $!cur_idx + 1;
         }
         
@@ -592,10 +596,15 @@ class QAST::CompilerJAST {
                         $cra.append(JAST::Instruction.new( :op('aconst_null') ));
                     }
                 }
+                for @!max_arg_lists[$i] {
+                    $cra.append(JAST::PushIndex.new( :value($_) ));
+                    $cra.append(JAST::Instruction.new( :op('i2s') ));
+                }
                 $cra.append(JAST::Instruction.new( :op('invokespecial'),
                     $TYPE_CR, '<init>',
                     'Void', $TYPE_CU, 'Integer', $TYPE_STR, $TYPE_STR,
-                    $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR));
+                    $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR,
+                    'Short', 'Short', 'Short', 'Short'));
                 $cra.append(JAST::Instruction.new( :op('aastore') )); # Push to the array
                 $i++;
             }

@@ -35,4 +35,18 @@ public class CallFrame {
 	public long[] iLex;
 	public double[] nLex;
 	public String[] sLex;
+	
+	/**
+	 * Argument passing buffers, by type. Note that a future optimization could
+	 * unify these with the lexical storage, tacking them on the end. But for
+	 * now, simplicity is more helpful. Note that these are allocated once as
+	 * needed at the point of entry to a block and re-used for all of the
+	 * invocations that it makes. They are sized according to the maximum
+	 * number of arguments of the type that are passed by any call in the
+	 * block.
+	 */
+	public SixModelObject[] oArg;
+	public long[] iArg;
+	public double[] nArg;
+	public String[] sArg;
 }
