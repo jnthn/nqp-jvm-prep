@@ -125,6 +125,58 @@ public final class Ops {
 			throw new Exception("Argument coercion NYI");
 	}
 	
+	/* Return value setting. */
+	public static void return_o(SixModelObject v, CallFrame cf) {
+		CallFrame caller = cf.caller;
+		if (caller != null) {
+			caller.oRet = v;
+			caller.retType = CallFrame.RET_OBJ;
+		}
+	}
+	public static void return_i(long v, CallFrame cf) {
+		CallFrame caller = cf.caller;
+		if (caller != null) {
+			caller.iRet = v;
+			caller.retType = CallFrame.RET_INT;
+		}
+	}
+	public static void return_n(double v, CallFrame cf) {
+		CallFrame caller = cf.caller;
+		if (caller != null) {
+			caller.nRet = v;
+			caller.retType = CallFrame.RET_NUM;
+		}
+	}
+	public static void return_s(String v, CallFrame cf) {
+		CallFrame caller = cf.caller;
+		if (caller != null) {
+			caller.sRet = v;
+			caller.retType = CallFrame.RET_STR;
+		}
+	}
+	
+	/* Get returned result. */
+	public static SixModelObject result_o(CallFrame cf) {
+		if (cf.retType == CallFrame.RET_OBJ)
+			return cf.oRet;
+		throw new RuntimeException("Return value coercion NYI");
+	}
+	public static long result_i(CallFrame cf) {
+		if (cf.retType == CallFrame.RET_INT)
+			return cf.iRet;
+		throw new RuntimeException("Return value coercion NYI");
+	}
+	public static double result_n(CallFrame cf) {
+		if (cf.retType == CallFrame.RET_NUM)
+			return cf.nRet;
+		throw new RuntimeException("Return value coercion NYI");
+	}
+	public static String result_s(CallFrame cf) {
+		if (cf.retType == CallFrame.RET_STR)
+			return cf.sRet;
+		throw new RuntimeException("Return value coercion NYI");
+	}
+	
 	/* Invocation. */
 	private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0]);
 	public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
@@ -193,6 +245,9 @@ public final class Ops {
 		
 		// Do the invocation.
 		sci.compUnit.InvokeCode(tc, sci.idx);
+		
+		// Set curFrame back to caller.
+		tc.curFrame = cf.caller;
 	}
 	
 	/* Basic 6model operations. */

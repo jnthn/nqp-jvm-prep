@@ -49,4 +49,22 @@ public class CallFrame {
 	public long[] iArg;
 	public double[] nArg;
 	public String[] sArg;
+	
+	/**
+	 * Return value storage. Note that all the basic types are available and
+	 * the returning function picks the one it has.
+	 */
+	public SixModelObject oRet;
+	public long iRet;
+	public double nRet;
+	public String sRet;
+	
+	/**
+	 * Flag for what return type we have.
+	 */
+	public byte retType;
+	public static final int RET_OBJ = 0;
+	public static final int RET_INT = 1;
+	public static final int RET_NUM = 2;
+	public static final int RET_STR = 3;
 }
