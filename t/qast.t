@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(24);
+plan(25);
 
 qast_test(
     -> {
@@ -502,7 +502,7 @@ qast_test(
                     QAST::SVal.new( :value("The panda is the cucumber's enemy") )
                 ),
                 QAST::Op.new(
-                    :op('call'),
+                    :op('call'), :returns(str),
                     QAST::Block.new(
                         QAST::Op.new(
                             :op('say'),
@@ -528,7 +528,7 @@ qast_test(
                     QAST::SVal.new( :value("Oops") )
                 ),
                 QAST::Op.new(
-                    :op('call'),
+                    :op('call'), :returns(str),
                     QAST::Block.new(
                         QAST::Op.new(
                             :op('bind'),
@@ -562,7 +562,7 @@ qast_test(
                             QAST::Var.new( :name('a_param'), :scope('local'), :decl('param'), :returns(str) )
                         ))),
                 QAST::Op.new(
-                    :op('call'), :name('&say'),                    
+                    :op('call'), :name('&say'), :returns(str),
                     QAST::SVal.new( :value("Ailse 2! That's the place where we sell the Ragu!") )
                 )));
         QAST::CompUnit.new(
@@ -574,6 +574,36 @@ qast_test(
     },
     "Ailse 2! That's the place where we sell the Ragu!\n",
     "Passing a string argument");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&add'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('add_i'),
+                            QAST::Var.new( :name('a_param'), :scope('local'), :decl('param'), :returns(int) ),
+                            QAST::Var.new( :name('b_param'), :scope('local'), :decl('param'), :returns(int) )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('call'), :name('&add'), :returns(int),
+                        QAST::IVal.new( :value(39) ),
+                        QAST::IVal.new( :value(3) )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "42\n",
+    "Integer arguments and return value");
 
 # ~~ Test Infrastructure ~~
 
