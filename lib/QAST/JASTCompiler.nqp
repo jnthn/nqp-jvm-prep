@@ -1252,6 +1252,7 @@ class QAST::CompilerJAST {
                         nqp::die("Lexical parameters NYI");
                     }
                 }
+                $param_idx++;
             }
             
             # Add method body JAST.
