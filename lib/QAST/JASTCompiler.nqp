@@ -1162,9 +1162,9 @@ class QAST::CompilerJAST {
                 $*JMETH.append(JAST::Instruction.new( :op('astore'), 'oArgs' ));
             }
             if $*MAX_ARGS_I {
-                $*JMETH.add_local('iArgs', "[Ljava/lang/Long;");
+                $*JMETH.add_local('iArgs', "[J");
                 $*JMETH.append(JAST::Instruction.new( :op('dup') ));
-                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'iArg', "[Ljava/lang/Long;" ));
+                $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_CF, 'iArg', "[J" ));
                 $*JMETH.append(JAST::Instruction.new( :op('astore'), 'iArgs' ));
             }
             if $*MAX_ARGS_N {
@@ -1233,7 +1233,7 @@ class QAST::CompilerJAST {
                     $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                         "posparam_$tc", $jt, $TYPE_CF, 'Integer' ));
                     if $_.scope eq 'local' {
-                        $*JMETH.append(JAST::Instruction.new( :op('astore'), $_.name ));
+                        $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
                     }
                     else {
                         nqp::die("Lexical parameters NYI");
