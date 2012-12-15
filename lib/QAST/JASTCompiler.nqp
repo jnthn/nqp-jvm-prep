@@ -486,19 +486,28 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
             $il.append(JAST::PushIndex.new( :value($s_args) ));
         }
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'arg', 'Void',
-            jtype($type), "[" ~ jtype($type), 'Integer' ));
+            jtype($type), $type == $RT_INT ?? "[J" !! "[" ~ jtype($type), 'Integer' ));
     }
     
     # Get callsite index (which may create it if needed).
     my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite);
     
-    # Emit call and put result value on the stack.
+    # Emit call.
     $*STACK.obtain($invokee);
     $il.append(JAST::PushIndex.new( :value($cs_idx) ));
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
-    $il.append(JAST::Instruction.new( :op('aconst_null') )); # XXX to do: return values
     
-    result($il, $RT_OBJ)
+    # Load result onto the stack, unless in void context.
+    if $*WANT != $RT_VOID {
+        my $rtype := rttype_from_typeobj($node.returns);
+        $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            'result_' ~ typechar($rtype), jtype($rtype), $TYPE_CF ));
+        result($il, $rtype)
+    }
+    else {
+        result($il, $RT_VOID)
+    }
 });
 
 # Binding
@@ -1083,7 +1092,11 @@ class QAST::CompilerJAST {
         # Compile and include main-time logic, if any, and then add a Java
         # main that will lead to its invocation.
         if nqp::defined($cu.main) {
-            my $main_block := QAST::Block.new( :blocktype('raw'), $cu.main );
+            my $main_block := QAST::Block.new(
+                :blocktype('raw'),
+                $cu.main,
+                QAST::Op.new( :op('null') )
+            );
             self.as_jast($main_block);
             my $main_meth := JAST::Method.new( :name('main'), :returns('Void') );
             $main_meth.add_argument('argv', "[$TYPE_STR");
@@ -1243,6 +1256,11 @@ class QAST::CompilerJAST {
             
             # Add method body JAST.
             $*JMETH.append($body.jast);
+            
+            # Emit return instruction.
+            $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+            $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                'return_' ~ typechar($body.type), 'Void', jtype($body.type), $TYPE_CF ));
             
             # Finalize method and add it to the class.
             $*JMETH.append(JAST::Instruction.new( :op('return') ));
