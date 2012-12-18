@@ -88,41 +88,41 @@ public final class Ops {
 	public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
 	
 	/* Invocation arity check. */
-	public static void checkarity(CallFrame cf, int required, int accepted) throws Exception {
+	public static void checkarity(CallFrame cf, int required, int accepted) {
 		int positionals = cf.callSite.numPositionals;
 		if (positionals < required || positionals > accepted)
-			throw new Exception("Wrong number of arguments passed; expected " +
+			throw new RuntimeException("Wrong number of arguments passed; expected " +
 				required + ".." + accepted + ", but got " + positionals);
 	}
 	
 	/* Positional parameter fetching. */
-	public static SixModelObject posparam_o(CallFrame cf, int idx) throws Exception {
+	public static SixModelObject posparam_o(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
 			return cf.caller.oArg[cs.argIdx[idx]];
 		else
-			throw new Exception("Argument coercion NYI");
+			throw new RuntimeException("Argument coercion NYI");
 	}
-	public static long posparam_i(CallFrame cf, int idx) throws Exception {
+	public static long posparam_i(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_INT)
 			return cf.caller.iArg[cs.argIdx[idx]];
 		else
-			throw new Exception("Argument coercion NYI");
+			throw new RuntimeException("Argument coercion NYI");
 	}
-	public static double posparam_n(CallFrame cf, int idx) throws Exception {
+	public static double posparam_n(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_NUM)
 			return cf.caller.nArg[cs.argIdx[idx]];
 		else
-			throw new Exception("Argument coercion NYI");
+			throw new RuntimeException("Argument coercion NYI");
 	}
-	public static String posparam_s(CallFrame cf, int idx) throws Exception {
+	public static String posparam_s(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_STR)
 			return cf.caller.sArg[cs.argIdx[idx]];
 		else
-			throw new Exception("Argument coercion NYI");
+			throw new RuntimeException("Argument coercion NYI");
 	}
 	
 	/* Return value setting. */
