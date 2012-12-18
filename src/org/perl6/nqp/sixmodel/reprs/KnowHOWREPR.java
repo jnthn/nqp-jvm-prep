@@ -6,11 +6,17 @@ import java.util.*;
 
 public class KnowHOWREPR extends REPR {
 	public SixModelObject TypeObjectFor(ThreadContext tc, SixModelObject HOW) {
-		return null;
+		STable st = new STable(this, HOW);
+	    SixModelObject obj = new KnowHOWREPRInstance();
+	    obj.st = st;
+	    st.WHAT = obj;
+	    return st.WHAT;
 	}
 
 	public SixModelObject Allocate(ThreadContext tc, STable st) {
-		return new KnowHOWREPRInstance();
+		KnowHOWREPRInstance obj = new KnowHOWREPRInstance();
+		obj.st = st;
+		return obj;
 	}
 
 	public void initialize(ThreadContext tc, STable st, SixModelObject obj_s) {

@@ -7,11 +7,17 @@ import org.perl6.nqp.sixmodel.SixModelObject;
 
 public class KnowHOWAttribute extends REPR {
 	public SixModelObject TypeObjectFor(ThreadContext tc, SixModelObject HOW) {
-		return null;
+	    STable st = new STable(this, HOW);
+	    SixModelObject obj = new KnowHOWAttributeInstance();
+	    obj.st = st;
+	    st.WHAT = obj;
+	    return st.WHAT;
 	}
 
 	public SixModelObject Allocate(ThreadContext tc, STable st) {
-		return new KnowHOWAttributeInstance();
+		KnowHOWAttributeInstance obj = new KnowHOWAttributeInstance();
+		obj.st = st;
+		return obj;
 	}
 
 	public void initialize(ThreadContext tc, STable st, SixModelObject obj) {

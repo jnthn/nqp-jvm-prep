@@ -6,6 +6,11 @@ import java.util.Map;
  * An STable (Shared Table) represents a given HOW/REPR pairing, and thus a type.
  */
 public class STable {
+	public STable(REPR REPR, SixModelObject HOW) {
+		this.REPR = REPR;
+		this.HOW = HOW;
+	}
+
 	/**
 	 * The representation operation table.
 	 */
