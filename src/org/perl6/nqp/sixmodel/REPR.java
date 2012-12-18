@@ -31,24 +31,7 @@ public abstract class REPR {
     /* Used to initialize the body of an object representing the type
      * describe by the specified s-table. DATA points to the body. It
      * may recursively call initialize for any flattened objects. */
-    // XXX void (*initialize) (ThreadContext, STable *st, void *data);
-    
-    /* For the given type, copies the object data from the source memory
-     * location to the destination one. Note that it may actually be more
-     * involved than a straightforward bit of copying; what's important is
-     * that the representation knows about that. Note that it may have to
-     * call copy_to recursively on representations of any flattened objects
-     * within its body. */
-    // XXX void (*copy_to) (ThreadContext, STable *st, void *src, void *dest);
-
-    /* XXX Attribute access REPR functions. */
-    
-    /* XXX Boxing REPR functions. */
-
-    /* XXX Indexing REPR functions. */
-    
-    /* Gets the storage specification for this representation. */
-    // XXX storage_spec (*get_storage_spec) (ThreadContext, STable *st);
+    public abstract void initialize(ThreadContext tc, STable st, SixModelObject obj);
     
     /**
      * Handles an object changing its type. The representation is responsible
@@ -59,7 +42,9 @@ public abstract class REPR {
      * out, the representation probably knows more about timing issues and
      * thread safety requirements.
      */
-    public abstract void ChangeType(ThreadContext tc, SixModelObject Object, SixModelObject NewType);
+    public void ChangeType(ThreadContext tc, SixModelObject Object, SixModelObject NewType) {
+    	throw new RuntimeException("This representation does not support type changes.");
+    }
     
     /* Object serialization. Writes the objects body out using the passed
      * serialization writer. */
