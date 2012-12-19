@@ -27,6 +27,7 @@ public class KnowHOWBootstrapper {
 	    
 	    /* Add various methods to the KnowHOW's HOW. */
 	    CompilationUnit knowhowUnit = new KnowHOWMethods();
+	    knowhowUnit.initializeCompilationUnit();
 	    knowhow_how.methods.put("new_type", knowhowUnit.lookupCodeRef("new_type"));
 	    knowhow_how.methods.put("add_method", knowhowUnit.lookupCodeRef("add_method"));
 	    knowhow_how.methods.put("add_attribute", knowhowUnit.lookupCodeRef("add_attribute"));

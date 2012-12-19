@@ -48,7 +48,7 @@ public abstract class CompilationUnit {
 	/**
 	 * Does initialization work for the compilation unit.
 	 */
-	private void initializeCompilationUnit() {
+	public void initializeCompilationUnit() {
 		/* Place code references into a lookup table by unique ID. */
 		codeRefs = getCodeRefs();
 		for (CodeRef c : codeRefs)
