@@ -404,22 +404,7 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
 });
 
 # Calling
-QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
-    my $il := JAST::InstructionList.new();
-    $il.append(JAST::Instruction.new( :op('aload_1') ));
-    
-    # Get thing to call.
-    my $invokee;
-    if $node.name ne "" {
-        $invokee := $qastcomp.as_jast(QAST::Var.new( :name($node.name), :scope('lexical') ));
-    }
-    else {
-        nqp::die("A 'call' node must have a name or at least one child") unless +@($node) >= 1;
-        $invokee := $qastcomp.as_jast($node[0]);
-    }
-    nqp::die("Invocation target must be an object") unless $invokee.type == $RT_OBJ;
-    $il.append($invokee.jast);
-    
+sub process_args($qastcomp, $node, $il) {
     # Process the arguments, computing each of them. Note we don't worry about
     # putting them into the buffers just yet (that'll happen in the next step).
     my @arg_results;
@@ -489,9 +474,28 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
             jtype($type), $type == $RT_INT ?? "[J" !! "[" ~ jtype($type), 'Integer' ));
     }
     
-    # Get callsite index (which may create it if needed).
-    my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite);
+    # Return callsite index (which may create it if needed).
+    return $*CODEREFS.get_callsite_idx(@callsite);
+}
+QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
     
+    # Get thing to call.
+    my $invokee;
+    if $node.name ne "" {
+        $invokee := $qastcomp.as_jast(QAST::Var.new( :name($node.name), :scope('lexical') ));
+    }
+    else {
+        nqp::die("A 'call' node must have a name or at least one child") unless +@($node) >= 1;
+        $invokee := $qastcomp.as_jast($node[0]);
+    }
+    nqp::die("Invocation target must be an object") unless $invokee.type == $RT_OBJ;
+    $il.append($invokee.jast);
+    
+    # Process arguments.
+    my $cs_idx := process_args($qastcomp, $node, $il);
+
     # Emit call.
     $*STACK.obtain($invokee);
     $il.append(JAST::PushIndex.new( :value($cs_idx) ));
