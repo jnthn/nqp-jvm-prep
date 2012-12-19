@@ -267,4 +267,10 @@ public final class Ops {
 	public static SixModelObject knowhow(ThreadContext tc) {
 		return tc.gc.KnowHOW;
 	}
+	public static SixModelObject findmethod(ThreadContext tc, SixModelObject invocant, String name) {
+		SixModelObject meth = invocant.st.MethodCache.get(name);
+		if (meth == null)
+			throw new RuntimeException("Method '" + name + "' not found"); 
+		return meth;
+	}
 }

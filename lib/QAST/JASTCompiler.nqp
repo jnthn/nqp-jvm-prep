@@ -404,7 +404,7 @@ QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
 });
 
 # Calling
-sub process_args($qastcomp, $node, $il) {
+sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # Process the arguments, computing each of them. Note we don't worry about
     # putting them into the buffers just yet (that'll happen in the next step).
     my @arg_results;
@@ -413,12 +413,21 @@ sub process_args($qastcomp, $node, $il) {
     my int $i_args := 0;
     my int $n_args := 0;
     my int $s_args := 0;
-    my int $i := $node.name eq "" ?? 1 !! 0;
+    my int $i := $first;
     while $i < +@($node) {
         my $arg_res := $qastcomp.as_jast($node[$i]);
         $il.append($arg_res.jast);
         nqp::push(@arg_results, $arg_res);
         my int $type := $arg_res.type;
+        if $i == 0 && $inv_temp {
+            if $type == $RT_OBJ {
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::Instruction.new( :op('astore'), $inv_temp ));
+            }
+            else {
+                nqp::die("Invocant must be an object");
+            }
+        }
         if $type == $RT_OBJ {
             $o_args++;
         }
@@ -494,10 +503,45 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     $il.append($invokee.jast);
     
     # Process arguments.
-    my $cs_idx := process_args($qastcomp, $node, $il);
+    my $cs_idx := process_args($qastcomp, $node, $il, $node.name eq "" ?? 1 !! 0);
 
     # Emit call.
     $*STACK.obtain($invokee);
+    $il.append(JAST::PushIndex.new( :value($cs_idx) ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
+    
+    # Load result onto the stack, unless in void context.
+    if $*WANT != $RT_VOID {
+        my $rtype := rttype_from_typeobj($node.returns);
+        $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            'result_' ~ typechar($rtype), jtype($rtype), $TYPE_CF ));
+        result($il, $rtype)
+    }
+    else {
+        result($il, $RT_VOID)
+    }
+});
+QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
+    my $il := JAST::InstructionList.new();
+    
+    # Ensure we have an invocant.
+    if +@($node) == 0 {
+        nqp::die("A 'callmethod' node must have at least one child");
+    }
+    
+    # Process arguments, stashing the invocant.
+    my $inv_temp := $*TA.fresh_o();
+    my $cs_idx := process_args($qastcomp, $node, $il, 0, :$inv_temp);
+    
+    # Look up method.
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('dup') ));
+    $il.append(JAST::Instruction.new( :op('aload'), $inv_temp ));
+    $il.append(JAST::PushSVal.new( :value($node.name) ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'findmethod', $TYPE_SMO, $TYPE_TC, $TYPE_SMO, $TYPE_STR ));
+
+    # Emit call.
     $il.append(JAST::PushIndex.new( :value($cs_idx) ));
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
     
