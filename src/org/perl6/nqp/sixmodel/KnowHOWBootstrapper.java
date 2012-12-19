@@ -24,7 +24,7 @@ public class KnowHOWBootstrapper {
 	    STable st = new STable(REPR, null);
 	    st.WHAT = knowhow;
 	    KnowHOWREPRInstance knowhow_how = (KnowHOWREPRInstance)REPR.allocate(tc, st);
-	    knowhow_how.initialize(tc, st);
+	    knowhow_how.initialize(tc);
 	    st.HOW = knowhow_how;
 	    knowhow_how.st = st;
 	    
@@ -62,7 +62,7 @@ public class KnowHOWBootstrapper {
 	    /* Create meta-object. */
 	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
 	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
-	    meta_obj.initialize(tc, meta_obj.st);
+	    meta_obj.initialize(tc);
 	    
 	    /* Add methods. */
 	    meta_obj.methods.put("new", knowhowUnit.lookupCodeRef("attr_new"));

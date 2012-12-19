@@ -24,7 +24,7 @@ public abstract class SixModelObject {
 	/**
 	 * Used to initialize the body of an object representing the type
      * describe by the specified s-table. */
-    public void initialize(ThreadContext tc, STable st) {
+    public void initialize(ThreadContext tc) {
     }
     
     /**
@@ -47,23 +47,23 @@ public abstract class SixModelObject {
     /**
      * Associative access functions.
      */
-    public SixModelObject at_key_boxed(ThreadContext tc, STable st, String key) {
+    public SixModelObject at_key_boxed(ThreadContext tc, String key) {
     	throw new RuntimeException("This representation does not implement at_key_boxed");
     }
-    public void bind_key_boxed(ThreadContext tc, STable st, String key, SixModelObject value) {
+    public void bind_key_boxed(ThreadContext tc, String key, SixModelObject value) {
     	throw new RuntimeException("This representation does not implement bind_key_boxed");
     }
-    public long exists_key(ThreadContext tc, STable st, String key) {
+    public long exists_key(ThreadContext tc, String key) {
     	throw new RuntimeException("This representation does not implement exists_key");
     }
-    public void delete_key(ThreadContext tc, STable st, String key) {
+    public void delete_key(ThreadContext tc, String key) {
     	throw new RuntimeException("This representation does not implement delete_key");
     }
 
     /**
      * General aggregate-y operations.
      */
-    public long elems(ThreadContext tc, STable st) {
+    public long elems(ThreadContext tc) {
     	throw new RuntimeException("This representation does not implement elems");
     }
 }

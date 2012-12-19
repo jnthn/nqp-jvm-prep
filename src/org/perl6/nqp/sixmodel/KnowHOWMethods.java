@@ -30,7 +30,7 @@ public class KnowHOWMethods extends CompilationUnit {
 	    SixModelObject type_object = repr_to_use.type_object_for(tc, HOW);
 	    
 	    /* See if we were given a name; put it into the meta-object if so. */
-	    HOW.initialize(tc, HOW.st);
+	    HOW.initialize(tc);
 	    if (name_arg != null)
 	    	((KnowHOWREPRInstance)HOW).name = name_arg;
 	    
@@ -121,7 +121,7 @@ public class KnowHOWMethods extends CompilationUnit {
 	    /* Allocate attribute object. */
 	    REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
 	    KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.allocate(tc, self.st);
-	    obj.initialize(tc, obj.st);
+	    obj.initialize(tc);
 	    
 	    /* Populate it. */
 	    obj.name = name_arg;
