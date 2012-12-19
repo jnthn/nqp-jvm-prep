@@ -29,5 +29,6 @@ public class REPRRegistry {
 	public static void setup() {
 		addREPR("KnowHOWREPR", new KnowHOWREPR());
 		addREPR("KnowHOWAttribute", new KnowHOWAttribute());
+		addREPR("P6opaque", new P6Opaque());
 	}
 }
