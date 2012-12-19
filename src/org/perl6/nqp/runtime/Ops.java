@@ -183,6 +183,56 @@ public final class Ops {
 		}
 	}
 	
+	/* Required named parameter getting. */
+	public static SixModelObject namedparam_o(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
+				return cf.caller.oArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else
+			throw new RuntimeException("Required named argument '" + name + "' not passed");
+	}
+	public static long namedparam_i(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
+				return cf.caller.iArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else
+			throw new RuntimeException("Required named argument '" + name + "' not passed");
+	}
+	public static double namedparam_n(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
+				return cf.caller.nArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else
+			throw new RuntimeException("Required named argument '" + name + "' not passed");
+	}
+	public static String namedparam_s(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
+				return cf.caller.sArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else
+			throw new RuntimeException("Required named argument '" + name + "' not passed");
+	}
+	
 	/* Return value setting. */
 	public static void return_o(SixModelObject v, CallFrame cf) {
 		CallFrame caller = cf.caller;
