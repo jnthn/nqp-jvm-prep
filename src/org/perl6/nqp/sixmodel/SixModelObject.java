@@ -42,7 +42,30 @@ public abstract class SixModelObject {
     /**
      * Positional access functions.
      */
-    
+	public SixModelObject at_pos_boxed(ThreadContext tc, long index) {
+		throw new RuntimeException("This representation does not implement at_pos_boxed");
+	}
+	public void bind_pos_boxed(ThreadContext tc, long index, SixModelObject value) {
+		throw new RuntimeException("This representation does not implement bind_pos_boxed");
+	}
+	public void set_elems(ThreadContext tc, long count) {
+		throw new RuntimeException("This representation does not implement set_elems");
+	}
+	public void push_boxed(ThreadContext tc, SixModelObject value) {
+		throw new RuntimeException("This representation does not implement push_boxed");
+	}
+	public SixModelObject pop_boxed(ThreadContext tc) {
+		throw new RuntimeException("This representation does not implement pop_boxed");
+	}
+	public void unshift_boxed(ThreadContext tc, SixModelObject value) {
+		throw new RuntimeException("This representation does not implement unshift_boxed");
+	}
+	public SixModelObject shift_boxed(ThreadContext tc) {
+		throw new RuntimeException("This representation does not implement shift_boxed");
+	}
+	public void splice(ThreadContext tc, SixModelObject from, long offset, long count) {
+		throw new RuntimeException("This representation does not implement splice");
+	}
     
     /**
      * Associative access functions.
