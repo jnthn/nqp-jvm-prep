@@ -264,4 +264,7 @@ public final class Ops {
 		o.st.WHO = who;
 		return o;
 	}
+	public static SixModelObject knowhow(ThreadContext tc) {
+		return tc.gc.KnowHOW;
+	}
 }

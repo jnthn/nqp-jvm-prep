@@ -173,26 +173,28 @@ class QAST::OperationsJAST {
     
     # Adds a core nqp:: op provided by a static method in the
     # class library.
-    method map_classlib_core_op($op, $class, $method, @stack_in, $stack_out) {
+    method map_classlib_core_op($op, $class, $method, @stack_in, $stack_out, :$tc) {
         my @jtypes_in;
         for @stack_in {
             nqp::push(@jtypes_in, jtype($_));
         }
+        nqp::push(@jtypes_in, $TYPE_TC) if $tc;
         my $ins := JAST::Instruction.new( :op('invokestatic'),
             $class, $method, jtype($stack_out), |@jtypes_in );
-        self.add_core_op($op, op_mapper($op, $ins, @stack_in, $stack_out));
+        self.add_core_op($op, op_mapper($op, $ins, @stack_in, $stack_out, :$tc));
     }
     
     # Adds a core nqp:: op provided by a static method in the
     # class library.
-    method map_classlib_hll_op($hll, $op, $class, $method, @stack_in, $stack_out) {
+    method map_classlib_hll_op($hll, $op, $class, $method, @stack_in, $stack_out, :$tc) {
         my @jtypes_in;
         for @stack_in {
             nqp::push(@jtypes_in, jtype($_));
         }
+        nqp::push(@jtypes_in, $TYPE_TC) if $tc;
         my $ins := JAST::Instruction.new( :op('invokestatic'),
             $class, $method, jtype($stack_out), |@jtypes_in );
-        self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out));
+        self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out, :$tc));
     }
     
     # Geneartes an operation mapper. Covers a range of operations,
@@ -204,14 +206,9 @@ class QAST::OperationsJAST {
             if +@($node) != $expected_args {
                 nqp::die("Operation '$op' requires $expected_args operands");
             }
-            
-            # Add thread context argument if needed.
-            my $il := JAST::InstructionList.new();
-            if $tc {
-                $il.append(JAST::Instruction.new( :op('aload_1') ));
-            }
-            
+
             # Emit operands.
+            my $il := JAST::InstructionList.new();
             my int $i := 0;
             my @arg_res;
             while $i < $expected_args {
@@ -226,6 +223,9 @@ class QAST::OperationsJAST {
             
             # Emit operation.
             $*STACK.obtain(|@arg_res);
+            if $tc {
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+            }
             $il.append($instruction);
             result($il, $stack_out)
         }
@@ -565,6 +565,7 @@ QAST::OperationsJAST.map_classlib_core_op('what', $TYPE_OPS, 'what', [$RT_OBJ], 
 QAST::OperationsJAST.map_classlib_core_op('how', $TYPE_OPS, 'how', [$RT_OBJ], $RT_OBJ);
 QAST::OperationsJAST.map_classlib_core_op('who', $TYPE_OPS, 'who', [$RT_OBJ], $RT_OBJ);
 QAST::OperationsJAST.map_classlib_core_op('setwho', $TYPE_OPS, 'setwho', [$RT_OBJ, $RT_OBJ], $RT_OBJ);
+QAST::OperationsJAST.map_classlib_core_op('knowhow', $TYPE_OPS, 'knowhow', [], $RT_OBJ, :tc);
 
 class QAST::CompilerJAST {
     # Responsible for handling issues around code references, building the
