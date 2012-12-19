@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(27);
+plan(28);
 
 qast_test(
     -> {
@@ -574,6 +574,37 @@ qast_test(
     },
     "Ailse 2! That's the place where we sell the Ragu!\n",
     "Passing a string argument");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&greet'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new(
+                                :name('a_param'), :scope('local'), :decl('param'), :returns(str),
+                                :default(QAST::SVal.new( :value('Hello') )) )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&greet'), :returns(str),
+                    QAST::SVal.new( :value("Dobry den") )
+                ),
+                QAST::Op.new(
+                    :op('call'), :name('&greet'), :returns(str)
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Dobry den\nHello\n",
+    "Optional string argument");
 
 qast_test(
     -> {
