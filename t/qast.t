@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(25);
+plan(26);
 
 qast_test(
     -> {
@@ -604,6 +604,30 @@ qast_test(
     },
     "42\n",
     "Integer arguments and return value");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('knowhow'), :scope('local'), :decl('var') ),
+                    QAST::Op.new( :op('knowhow') )
+                ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::SVal.new( :value('Got KnowHOW') )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Got KnowHOW\n",
+    "Obtaining KnowHOW works");
 
 # ~~ Test Infrastructure ~~
 
