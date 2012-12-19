@@ -1256,7 +1256,6 @@ class QAST::CompilerJAST {
                 }
                 elsif $_.default {
                     $pos_accepted++;
-                    nqp::die("Optional parameters NYI");
                 }
                 else {
                     if $pos_accepted != $pos_required {
@@ -1283,17 +1282,27 @@ class QAST::CompilerJAST {
                 elsif $_.slurpy {
                     nqp::die("Slurpy parameters NYI");
                 }
-                elsif $_.default {
-                    nqp::die("Optional parameters NYI");
-                }
                 else {
                     my $type := rttype_from_typeobj($_.returns);
                     my $jt   := jtype($type);
                     my $tc   := typechar($type);
+                    my $opt  := $_.default ?? "opt_" !! "";
                     $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
                     $*JMETH.append(JAST::PushIndex.new( :value($param_idx) ));
                     $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "posparam_$tc", $jt, $TYPE_CF, 'Integer' ));
+                        "posparam_$opt$tc", $jt, $TYPE_CF, 'Integer' ));
+                    if $opt {
+                        my $lbl := JAST::Label.new( :name(self.unique("opt_param")) );
+                        $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
+                        $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC,
+                            'lastParameterExisted', "Integer" ));
+                        $*JMETH.append(JAST::Instruction.new( :op('ifne'), $lbl ));
+                        $*JMETH.append(pop_ins($type));
+                        my $default := self.as_jast($_.default, :want($type));
+                        $*JMETH.append($default.jast);
+                        $*STACK.obtain($default);
+                        $*JMETH.append($lbl);
+                    }
                     if $_.scope eq 'local' {
                         $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
                     }

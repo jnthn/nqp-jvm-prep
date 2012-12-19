@@ -9,6 +9,11 @@ import org.perl6.nqp.sixmodel.SixModelObject;
  */
 public class CallFrame {
 	/**
+	 * The thread context that created this call frame.
+	 */
+	public ThreadContext tc;
+	
+	/**
 	 * Call site descriptor, describing the kinds of arguments being passed.
 	 */
 	public CallSiteDescriptor callSite;

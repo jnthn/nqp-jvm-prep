@@ -95,7 +95,7 @@ public final class Ops {
 				required + ".." + accepted + ", but got " + positionals);
 	}
 	
-	/* Positional parameter fetching. */
+	/* Required positional parameter fetching. */
 	public static SixModelObject posparam_o(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
@@ -123,6 +123,22 @@ public final class Ops {
 			return cf.caller.sArg[cs.argIdx[idx]];
 		else
 			throw new RuntimeException("Argument coercion NYI");
+	}
+	
+	/* Optional positional parameter fetching. */
+	public static String posparam_opt_s(CallFrame cf, int idx) {
+		CallSiteDescriptor cs = cf.callSite;
+		if (idx < cs.numPositionals) {
+			cf.tc.lastParameterExisted = 1;
+			if (cs.argFlags[idx] == CallSiteDescriptor.ARG_STR)
+				return cf.caller.sArg[cs.argIdx[idx]];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return null;
+		}
 	}
 	
 	/* Return value setting. */
@@ -189,6 +205,7 @@ public final class Ops {
 		// Create a new call frame and set caller and callsite.
 		// TODO Find a smarter way to do this without all the pointer chasing.
 		CallFrame cf = new CallFrame();
+		cf.tc = tc;
 		cf.codeRef = cr;
 		if (tc.curFrame != null) {
 			cf.caller = tc.curFrame;
