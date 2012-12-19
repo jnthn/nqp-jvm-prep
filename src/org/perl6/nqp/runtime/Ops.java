@@ -126,6 +126,48 @@ public final class Ops {
 	}
 	
 	/* Optional positional parameter fetching. */
+	public static SixModelObject posparam_opt_o(CallFrame cf, int idx) {
+		CallSiteDescriptor cs = cf.callSite;
+		if (idx < cs.numPositionals) {
+			cf.tc.lastParameterExisted = 1;
+			if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
+				return cf.caller.oArg[cs.argIdx[idx]];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return null;
+		}
+	}
+	public static long posparam_opt_i(CallFrame cf, int idx) {
+		CallSiteDescriptor cs = cf.callSite;
+		if (idx < cs.numPositionals) {
+			cf.tc.lastParameterExisted = 1;
+			if (cs.argFlags[idx] == CallSiteDescriptor.ARG_INT)
+				return cf.caller.iArg[cs.argIdx[idx]];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return 0;
+		}
+	}
+	public static double posparam_opt_n(CallFrame cf, int idx) {
+		CallSiteDescriptor cs = cf.callSite;
+		if (idx < cs.numPositionals) {
+			cf.tc.lastParameterExisted = 1;
+			if (cs.argFlags[idx] == CallSiteDescriptor.ARG_NUM)
+				return cf.caller.nArg[cs.argIdx[idx]];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return 0.0;
+		}
+	}
 	public static String posparam_opt_s(CallFrame cf, int idx) {
 		CallSiteDescriptor cs = cf.callSite;
 		if (idx < cs.numPositionals) {
