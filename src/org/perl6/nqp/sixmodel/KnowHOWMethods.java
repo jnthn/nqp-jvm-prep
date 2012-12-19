@@ -77,6 +77,10 @@ public class KnowHOWMethods extends CompilationUnit {
 		
 		// TODO: All the things...
 		
+		// Set method cache.
+		type_obj.st.MethodCache = ((KnowHOWREPRInstance)self).methods;
+		type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+		
 		Ops.return_o(type_obj, tc.curFrame);
 	}
 
