@@ -6,10 +6,13 @@ public class KnowHOWBootstrapper {
 	public static void bootstrap(ThreadContext tc)
 	{
 		REPRRegistry.setup();
-		bootstrapKnowHOW(tc);
+		CompilationUnit knowhowUnit = new KnowHOWMethods();
+	    knowhowUnit.initializeCompilationUnit();
+		bootstrapKnowHOW(tc, knowhowUnit);
+		bootstrapKnowHOWAttribute(tc, knowhowUnit);
 	}
 
-	private static void bootstrapKnowHOW(ThreadContext tc) {
+	private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
 	    /* Create our KnowHOW type object. Note we don't have a HOW just yet, so
 	     * pass in NULL. */
 	    REPR REPR = REPRRegistry.getByName("KnowHOWREPR");
@@ -26,8 +29,6 @@ public class KnowHOWBootstrapper {
 	    knowhow_how.st = st;
 	    
 	    /* Add various methods to the KnowHOW's HOW. */
-	    CompilationUnit knowhowUnit = new KnowHOWMethods();
-	    knowhowUnit.initializeCompilationUnit();
 	    knowhow_how.methods.put("new_type", knowhowUnit.lookupCodeRef("new_type"));
 	    knowhow_how.methods.put("add_method", knowhowUnit.lookupCodeRef("add_method"));
 	    knowhow_how.methods.put("add_attribute", knowhowUnit.lookupCodeRef("add_attribute"));
@@ -55,5 +56,33 @@ public class KnowHOWBootstrapper {
 
 	    /* Stash the created KnowHOW. */
 	    tc.gc.KnowHOW = knowhow;
+	}
+
+	private static void bootstrapKnowHOWAttribute(ThreadContext tc, CompilationUnit knowhowUnit) {	    
+	    /* Create meta-object. */
+	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
+	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.Allocate(tc, knowhow_how.st);
+	    meta_obj.initialize(tc, meta_obj.st);
+	    
+	    /* Add methods. */
+	    meta_obj.methods.put("new", knowhowUnit.lookupCodeRef("attr_new"));
+	    meta_obj.methods.put("compose", knowhowUnit.lookupCodeRef("attr_compose"));
+	    meta_obj.methods.put("name", knowhowUnit.lookupCodeRef("attr_name"));
+	    meta_obj.methods.put("type", knowhowUnit.lookupCodeRef("attr_type"));
+	    meta_obj.methods.put("box_target", knowhowUnit.lookupCodeRef("attr_box_target"));
+	    
+	    /* Set name. */
+	    meta_obj.name = "KnowHOWAttribute";
+	    
+	    /* Create a new type object with the correct REPR. */
+	    REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
+	    SixModelObject type_obj = repr.TypeObjectFor(tc, meta_obj);
+	    
+	    /* Set up method dispatch cache. */
+	    type_obj.st.MethodCache = meta_obj.methods;
+	    type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+	    
+	    /* Stash the created type object. */
+	    tc.gc.KnowHOWAttribute = type_obj;
 	}
 }

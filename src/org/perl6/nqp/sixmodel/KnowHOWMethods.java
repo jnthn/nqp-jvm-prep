@@ -111,6 +111,47 @@ public class KnowHOWMethods extends CompilationUnit {
 		Ops.return_s(((KnowHOWREPRInstance)self).name, tc.curFrame);
 	}
 	
+	public void attr_new(ThreadContext tc) {
+	    /* Process arguments. */
+	    SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+	    String name_arg = Ops.namedparam_s(tc.curFrame, "name");
+	    SixModelObject type_arg = Ops.namedparam_o(tc.curFrame, "type");
+	    long bt_arg = Ops.namedparam_opt_i(tc.curFrame, "box_target");
+
+	    /* Allocate attribute object. */
+	    REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
+	    KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.Allocate(tc, self.st);
+	    obj.initialize(tc, obj.st);
+	    
+	    /* Populate it. */
+	    obj.name = name_arg;
+	    obj.type = type_arg;
+	    obj.box_target = bt_arg == 0 ? 0 : 1;
+	    
+	    /* Return produced object. */
+	    Ops.return_o(obj, tc.curFrame);
+	}
+
+	public void attr_compose(ThreadContext tc) {
+		SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+		Ops.return_o(self, tc.curFrame);
+	}
+
+	public void attr_name(ThreadContext tc) {
+		SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+		Ops.return_s(((KnowHOWAttributeInstance)self).name, tc.curFrame);
+	}
+
+	public void attr_type(ThreadContext tc) {
+		SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+		Ops.return_o(((KnowHOWAttributeInstance)self).type, tc.curFrame);
+	}
+
+	public void attr_box_target(ThreadContext tc) {
+		SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+		Ops.return_i(((KnowHOWAttributeInstance)self).box_target, tc.curFrame);
+	}
+	
 	public void InvokeCode(ThreadContext tc, int idx) {
 		switch (idx) {
 		case 0: new_type(tc); break;
@@ -120,12 +161,17 @@ public class KnowHOWMethods extends CompilationUnit {
 		case 4: attributes(tc); break;
 		case 5: methods(tc); break;
 		case 6: name(tc); break;
+		case 7: attr_new(tc); break;
+		case 8: attr_compose(tc); break;
+		case 9: attr_name(tc); break;
+		case 10: attr_type(tc); break;
+		case 11: attr_box_target(tc); break;
 		default: throw new RuntimeException("Invalid call in KnowHOWMethods compilation unit");
 		}
 	}
 
 	public CodeRef[] getCodeRefs() {
-		CodeRef[] refs = new CodeRef[7];
+		CodeRef[] refs = new CodeRef[12];
 		String[] snull = null;
 		short zero = 0;
 		refs[0] = new CodeRef(this, 0, "new_type", "new_type", snull, snull, snull, snull, zero, zero, zero, zero);
@@ -135,6 +181,11 @@ public class KnowHOWMethods extends CompilationUnit {
 		refs[4] = new CodeRef(this, 4, "attributes", "attributes", snull, snull, snull, snull, zero, zero, zero, zero);
 		refs[5] = new CodeRef(this, 5, "methods", "methods", snull, snull, snull, snull, zero, zero, zero, zero);
 		refs[6] = new CodeRef(this, 6, "name", "name", snull, snull, snull, snull, zero, zero, zero, zero);
+		refs[7] = new CodeRef(this, 7, "new", "attr_new", snull, snull, snull, snull, zero, zero, zero, zero);
+		refs[8] = new CodeRef(this, 8, "compose", "attr_compose", snull, snull, snull, snull, zero, zero, zero, zero);
+		refs[9] = new CodeRef(this, 9, "name", "attr_name", snull, snull, snull, snull, zero, zero, zero, zero);
+		refs[10] = new CodeRef(this, 10, "type", "attr_type", snull, snull, snull, snull, zero, zero, zero, zero);
+		refs[11] = new CodeRef(this, 11, "box_target", "attr_box_target", snull, snull, snull, snull, zero, zero, zero, zero);
 		return refs;
 	}
 

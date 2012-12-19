@@ -10,6 +10,11 @@ public class GlobalContext {
 	public SixModelObject KnowHOW;
 	
 	/**
+	 * The KnowHOWAttribute.
+	 */
+	public SixModelObject KnowHOWAttribute;
+	
+	/**
 	 * The main, startup thread's ThreadContext.
 	 */
 	public ThreadContext mainThread;
