@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(28);
+plan(29);
 
 qast_test(
     -> {
@@ -635,6 +635,36 @@ qast_test(
     },
     "42\n",
     "Integer arguments and return value");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&add'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('div_i'),
+                            QAST::Var.new( :name('a_param'), :named('a'), :scope('local'), :decl('param'), :returns(int) ),
+                            QAST::Var.new( :name('b_param'), :named('b'), :scope('local'), :decl('param'), :returns(int) )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('call'), :name('&add'), :returns(int),
+                        QAST::IVal.new( :value(3), :named('b') ),
+                        QAST::IVal.new( :value(27), :named('a') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "9\n",
+    "Integer named arguments");
 
 qast_test(
     -> {
