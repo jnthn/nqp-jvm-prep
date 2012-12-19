@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(30);
+plan(31);
 
 qast_test(
     -> {
@@ -778,6 +778,54 @@ qast_test(
     },
     "A Punk IPA, good sir\n",
     "Can create a new type with a method and call it");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type with a name.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::SVal.new( :value('GreenTea'), :named('name') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+                
+                # Get the name of the type.
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('name'), :returns(str),
+                        QAST::Var.new( :name('how'), :scope('local') ),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "GreenTea\n",
+    "Created type's .name is properly set");
 
 # ~~ Test Infrastructure ~~
 
