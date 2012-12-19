@@ -31,7 +31,7 @@ public abstract class CompilationUnit {
 	public static void enterFromMain(Class<?> cuType, int entryCodeRefIdx, String[] argv)
 			throws Exception {
 		CompilationUnit cu = setupCompilationUnit(cuType);
-		ThreadContext tc = new ThreadContext();
+		ThreadContext tc = (new GlobalContext()).mainThread;
 		Ops.invoke(tc, cu.codeRefs[entryCodeRefIdx], -1);
 	}
 	
