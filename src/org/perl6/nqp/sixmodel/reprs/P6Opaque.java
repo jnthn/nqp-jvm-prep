@@ -6,7 +6,7 @@ import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
 public class P6Opaque extends REPR {
-	public SixModelObject TypeObjectFor(ThreadContext tc, SixModelObject HOW) {
+	public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
 		STable st = new STable(this, HOW);
 	    SixModelObject obj = new P6OpaqueBaseInstance();
 	    obj.st = st;
@@ -14,7 +14,7 @@ public class P6Opaque extends REPR {
 	    return st.WHAT;
 	}
 
-	public SixModelObject Allocate(ThreadContext tc, STable st) {
+	public SixModelObject allocate(ThreadContext tc, STable st) {
 		P6OpaqueBaseInstance obj = new P6OpaqueBaseInstance();
 		obj.st = st;
 		return obj;

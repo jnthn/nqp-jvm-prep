@@ -16,14 +16,14 @@ public class KnowHOWBootstrapper {
 	    /* Create our KnowHOW type object. Note we don't have a HOW just yet, so
 	     * pass in NULL. */
 	    REPR REPR = REPRRegistry.getByName("KnowHOWREPR");
-	    SixModelObject knowhow = REPR.TypeObjectFor(tc, null);
+	    SixModelObject knowhow = REPR.type_object_for(tc, null);
 
 	    /* We create a KnowHOW instance that can describe itself. This means
 	     * (once we tie the knot) that .HOW.HOW.HOW.HOW etc will always return
 	     * that, which closes the model up. */
 	    STable st = new STable(REPR, null);
 	    st.WHAT = knowhow;
-	    KnowHOWREPRInstance knowhow_how = (KnowHOWREPRInstance)REPR.Allocate(tc, st);
+	    KnowHOWREPRInstance knowhow_how = (KnowHOWREPRInstance)REPR.allocate(tc, st);
 	    knowhow_how.initialize(tc, st);
 	    st.HOW = knowhow_how;
 	    knowhow_how.st = st;
@@ -61,7 +61,7 @@ public class KnowHOWBootstrapper {
 	private static void bootstrapKnowHOWAttribute(ThreadContext tc, CompilationUnit knowhowUnit) {	    
 	    /* Create meta-object. */
 	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
-	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.Allocate(tc, knowhow_how.st);
+	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
 	    meta_obj.initialize(tc, meta_obj.st);
 	    
 	    /* Add methods. */
@@ -76,7 +76,7 @@ public class KnowHOWBootstrapper {
 	    
 	    /* Create a new type object with the correct REPR. */
 	    REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
-	    SixModelObject type_obj = repr.TypeObjectFor(tc, meta_obj);
+	    SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
 	    
 	    /* Set up method dispatch cache. */
 	    type_obj.st.MethodCache = meta_obj.methods;

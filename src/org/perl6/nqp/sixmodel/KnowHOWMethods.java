@@ -18,7 +18,7 @@ public class KnowHOWMethods extends CompilationUnit {
 			throw new RuntimeException("KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
 	    
 	    /* We first create a new HOW instance. */
-	    SixModelObject HOW = self.st.REPR.Allocate(tc, self.st);
+	    SixModelObject HOW = self.st.REPR.allocate(tc, self.st);
 	    
 	    /* See if we have a representation name; if not default to P6opaque. */
 	    String repr_name = repr_arg != null ? repr_arg : "P6opaque";
@@ -27,7 +27,7 @@ public class KnowHOWMethods extends CompilationUnit {
 	     * default to KnowHOWREPR here, since it doesn't know how to actually
 	     * store attributes, it's just for bootstrapping knowhow's. */
 	    REPR repr_to_use = REPRRegistry.getByName(repr_name);
-	    SixModelObject type_object = repr_to_use.TypeObjectFor(tc, HOW);
+	    SixModelObject type_object = repr_to_use.type_object_for(tc, HOW);
 	    
 	    /* See if we were given a name; put it into the meta-object if so. */
 	    HOW.initialize(tc, HOW.st);
@@ -120,7 +120,7 @@ public class KnowHOWMethods extends CompilationUnit {
 
 	    /* Allocate attribute object. */
 	    REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
-	    KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.Allocate(tc, self.st);
+	    KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.allocate(tc, self.st);
 	    obj.initialize(tc, obj.st);
 	    
 	    /* Populate it. */

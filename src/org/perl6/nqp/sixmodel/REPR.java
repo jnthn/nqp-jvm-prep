@@ -16,18 +16,18 @@ public abstract class REPR {
 	/**
 	 * The name of the representation.
 	 */
-	public String Name;
+	public String name;
 	
 	/**
 	 * Creates a new type object of this representation, and associates it
 	 * with the given HOW.
      */
-    public abstract SixModelObject TypeObjectFor(ThreadContext tc, SixModelObject HOW);
+    public abstract SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW);
 
     /**
      * Allocates a new, but uninitialized object, based on the
      * specified s-table. */
-    public abstract SixModelObject Allocate(ThreadContext tc, STable st);
+    public abstract SixModelObject allocate(ThreadContext tc, STable st);
 
     /**
      * Handles an object changing its type. The representation is responsible
@@ -38,7 +38,7 @@ public abstract class REPR {
      * out, the representation probably knows more about timing issues and
      * thread safety requirements.
      */
-    public void ChangeType(ThreadContext tc, SixModelObject Object, SixModelObject NewType) {
+    public void change_type(ThreadContext tc, SixModelObject Object, SixModelObject NewType) {
     	throw new RuntimeException("This representation does not support type changes.");
     }
     
@@ -54,7 +54,7 @@ public abstract class REPR {
      * REPR data serialization. Serializes the per-type representation data that
      * is attached to the supplied STable.
      */
-    public void SerializeREPRData(ThreadContext tc, STable st, SerializationWriter writer)
+    public void serialize_repr_data(ThreadContext tc, STable st, SerializationWriter writer)
     {
     	// It's fine for this to be unimplemented.
     }
@@ -63,7 +63,7 @@ public abstract class REPR {
      * REPR data deserialization. Deserializes the per-type representation data and
      * attaches it to the supplied STable.
      */
-    public void DeserializeREPRData(ThreadContext tc, STable st, SerializationReader reader)
+    public void deserialize_repr_data(ThreadContext tc, STable st, SerializationReader reader)
     {
     	// It's fine for this to be unimplemented.
     }
