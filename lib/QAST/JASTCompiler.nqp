@@ -596,7 +596,7 @@ class QAST::CompilerJAST {
             @!max_arg_lists := [];
             @!outer_mappings := [];
             @!callsites := [];
-            %!callsite_map := [];
+            %!callsite_map := {};
         }
         
         my $nolex := [[],[],[],[]];
