@@ -12,8 +12,8 @@ public class KnowHOWMethods extends CompilationUnit {
 	public void new_type(ThreadContext tc) {
 	    /* Get arguments. */
 	    SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-	    String repr_arg = null; // TODO: Needs named args/params
-	    String name_arg = null; // TODO: Needs named args/params
+	    String repr_arg = Ops.namedparam_opt_s(tc.curFrame, "repr");
+	    String name_arg = Ops.namedparam_opt_s(tc.curFrame, "name");
 	    if (self == null || !(self instanceof KnowHOWREPRInstance))
 			throw new RuntimeException("KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
 	    
