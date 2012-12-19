@@ -66,7 +66,4 @@ public abstract class SixModelObject {
     public long elems(ThreadContext tc, STable st) {
     	throw new RuntimeException("This representation does not implement elems");
     }
-    public StorageSpec get_value_storage_spec(ThreadContext tc, STable st) {
-    	throw new RuntimeException("This representation does not implement get_value_storage_spec");
-    }
 }

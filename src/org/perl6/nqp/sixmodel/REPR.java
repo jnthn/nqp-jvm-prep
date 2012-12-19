@@ -30,6 +30,13 @@ public abstract class REPR {
     public abstract SixModelObject allocate(ThreadContext tc, STable st);
 
     /**
+     * For aggregate types, gets the storage type of values in the aggregate.
+     */
+    public StorageSpec get_value_storage_spec(ThreadContext tc, STable st) {
+    	throw new RuntimeException("This representation does not implement get_value_storage_spec");
+    }
+    
+    /**
      * Handles an object changing its type. The representation is responsible
      * for doing any changes to the underlying data structure, and may reject
      * changes that it's not willing to do (for example, a representation may
