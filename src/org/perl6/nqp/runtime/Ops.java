@@ -233,6 +233,68 @@ public final class Ops {
 			throw new RuntimeException("Required named argument '" + name + "' not passed");
 	}
 	
+	/* Optional named parameter getting. */
+	public static SixModelObject namedparam_opt_o(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			cf.tc.lastParameterExisted = 1;
+			if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
+				return cf.caller.oArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return null;
+		}
+	}
+	public static long namedparam_opt_i(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			cf.tc.lastParameterExisted = 1;
+			if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
+				return cf.caller.iArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return 0;
+		}
+	}
+	public static double namedparam_opt_n(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			cf.tc.lastParameterExisted = 1;
+			if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
+				return cf.caller.nArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return 0.0;
+		}
+	}
+	public static String namedparam_opt_s(CallFrame cf, String name) {
+		CallSiteDescriptor cs = cf.callSite;
+		Integer lookup = cs.nameMap.get(name);
+		if (lookup != null) {
+			cf.tc.lastParameterExisted = 1;
+			if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
+				return cf.caller.sArg[lookup >> 3];
+			else
+				throw new RuntimeException("Argument coercion NYI");
+		}
+		else {
+			cf.tc.lastParameterExisted = 0;
+			return null;
+		}
+	}
+	
 	/* Return value setting. */
 	public static void return_o(SixModelObject v, CallFrame cf) {
 		CallFrame caller = cf.caller;

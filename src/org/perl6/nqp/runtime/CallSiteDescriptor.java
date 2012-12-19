@@ -26,6 +26,11 @@ public class CallSiteDescriptor {
 	 */
 	public HashMap<String, Integer> nameMap;
 	
+	/*
+	 * Singleton empty name mape.
+	 */
+	private static HashMap<String, Integer> emptyNameMap = new HashMap<String, Integer>();
+	
 	/* Number of normal positional arguments. */
 	public int numPositionals = 0;
 	
@@ -33,6 +38,8 @@ public class CallSiteDescriptor {
 		argFlags = flags;
 		if (names != null)
 			nameMap = new HashMap<String, Integer>();
+		else
+			nameMap = emptyNameMap;
 		
 		int oPos = 0, iPos = 0, nPos = 0, sPos = 0, arg = 0, name = 0;
 		argIdx = new int[flags.length];
