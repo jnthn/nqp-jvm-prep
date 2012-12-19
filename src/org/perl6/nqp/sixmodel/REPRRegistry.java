@@ -30,5 +30,6 @@ public class REPRRegistry {
 		addREPR("KnowHOWREPR", new KnowHOWREPR());
 		addREPR("KnowHOWAttribute", new KnowHOWAttribute());
 		addREPR("P6opaque", new P6Opaque());
+		addREPR("VMHash", new VMHash());
 	}
 }
