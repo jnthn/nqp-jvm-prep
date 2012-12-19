@@ -1274,7 +1274,7 @@ class QAST::CompilerJAST {
             my int $pos_accepted := 0;
             for $block.params {
                 if $_.named {
-                    nqp::die("Named parameters NYI");
+                    # Don't count.
                 }
                 elsif $_.slurpy {
                     nqp::die("Slurpy parameters NYI");
@@ -1301,10 +1301,7 @@ class QAST::CompilerJAST {
             # Emit instructions to load each parameter.
             my int $param_idx := 0;
             for $block.params {
-                if $_.named {
-                    nqp::die("Named parameters NYI");
-                }
-                elsif $_.slurpy {
+                if $_.slurpy {
                     nqp::die("Slurpy parameters NYI");
                 }
                 else {
@@ -1313,9 +1310,16 @@ class QAST::CompilerJAST {
                     my $tc   := typechar($type);
                     my $opt  := $_.default ?? "opt_" !! "";
                     $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
-                    $*JMETH.append(JAST::PushIndex.new( :value($param_idx) ));
-                    $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "posparam_$opt$tc", $jt, $TYPE_CF, 'Integer' ));
+                    if $_.named {
+                        $*JMETH.append(JAST::PushSVal.new( :value($_.named) ));
+                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "namedparam_$opt$tc", $jt, $TYPE_CF, $TYPE_STR ));
+                    }
+                    else {
+                        $*JMETH.append(JAST::PushIndex.new( :value($param_idx) ));
+                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "posparam_$opt$tc", $jt, $TYPE_CF, 'Integer' ));
+                    }
                     if $opt {
                         my $lbl := JAST::Label.new( :name(self.unique("opt_param")) );
                         $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
