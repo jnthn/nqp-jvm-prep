@@ -24,15 +24,11 @@ public abstract class REPR {
      */
     public abstract SixModelObject TypeObjectFor(ThreadContext tc, SixModelObject HOW);
 
-    /* Allocates a new, but uninitialized object, based on the
+    /**
+     * Allocates a new, but uninitialized object, based on the
      * specified s-table. */
     public abstract SixModelObject Allocate(ThreadContext tc, STable st);
 
-    /* Used to initialize the body of an object representing the type
-     * describe by the specified s-table. DATA points to the body. It
-     * may recursively call initialize for any flattened objects. */
-    public abstract void initialize(ThreadContext tc, STable st, SixModelObject obj);
-    
     /**
      * Handles an object changing its type. The representation is responsible
      * for doing any changes to the underlying data structure, and may reject

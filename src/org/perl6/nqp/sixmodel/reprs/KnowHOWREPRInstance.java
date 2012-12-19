@@ -1,11 +1,20 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
 
 public class KnowHOWREPRInstance extends SixModelObject {
 	public String name;
 	public List<SixModelObject> attributes;
 	public HashMap<String, SixModelObject> methods;
+	
+	public void initialize(ThreadContext tc, STable st) {
+		this.name = "<anon>";
+		this.attributes = new ArrayList<SixModelObject>();
+		this.methods = new HashMap<String, SixModelObject>();
+	}
 }

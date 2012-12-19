@@ -19,8 +19,4 @@ public class KnowHOWAttribute extends REPR {
 		obj.st = st;
 		return obj;
 	}
-
-	public void initialize(ThreadContext tc, STable st, SixModelObject obj) {
-		// Nothing to do.
-	}
 }
