@@ -16,13 +16,13 @@ public class CallSiteDescriptor {
 	/* Flags, one per argument that is being passed. */
 	public byte[] argFlags;
 	
-	/* Argument indexes. */
+	/* Positional argument indexes. */
 	public int[] argIdx;
 	
 	/* Number of normal positional arguments. */
 	public int numPositionals = 0;
 	
-	public CallSiteDescriptor(byte[] flags) {
+	public CallSiteDescriptor(byte[] flags, String[] names) {
 		argFlags = flags;
 		
 		int oPos = 0, iPos = 0, nPos = 0, sPos = 0, arg = 0;

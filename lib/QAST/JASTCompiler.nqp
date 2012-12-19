@@ -409,6 +409,7 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # putting them into the buffers just yet (that'll happen in the next step).
     my @arg_results;
     my @callsite;
+    my @argnames;
     my int $o_args := 0;
     my int $i_args := 0;
     my int $n_args := 0;
@@ -443,7 +444,15 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
         else {
             nqp::die("Invalid argument type");
         }
-        nqp::push(@callsite, arg_type($type));
+        my int $flags := 0;
+        if $node[$i].flat {
+            $flags := $node[$i].named ?? 24 !! 16;
+        }
+        elsif $node[$i].named -> $name {
+            $flags := 8;
+            nqp::push(@argnames, $name);
+        }
+        nqp::push(@callsite, arg_type($type) + $flags);
         $i++;
     }
 
@@ -484,7 +493,7 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     }
     
     # Return callsite index (which may create it if needed).
-    return $*CODEREFS.get_callsite_idx(@callsite);
+    return $*CODEREFS.get_callsite_idx(@callsite, @argnames);
 }
 QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     my $il := JAST::InstructionList.new();
@@ -674,14 +683,14 @@ class QAST::CompilerJAST {
                 [self.cuid_to_idx($cuid), self.cuid_to_idx($outer_cuid)]);
         }
         
-        method get_callsite_idx(@arg_types) {
-            my $key := nqp::join("-", @arg_types);
+        method get_callsite_idx(@arg_types, @arg_names) {
+            my $key := nqp::join("-", @arg_types) ~ ';' ~ nqp::join("\0", @arg_names);
             if nqp::existskey(%!callsite_map, $key) {
                 return %!callsite_map{$key};
             }
             else {
                 my $idx := +@!callsites;
-                nqp::push(@!callsites, @arg_types);
+                nqp::push(@!callsites, [@arg_types, @arg_names]);
                 %!callsite_map{$key} := $idx;
                 return $idx;
             }
@@ -815,22 +824,38 @@ class QAST::CompilerJAST {
             # All all the callsites
             my int $i := 0;
             for @!callsites -> @cs {
+                my @cs_flags := @cs[0];
+                my @cs_names := @cs[1];
                 $csa.append(JAST::Instruction.new( :op('dup') )); # Target array.
                 $csa.append(JAST::PushIndex.new( :value($i++) )); # Index.
                 $csa.append(JAST::Instruction.new( :op('new'), $TYPE_CSD ));
                 $csa.append(JAST::Instruction.new( :op('dup') ));
-                $csa.append(JAST::PushIndex.new( :value(+@cs) ));
+                $csa.append(JAST::PushIndex.new( :value(+@cs_flags) ));
                 $csa.append(JAST::Instruction.new( :op('newarray'), 'Byte' ));
                 my int $j := 0;
-                for @cs {
+                for @cs_flags {
                     $csa.append(JAST::Instruction.new( :op('dup') ));
                     $csa.append(JAST::PushIndex.new( :value($j++) ));
                     $csa.append(JAST::PushIndex.new( :value($_) ));
                     $csa.append(JAST::Instruction.new( :op('i2b') ));
                     $csa.append(JAST::Instruction.new( :op('bastore') ));
                 }
+                if @cs_names {
+                    $csa.append(JAST::PushIndex.new( :value(+@cs_names) ));
+                    $csa.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+                    $j := 0;
+                    for @cs_names {
+                        $csa.append(JAST::Instruction.new( :op('dup') ));
+                        $csa.append(JAST::PushIndex.new( :value($j++) ));
+                        $csa.append(JAST::PushSVal.new( :value($_) ));
+                        $csa.append(JAST::Instruction.new( :op('aastore') ));
+                    }
+                }
+                else {
+                    $csa.append(JAST::Instruction.new( :op('aconst_null') ));
+                }
                 $csa.append(JAST::Instruction.new( :op('invokespecial'),
-                    $TYPE_CSD, '<init>', 'Void', '[Byte'));
+                    $TYPE_CSD, '<init>', 'Void', '[Byte', "[$TYPE_STR"));
                 $csa.append(JAST::Instruction.new( :op('aastore') ));
             }
             

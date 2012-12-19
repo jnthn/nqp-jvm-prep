@@ -236,7 +236,7 @@ public final class Ops {
 	}
 	
 	/* Invocation. */
-	private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0]);
+	private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
 	public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
 		// Get the code ref.
 		if (!(invokee instanceof CodeRef))
