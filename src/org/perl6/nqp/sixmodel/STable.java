@@ -26,6 +26,11 @@ public class STable {
     public static final int METHOD_CACHE_AUTHORITATIVE = 4;
     
     /**
+     * Indicates that there's no attribute access hint.
+     */
+    public static final long NO_HINT = -1;
+    
+    /**
      * Initializes a new STable.
      */
     public STable(REPR REPR, SixModelObject HOW) {

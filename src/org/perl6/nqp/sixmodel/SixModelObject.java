@@ -30,8 +30,18 @@ public abstract class SixModelObject {
     /**
      * Attribute access functions.
      */
-    
-    
+    public SixModelObject get_attribute_boxed(ThreadContext tc, SixModelObject class_handle,
+    		String name, long hint) {
+    	throw new RuntimeException("This representation does not support attributes");
+    }
+    public void bind_attribute_boxed(ThreadContext tc,SixModelObject class_handle,
+    		String name, long hint, SixModelObject value) {
+    	throw new RuntimeException("This representation does not support attributes");
+    } 
+    public long is_attribute_initialized(ThreadContext tc, SixModelObject class_handle,
+    		String name, long hint) {
+    	throw new RuntimeException("This representation does not support attributes");
+    }
 
     /**
      * Boxing related functions.

@@ -35,6 +35,13 @@ public abstract class REPR {
     public void compose(ThreadContext tc, STable st, SixModelObject repr_info) {
         // By default, nothing to do.
     }
+    
+    /**
+     * Gets attribute access hint for the representation.
+     */
+    public long hint_for(ThreadContext tc, STable st, SixModelObject class_handle, String name) {
+    	return STable.NO_HINT;
+    }
 
     /**
      * For aggregate types, gets the storage type of values in the aggregate.
