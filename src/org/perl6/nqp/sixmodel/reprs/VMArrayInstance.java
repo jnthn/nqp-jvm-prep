@@ -27,7 +27,7 @@ public class VMArrayInstance extends SixModelObject {
 	private void set_size_internal(ThreadContext tc, long n) {
 		long elems = this.elems;
 	    long start = this.start;
-	    long ssize = this.slots.length;
+	    long ssize = this.slots == null ? 0 : this.slots.length;
 	    SixModelObject[] slots = this.slots;
 
 	    if (n < 0)
