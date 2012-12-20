@@ -28,6 +28,13 @@ public abstract class REPR {
      * Allocates a new, but uninitialized object, based on the
      * specified s-table. */
     public abstract SixModelObject allocate(ThreadContext tc, STable st);
+    
+    /**
+     * Composes the representation; typically performed at type composition time.
+     */
+    public void compose(ThreadContext tc, STable st, SixModelObject repr_info) {
+    	// By default, nothing to do.
+    }
 
     /**
      * For aggregate types, gets the storage type of values in the aggregate.
