@@ -11,18 +11,18 @@ import org.perl6.nqp.runtime.ThreadContext;
  * way the JVM does things.
  */
 public abstract class SixModelObject {
-	/**
-	 * The STable of the object.
-	 */
-	public STable st;
-	
-	/**
-	 * The serialization context this object belongs to, if any.
-	 */
-	public SerializationContext sc;
-	
-	/**
-	 * Used to initialize the body of an object representing the type
+    /**
+     * The STable of the object.
+     */
+    public STable st;
+    
+    /**
+     * The serialization context this object belongs to, if any.
+     */
+    public SerializationContext sc;
+    
+    /**
+     * Used to initialize the body of an object representing the type
      * describe by the specified s-table. */
     public void initialize(ThreadContext tc) {
     }
@@ -37,72 +37,72 @@ public abstract class SixModelObject {
      * Boxing related functions.
      */
     public void set_int(ThreadContext tc, long value) {
-    	throw new RuntimeException("This representation can not box a native int");
+        throw new RuntimeException("This representation can not box a native int");
     }
     public long get_int(ThreadContext tc) {
-    	throw new RuntimeException("This representation can not unbox to a native int");
+        throw new RuntimeException("This representation can not unbox to a native int");
     }
     public void set_num(ThreadContext tc, double value) {
-    	throw new RuntimeException("This representation can not box a native num");
+        throw new RuntimeException("This representation can not box a native num");
     }
     public double get_num(ThreadContext tc) {
-    	throw new RuntimeException("This representation can not unbox to a native num");
+        throw new RuntimeException("This representation can not unbox to a native num");
     }
     public void set_str(ThreadContext tc, String value) {
-    	throw new RuntimeException("This representation can not box a native str");
+        throw new RuntimeException("This representation can not box a native str");
     }
     public String get_str(ThreadContext tc) {
-    	throw new RuntimeException("This representation can not unbox to a native str");
+        throw new RuntimeException("This representation can not unbox to a native str");
     }
     
     /**
      * Positional access functions.
      */
-	public SixModelObject at_pos_boxed(ThreadContext tc, long index) {
-		throw new RuntimeException("This representation does not implement at_pos_boxed");
-	}
-	public void bind_pos_boxed(ThreadContext tc, long index, SixModelObject value) {
-		throw new RuntimeException("This representation does not implement bind_pos_boxed");
-	}
-	public void set_elems(ThreadContext tc, long count) {
-		throw new RuntimeException("This representation does not implement set_elems");
-	}
-	public void push_boxed(ThreadContext tc, SixModelObject value) {
-		throw new RuntimeException("This representation does not implement push_boxed");
-	}
-	public SixModelObject pop_boxed(ThreadContext tc) {
-		throw new RuntimeException("This representation does not implement pop_boxed");
-	}
-	public void unshift_boxed(ThreadContext tc, SixModelObject value) {
-		throw new RuntimeException("This representation does not implement unshift_boxed");
-	}
-	public SixModelObject shift_boxed(ThreadContext tc) {
-		throw new RuntimeException("This representation does not implement shift_boxed");
-	}
-	public void splice(ThreadContext tc, SixModelObject from, long offset, long count) {
-		throw new RuntimeException("This representation does not implement splice");
-	}
+    public SixModelObject at_pos_boxed(ThreadContext tc, long index) {
+        throw new RuntimeException("This representation does not implement at_pos_boxed");
+    }
+    public void bind_pos_boxed(ThreadContext tc, long index, SixModelObject value) {
+        throw new RuntimeException("This representation does not implement bind_pos_boxed");
+    }
+    public void set_elems(ThreadContext tc, long count) {
+        throw new RuntimeException("This representation does not implement set_elems");
+    }
+    public void push_boxed(ThreadContext tc, SixModelObject value) {
+        throw new RuntimeException("This representation does not implement push_boxed");
+    }
+    public SixModelObject pop_boxed(ThreadContext tc) {
+        throw new RuntimeException("This representation does not implement pop_boxed");
+    }
+    public void unshift_boxed(ThreadContext tc, SixModelObject value) {
+        throw new RuntimeException("This representation does not implement unshift_boxed");
+    }
+    public SixModelObject shift_boxed(ThreadContext tc) {
+        throw new RuntimeException("This representation does not implement shift_boxed");
+    }
+    public void splice(ThreadContext tc, SixModelObject from, long offset, long count) {
+        throw new RuntimeException("This representation does not implement splice");
+    }
     
     /**
      * Associative access functions.
      */
     public SixModelObject at_key_boxed(ThreadContext tc, String key) {
-    	throw new RuntimeException("This representation does not implement at_key_boxed");
+        throw new RuntimeException("This representation does not implement at_key_boxed");
     }
     public void bind_key_boxed(ThreadContext tc, String key, SixModelObject value) {
-    	throw new RuntimeException("This representation does not implement bind_key_boxed");
+        throw new RuntimeException("This representation does not implement bind_key_boxed");
     }
     public long exists_key(ThreadContext tc, String key) {
-    	throw new RuntimeException("This representation does not implement exists_key");
+        throw new RuntimeException("This representation does not implement exists_key");
     }
     public void delete_key(ThreadContext tc, String key) {
-    	throw new RuntimeException("This representation does not implement delete_key");
+        throw new RuntimeException("This representation does not implement delete_key");
     }
 
     /**
      * General aggregate-y operations.
      */
     public long elems(ThreadContext tc) {
-    	throw new RuntimeException("This representation does not implement elems");
+        throw new RuntimeException("This representation does not implement elems");
     }
 }

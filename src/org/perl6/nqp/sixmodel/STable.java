@@ -6,36 +6,36 @@ import java.util.Map;
  * An STable (Shared Table) represents a given HOW/REPR pairing, and thus a type.
  */
 public class STable {
-	/**
-	 * Controls the way that type checks are performed. By default, if there is
-	 * a type check cache we treat it as definitive. However, it's possible to
-	 * declare that in the case the type check cache has no entry we should fall
-	 * back to asking the .HOW.type_check method (set TYPE_CHECK_CACHE_THEN_METHOD).
-	 * While a normal type check asks a value if it supports another type, the
-	 * TYPE_CHECK_NEEDS_ACCEPTS flag results in a call to .accepts_type on the
-	 * HOW of the thing we're checking the value against, giving it a chance to
-	 * decide answer. */
-	public static final int TYPE_CHECK_CACHE_DEFINITIVE = 0;
-	public static final int TYPE_CHECK_CACHE_THEN_METHOD = 1;
-	public static final int TYPE_CHECK_NEEDS_ACCEPTS = 2;
-	public static final int TYPE_CHECK_CACHE_FLAG_MASK = 3;
+    /**
+     * Controls the way that type checks are performed. By default, if there is
+     * a type check cache we treat it as definitive. However, it's possible to
+     * declare that in the case the type check cache has no entry we should fall
+     * back to asking the .HOW.type_check method (set TYPE_CHECK_CACHE_THEN_METHOD).
+     * While a normal type check asks a value if it supports another type, the
+     * TYPE_CHECK_NEEDS_ACCEPTS flag results in a call to .accepts_type on the
+     * HOW of the thing we're checking the value against, giving it a chance to
+     * decide answer. */
+    public static final int TYPE_CHECK_CACHE_DEFINITIVE = 0;
+    public static final int TYPE_CHECK_CACHE_THEN_METHOD = 1;
+    public static final int TYPE_CHECK_NEEDS_ACCEPTS = 2;
+    public static final int TYPE_CHECK_CACHE_FLAG_MASK = 3;
 
-	/**
-	 * This flag is set if we consider the method cache authoritative.
-	 */
-	public static final int METHOD_CACHE_AUTHORITATIVE = 4;
-	
-	/**
-	 * Initializes a new STable.
-	 */
-	public STable(REPR REPR, SixModelObject HOW) {
-		this.REPR = REPR;
-		this.HOW = HOW;
-	}
+    /**
+     * This flag is set if we consider the method cache authoritative.
+     */
+    public static final int METHOD_CACHE_AUTHORITATIVE = 4;
+    
+    /**
+     * Initializes a new STable.
+     */
+    public STable(REPR REPR, SixModelObject HOW) {
+        this.REPR = REPR;
+        this.HOW = HOW;
+    }
 
-	/**
-	 * The representation operation table.
-	 */
+    /**
+     * The representation operation table.
+     */
     public REPR REPR;
     
     /**

@@ -5,14 +5,14 @@ package org.perl6.nqp.sixmodel;
  * container of some sort.
  */
 public class ContainerSpec {
-	/**
-	 * Class handle where we find the contained value.
-	 */
-	SixModelObject ClassHandle;
-	
-	/**
-	 * Attribute name where we find the contained value.
-	 */
+    /**
+     * Class handle where we find the contained value.
+     */
+    SixModelObject ClassHandle;
+    
+    /**
+     * Attribute name where we find the contained value.
+     */
     String AttrName;
     
     /**
@@ -23,5 +23,5 @@ public class ContainerSpec {
     /**
      * FETCH method if applicable.
      */
-	SixModelObject FetchMethod;
+    SixModelObject FetchMethod;
 }

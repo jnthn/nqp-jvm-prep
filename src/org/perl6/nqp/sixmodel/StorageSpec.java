@@ -7,22 +7,22 @@ package org.perl6.nqp.sixmodel;
  * But for other things, they would prefer to be "inlined" into
  * the object. */
 public class StorageSpec {
-	/* Inlined or not. */
-	public static final short REFERENCE = 0;
-	public static final short INLINED = 1;
+    /* Inlined or not. */
+    public static final short REFERENCE = 0;
+    public static final short INLINED = 1;
 
-	/* Possible options for boxed primitives. */
-	public static final short BP_NONE = 0;
-	public static final short BP_INT = 1;
-	public static final short BP_NUM = 2;
-	public static final short BP_STR = 3;
+    /* Possible options for boxed primitives. */
+    public static final short BP_NONE = 0;
+    public static final short BP_INT = 1;
+    public static final short BP_NUM = 2;
+    public static final short BP_STR = 3;
 
-	/* can_box bit field values. */
-	public static final short CAN_BOX_INT = 1;
-	public static final short CAN_BOX_NUM = 2;
-	public static final short CAN_BOX_STR = 4;
-	
-	/* 0 if this is to be referenced, anything else otherwise. */
+    /* can_box bit field values. */
+    public static final short CAN_BOX_INT = 1;
+    public static final short CAN_BOX_NUM = 2;
+    public static final short CAN_BOX_STR = 4;
+    
+    /* 0 if this is to be referenced, anything else otherwise. */
     short inlineable;
 
     /* For things that want to be inlined, the number of bits of
