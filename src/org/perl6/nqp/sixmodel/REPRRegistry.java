@@ -32,5 +32,6 @@ public class REPRRegistry {
 		addREPR("P6opaque", new P6Opaque());
 		addREPR("VMHash", new VMHash());
 		addREPR("VMArray", new VMArray());
+		addREPR("P6str", new P6str());
 	}
 }

@@ -25,6 +25,11 @@ public class GlobalContext {
 	public SixModelObject BOOTHash;
 	
 	/**
+	 * BOOTHash type; a very bare type with the P6str REPR.
+	 */
+	public SixModelObject BOOTStr;
+	
+	/**
 	 * The main, startup thread's ThreadContext.
 	 */
 	public ThreadContext mainThread;

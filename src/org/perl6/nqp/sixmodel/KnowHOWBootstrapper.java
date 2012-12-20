@@ -12,6 +12,7 @@ public class KnowHOWBootstrapper {
 		bootstrapKnowHOWAttribute(tc, knowhowUnit);
 		bootArray(tc);
 		bootHash(tc);
+		bootStr(tc);
 	}
 
 	private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
@@ -110,5 +111,17 @@ public class KnowHOWBootstrapper {
 	    type_obj.st.MethodCache = meta_obj.methods;
 	    type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
 	    tc.gc.BOOTHash = type_obj;
+	}
+	
+	private static void bootStr(ThreadContext tc) {
+	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
+	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
+	    meta_obj.initialize(tc);
+	    meta_obj.name = "BOOTStr";
+	    REPR repr = REPRRegistry.getByName("P6str");
+	    SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
+	    type_obj.st.MethodCache = meta_obj.methods;
+	    type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+	    tc.gc.BOOTStr = type_obj;
 	}
 }
