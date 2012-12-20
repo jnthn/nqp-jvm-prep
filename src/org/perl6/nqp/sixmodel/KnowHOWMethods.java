@@ -1,5 +1,7 @@
 package org.perl6.nqp.sixmodel;
 
+import java.util.List;
+
 import org.perl6.nqp.runtime.*;
 import org.perl6.nqp.sixmodel.reprs.*;
 
@@ -75,11 +77,54 @@ public class KnowHOWMethods extends CompilationUnit {
 		if (self == null || !(self instanceof KnowHOWREPRInstance))
 			throw new RuntimeException("KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
 		
-		// TODO: All the things...
-		
-		// Set method cache.
+		/* Set method cache. */
 		type_obj.st.MethodCache = ((KnowHOWREPRInstance)self).methods;
 		type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+		
+		/* Set type check cache. */
+		// TODO
+		
+		/* Use any attribute information to produce attribute protocol
+	     * data. The protocol consists of an array... */
+	    SixModelObject repr_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	    repr_info.initialize(tc);
+	    
+	    /* ...which contains an array per MRO entry... */
+	    SixModelObject type_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	    type_info.initialize(tc);
+	    repr_info.push_boxed(tc, type_info);
+	        
+	    /* ...which in turn contains this type... */
+	    type_info.push_boxed(tc, type_obj);
+	    
+	    /* ...then an array of hashes per attribute... */
+	    SixModelObject attr_info_list = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	    attr_info_list.initialize(tc);
+	    type_info.push_boxed(tc, attr_info_list);
+	    List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
+	    for (int i = 0; i < attributes.size(); i++) {
+	        KnowHOWAttributeInstance attribute = (KnowHOWAttributeInstance)attributes.get(i);
+	        SixModelObject attr_info = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
+	        attr_info.initialize(tc);
+	        SixModelObject name_obj = tc.gc.BOOTStr.st.REPR.allocate(tc, tc.gc.BOOTStr.st);
+	        name_obj.initialize(tc);
+	        name_obj.set_str(tc, attribute.name);
+	        attr_info.bind_key_boxed(tc, "name", name_obj);
+	        attr_info.bind_key_boxed(tc, "type", attribute.type);
+	        if (attribute.box_target != 0) {
+	            /* Merely having the key serves as a "yes". */
+	        	attr_info.bind_key_boxed(tc, "box_target", attr_info);
+	        }
+	        attr_info_list.push_boxed(tc, attr_info);
+	    }
+	    
+	    /* ...followed by a list of parents (none). */
+	    SixModelObject parent_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	    parent_info.initialize(tc);
+	    type_info.push_boxed(tc, parent_info);
+	    
+	    /* Compose the representation using it. */
+	    type_obj.st.REPR.compose(tc, type_obj.st, repr_info);
 		
 		Ops.return_o(type_obj, tc.curFrame);
 	}
