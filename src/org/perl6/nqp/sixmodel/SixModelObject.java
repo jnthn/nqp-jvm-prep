@@ -36,8 +36,24 @@ public abstract class SixModelObject {
     /**
      * Boxing related functions.
      */
-    
-    
+    public void set_int(ThreadContext tc, long value) {
+    	throw new RuntimeException("This representation can not box a native int");
+    }
+    public long get_int(ThreadContext tc) {
+    	throw new RuntimeException("This representation can not unbox to a native int");
+    }
+    public void set_num(ThreadContext tc, double value) {
+    	throw new RuntimeException("This representation can not box a native num");
+    }
+    public double get_num(ThreadContext tc) {
+    	throw new RuntimeException("This representation can not unbox to a native num");
+    }
+    public void set_str(ThreadContext tc, String value) {
+    	throw new RuntimeException("This representation can not box a native str");
+    }
+    public String get_str(ThreadContext tc) {
+    	throw new RuntimeException("This representation can not unbox to a native str");
+    }
     
     /**
      * Positional access functions.
