@@ -15,6 +15,16 @@ public class GlobalContext {
 	public SixModelObject KnowHOWAttribute;
 	
 	/**
+	 * BOOTArray type; a very bare type with the VMArray REPR.
+	 */
+	public SixModelObject BOOTArray;
+	
+	/**
+	 * BOOTHash type; a very bare type with the VMHash REPR.
+	 */
+	public SixModelObject BOOTHash;
+	
+	/**
 	 * The main, startup thread's ThreadContext.
 	 */
 	public ThreadContext mainThread;

@@ -10,6 +10,8 @@ public class KnowHOWBootstrapper {
 	    knowhowUnit.initializeCompilationUnit();
 		bootstrapKnowHOW(tc, knowhowUnit);
 		bootstrapKnowHOWAttribute(tc, knowhowUnit);
+		bootArray(tc);
+		bootHash(tc);
 	}
 
 	private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
@@ -84,5 +86,29 @@ public class KnowHOWBootstrapper {
 	    
 	    /* Stash the created type object. */
 	    tc.gc.KnowHOWAttribute = type_obj;
+	}
+
+	private static void bootArray(ThreadContext tc) {
+	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
+	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
+	    meta_obj.initialize(tc);
+	    meta_obj.name = "BOOTArray";
+	    REPR repr = REPRRegistry.getByName("VMArray");
+	    SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
+	    type_obj.st.MethodCache = meta_obj.methods;
+	    type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+	    tc.gc.BOOTArray = type_obj;
+	}
+	
+	private static void bootHash(ThreadContext tc) {
+	    SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
+	    KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
+	    meta_obj.initialize(tc);
+	    meta_obj.name = "BOOTHash";
+	    REPR repr = REPRRegistry.getByName("VMHash");
+	    SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
+	    type_obj.st.MethodCache = meta_obj.methods;
+	    type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+	    tc.gc.BOOTHash = type_obj;
 	}
 }
