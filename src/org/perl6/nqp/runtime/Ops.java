@@ -435,6 +435,11 @@ public final class Ops {
         o.st.WHO = who;
         return o;
     }
+    public static SixModelObject create(SixModelObject obj, ThreadContext tc) {
+        SixModelObject res = obj.st.REPR.allocate(tc, obj.st);
+        res.initialize(tc);
+        return res;
+    }
     public static SixModelObject knowhow(ThreadContext tc) {
         return tc.gc.KnowHOW;
     }
