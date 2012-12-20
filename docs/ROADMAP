@@ -1,39 +1,43 @@
 NQP JVM Preparation Roadmap
 
-Grouped by topic, but there are plenty of dependencies between compiler and
-runtime. Sort-of in order within the groups. This won't get us all the way to
-being able to cross-compile NQP to JVM, but it'll most certainly get a lot of
-what is needed.
+This provides an idea of the things that need to be worked on. Once all these
+are done, we'll have most of what is needed to start working on cross-compiling
+NQP to the JVM. (And yes, this means working for a quite a while with just QAST
+trees to test.) There are some dependencies between the various sections (like,
+some of the QAST things need runtime support).
 
-Minimal QAST to JAST Compiler
-* loops
-* Basic 6model ops
+QAST to JAST Compiler
+* nqp::list() and nqp::hash() (for now can just use BOOTArray and BOOTHash)
+* Positional ops (atpos, etc.)
+* Associative ops (atkey, etc.)
+* Attribute access ops (need P6opaque work to be useful)
+* Boxing/unboxing (also kinda need P6opaque work)
+* Loops
 * QAST::Var contextuals
 * Slurpy parameters
 * Flattening arguments
 * Closures
 * Named lexical lookup fallback
+* Missing trig ops
+* Missing numeric ops
+* String ops (for now, we'll just go with JVM strings to Make Something Work,
+  but in the future we'll have to re-visit this and do NFG...)
 
 6model
-* P6int, P6num, P6str REPRs
-* VMHash, VMArray REPRs
-* P6opaque REPR
+* P6int, P6num, P6str REPRs need to learn about flattening
+* P6opaque REPR needs to support attributes and box/unbox
+* Work something out for bigint REPR
 
 Runtime
 * Implementation of flattening args
 * Implementation of slurpy params
 * Implement ops for lexical handling by name
-* Implement various 6model ops
+* Implement various 6model related ops
 
 SCs
 * Design work for SC support
 * Deserialization implementation
 * QAST::WVal
-
-Strings
-* Decide what to do about them
-* Implement it
-* Add the various QAST ops related to strings
 
 Exceptions
 * Design work
@@ -44,10 +48,6 @@ Exceptions
 Contexts
 * Contexts as first class things (REPR...)
 * QAST instructions for it
-
-Extra QAST bits
-* Missing trig instructions
-* Other missing numeric instructions
 
 Parsing
 * NFA execution
