@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(31);
+plan(32);
 
 qast_test(
     -> {
@@ -826,6 +826,69 @@ qast_test(
     },
     "GreenTea\n",
     "Created type's .name is properly set");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type with a name.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::SVal.new( :value('GreenTea'), :named('name') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+                
+                # Try to make an instance, and report survival.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('test'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('create'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('ifnull'),
+                    QAST::Var.new( :name('test'), :scope('local') ),
+                    QAST::Stmts.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::SVal.new( :value('OOPS!') )
+                        ),
+                        QAST::Op.new( :op('null') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::SVal.new( :value('Survived!') )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Survived!\n",
+    "Can create instances of a type");
 
 # ~~ Test Infrastructure ~~
 
