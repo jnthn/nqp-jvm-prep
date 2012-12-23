@@ -443,6 +443,24 @@ public final class Ops {
     public static SixModelObject knowhow(ThreadContext tc) {
         return tc.gc.KnowHOW;
     }
+    public static SixModelObject knowhowattr(ThreadContext tc) {
+        return tc.gc.KnowHOWAttribute;
+    }
+    public static SixModelObject bootint(ThreadContext tc) {
+        return tc.gc.BOOTInt;
+    }
+    public static SixModelObject bootnum(ThreadContext tc) {
+        return tc.gc.BOOTNum;
+    }
+    public static SixModelObject bootstr(ThreadContext tc) {
+        return tc.gc.BOOTStr;
+    }
+    public static SixModelObject bootarray(ThreadContext tc) {
+        return tc.gc.BOOTArray;
+    }
+    public static SixModelObject boothash(ThreadContext tc) {
+        return tc.gc.BOOTHash;
+    }
     public static SixModelObject findmethod(ThreadContext tc, SixModelObject invocant, String name) {
         SixModelObject meth = invocant.st.MethodCache.get(name);
         if (meth == null)
