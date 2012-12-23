@@ -4,6 +4,7 @@ import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.StorageSpec;
 
 public class P6num extends REPR {
 	public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
@@ -20,5 +21,13 @@ public class P6num extends REPR {
         obj.value = Double.NaN;
         return obj;
 	}
-
+	
+	public StorageSpec get_storage_spec(ThreadContext tc, STable st) {
+        StorageSpec ss = new StorageSpec();
+        ss.inlineable = StorageSpec.INLINED;
+        ss.boxed_primitive = StorageSpec.BP_NUM;
+        ss.bits = 64;
+        ss.can_box = StorageSpec.CAN_BOX_NUM;
+        return ss;
+    }
 }

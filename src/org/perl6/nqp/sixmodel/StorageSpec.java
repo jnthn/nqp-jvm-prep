@@ -23,17 +23,17 @@ public class StorageSpec {
     public static final short CAN_BOX_STR = 4;
     
     /* 0 if this is to be referenced, anything else otherwise. */
-    short inlineable;
+    public short inlineable;
 
     /* For things that want to be inlined, the number of bits of
      * storage they need. Ignored otherwise. */
-    short bits;
+    public short bits;
 
     /* For things that are inlined, if they are just storage of a
      * primitive type and can unbox, this says what primitive type
      * that they unbox to. */
-    short boxed_primitive;
+    public short boxed_primitive;
     
     /* The types that this one can box/unbox to. */
-    short can_box;
+    public short can_box;
 }

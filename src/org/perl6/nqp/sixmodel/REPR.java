@@ -42,6 +42,14 @@ public abstract class REPR {
     public long hint_for(ThreadContext tc, STable st, SixModelObject class_handle, String name) {
     	return STable.NO_HINT;
     }
+    
+    /**
+     * Gets information on how objects of this representation like to be
+     * stored (inlined into the body of another object, or referencey).
+     */
+    public StorageSpec get_storage_spec(ThreadContext tc, STable st) {
+        return new StorageSpec();
+    }
 
     /**
      * For aggregate types, gets the storage type of values in the aggregate.
