@@ -33,5 +33,7 @@ public class REPRRegistry {
         addREPR("VMHash", new VMHash());
         addREPR("VMArray", new VMArray());
         addREPR("P6str", new P6str());
+        addREPR("P6int", new P6int());
+        addREPR("P6num", new P6num());
     }
 }
