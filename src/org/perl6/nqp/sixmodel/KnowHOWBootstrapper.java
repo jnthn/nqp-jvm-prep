@@ -10,9 +10,11 @@ public class KnowHOWBootstrapper {
         knowhowUnit.initializeCompilationUnit();
         bootstrapKnowHOW(tc, knowhowUnit);
         bootstrapKnowHOWAttribute(tc, knowhowUnit);
-        bootArray(tc);
-        bootHash(tc);
-        bootStr(tc);
+        tc.gc.BOOTArray = bootType(tc, "BOOTArray", "VMArray");
+        tc.gc.BOOTHash = bootType(tc, "BOOTHash", "VMHash");
+        tc.gc.BOOTInt = bootType(tc, "BOOTInt", "P6int");
+        tc.gc.BOOTNum = bootType(tc, "BOOTNum", "P6num");
+        tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
     }
 
     private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
@@ -88,40 +90,16 @@ public class KnowHOWBootstrapper {
         /* Stash the created type object. */
         tc.gc.KnowHOWAttribute = type_obj;
     }
-
-    private static void bootArray(ThreadContext tc) {
-        SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
-        KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
-        meta_obj.initialize(tc);
-        meta_obj.name = "BOOTArray";
-        REPR repr = REPRRegistry.getByName("VMArray");
-        SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
-        type_obj.st.MethodCache = meta_obj.methods;
-        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
-        tc.gc.BOOTArray = type_obj;
-    }
     
-    private static void bootHash(ThreadContext tc) {
-        SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
+    private static SixModelObject bootType(ThreadContext tc, String typeName, String reprName) {
+    	SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
         KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
         meta_obj.initialize(tc);
-        meta_obj.name = "BOOTHash";
-        REPR repr = REPRRegistry.getByName("VMHash");
+        meta_obj.name = typeName;
+        REPR repr = REPRRegistry.getByName(reprName);
         SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
         type_obj.st.MethodCache = meta_obj.methods;
         type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
-        tc.gc.BOOTHash = type_obj;
-    }
-    
-    private static void bootStr(ThreadContext tc) {
-        SixModelObject knowhow_how = tc.gc.KnowHOW.st.HOW;
-        KnowHOWREPRInstance meta_obj = (KnowHOWREPRInstance)knowhow_how.st.REPR.allocate(tc, knowhow_how.st);
-        meta_obj.initialize(tc);
-        meta_obj.name = "BOOTStr";
-        REPR repr = REPRRegistry.getByName("P6str");
-        SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
-        type_obj.st.MethodCache = meta_obj.methods;
-        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
-        tc.gc.BOOTStr = type_obj;
+        return type_obj;
     }
 }
