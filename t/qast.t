@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(34);
+plan(36);
 
 qast_test(
     -> {
@@ -997,6 +997,109 @@ qast_test(
     },
     "1\n3\n2\n3\n2\n",
     "Basic atpos and bindpos usage");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new( :op('hash') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('hash'),
+                        QAST::SVal.new( :value('whisky') ),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::SVal.new( :value('vodka') ),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n2\n",
+    "Can create empty/2-elem hash and get elems");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('h'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('hash'),
+                    QAST::SVal.new( :value('whisky') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    ),
+                    QAST::SVal.new( :value('vodka') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atkey'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('vodka') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atkey'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('whisky') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('bindkey'),
+                QAST::Var.new( :name('h'), :scope('local') ),
+                QAST::SVal.new( :value('whisky') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atkey'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('whisky') )
+                    )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n2\n3\n",
+    "Basic atkey and bindkey usage");
 
 # ~~ Test Infrastructure ~~
 
