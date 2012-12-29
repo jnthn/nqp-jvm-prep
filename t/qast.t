@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(32);
+plan(34);
 
 qast_test(
     -> {
@@ -889,6 +889,114 @@ qast_test(
     },
     "Survived!\n",
     "Can create instances of a type");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n2\n",
+    "Can create empty/2-elem list and get elems");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('l'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new(
+                        :op('list'), 
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    )
+                )
+            ),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    )
+                )),
+            QAST::Op.new(
+                :op('bindpos'),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::IVal.new( :value(1) ),
+                QAST::Op.new(
+                    :op('list'), 
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(1) )
+                    )
+                )),
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n3\n2\n3\n2\n",
+    "Basic atpos and bindpos usage");
 
 # ~~ Test Infrastructure ~~
 
