@@ -272,6 +272,49 @@ QAST::OperationsJAST.add_core_op('list', -> $qastcomp, $op {
         $arr
     }
 });
+QAST::OperationsJAST.add_core_op('hash', -> $qastcomp, $op {
+    # Just desugar to create the empty hash.
+    my $hash := $qastcomp.as_jast(QAST::Op.new(
+        :op('create'),
+        QAST::Op.new( :op('boothash') )
+    ));
+    if +$op.list {
+        # Put hash into a temporary so we can add the items to it.
+        my $il := JAST::InstructionList.new();
+        $il.append($hash.jast);
+        $*STACK.obtain($hash);
+        my $hash_tmp := $*TA.fresh_o();
+        $il.append(JAST::Instruction.new( :op('astore'), $hash_tmp ));
+        
+        my $key_tmp := $*TA.fresh_s();
+        my $val_tmp := $*TA.fresh_o();
+        for $op.list -> $key, $val {
+            my $key_res := $qastcomp.as_jast($key, :want($RT_STR));
+            $il.append($key_res.jast);
+            $*STACK.obtain($key_res);
+            $il.append(JAST::Instruction.new( :op('astore'), $key_tmp ));
+            
+            my $val_res := $qastcomp.as_jast($val, :want($RT_OBJ));
+            $il.append($val_res.jast);
+            $*STACK.obtain($val_res);
+            $il.append(JAST::Instruction.new( :op('astore'), $val_tmp ));
+            
+            $il.append(JAST::Instruction.new( :op('aload'), $hash_tmp ));
+            $il.append(JAST::Instruction.new( :op('aload'), $key_tmp ));
+            $il.append(JAST::Instruction.new( :op('aload'), $val_tmp ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'bindkey',
+                $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_SMO, $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+        }
+        
+        $il.append(JAST::Instruction.new( :op('aload'), $hash_tmp ));
+        result($il, $RT_OBJ);
+    }
+    else {
+        $hash
+    }
+});
 
 # Conditionals.
 for <if unless> -> $op_name {
@@ -653,7 +696,9 @@ QAST::OperationsJAST.map_classlib_core_op('atan2_n', $TYPE_MATH, 'atan', [$RT_NU
 
 # aggregate opcodes
 QAST::OperationsJAST.map_classlib_core_op('atpos', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('atkey', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindpos', $TYPE_OPS, 'bindpos', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindkey', $TYPE_OPS, 'bindkey', [$RT_OBJ, $RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('elems', $TYPE_OPS, 'elems', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('push', $TYPE_OPS, 'push', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('pop', $TYPE_OPS, 'pop', [$RT_OBJ], $RT_OBJ, :tc);

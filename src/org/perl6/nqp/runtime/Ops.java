@@ -491,6 +491,15 @@ public final class Ops {
         return arr.shift_boxed(tc);
     }
     
+    /* Associative operations. */
+    public static SixModelObject atkey(SixModelObject arr, String key, ThreadContext tc) {
+        return arr.at_key_boxed(tc, key);
+    }
+    public static SixModelObject bindkey(SixModelObject arr, String key, SixModelObject value, ThreadContext tc) {
+    	arr.bind_key_boxed(tc, key, value);
+    	return value;
+    }
+    
     /* Aggregate operations. */
     public static long elems(SixModelObject agg, ThreadContext tc) {
         return agg.elems(tc);
