@@ -467,4 +467,32 @@ public final class Ops {
             throw new RuntimeException("Method '" + name + "' not found"); 
         return meth;
     }
+    
+    /* Positional operations. */
+    public static SixModelObject atpos(SixModelObject arr, long idx, ThreadContext tc) {
+        return arr.at_pos_boxed(tc, idx);
+    }
+    public static SixModelObject bindpos(SixModelObject arr, long idx, SixModelObject value, ThreadContext tc) {
+    	arr.bind_pos_boxed(tc, idx, value);
+    	return value;
+    }
+    public static SixModelObject push(SixModelObject arr, SixModelObject value, ThreadContext tc) {
+        arr.push_boxed(tc, value);
+        return value;
+    }
+    public static SixModelObject pop(SixModelObject arr, ThreadContext tc) {
+        return arr.pop_boxed(tc);
+    }
+    public static SixModelObject unshift(SixModelObject arr, SixModelObject value, ThreadContext tc) {
+        arr.unshift_boxed(tc, value);
+        return value;
+    }
+    public static SixModelObject shift(SixModelObject arr, ThreadContext tc) {
+        return arr.shift_boxed(tc);
+    }
+    
+    /* Aggregate operations. */
+    public static long elems(SixModelObject agg, ThreadContext tc) {
+        return agg.elems(tc);
+    }
 }
