@@ -7,9 +7,8 @@ trees to test.) There are some dependencies between the various sections (like,
 some of the QAST things need runtime support).
 
 QAST to JAST Compiler
-* nqp::list() and nqp::hash() (for now can just use BOOTArray and BOOTHash)
-* Positional ops (atpos, etc.)
-* Associative ops (atkey, etc.)
+* Remaining positional ops (splice, delete)
+* Remaining associative ops (exists, delete)
 * Attribute access ops (need P6opaque work to be useful)
 * Boxing/unboxing (also kinda need P6opaque work)
 * Loops
