@@ -1,12 +1,10 @@
 # Low Hanging Fruit
 Some (comparatively :-)) easy tasks for those who want to get involved.
 
-## Add missing numeric ops
+## Add missing numeric ops (and tests)
 
 * gcd_i
 * lcm_i
-
-## Add tests for trig & numeric ops
 
 ## Bitwise ops
 The integer bitwise ops are to do. They are:
