@@ -504,4 +504,17 @@ public final class Ops {
     public static long elems(SixModelObject agg, ThreadContext tc) {
         return agg.elems(tc);
     }
+    
+    /* Math operations. */
+    public static double sec_n(double val) {
+        return 1 / Math.cos(val);
+    }
+
+    public static double asec_n(double val) {
+        return Math.acos(1 / val);
+    }
+    
+    public static double sech_n(double val) {
+        return 1 / Math.cosh(val);
+    }    
 }
