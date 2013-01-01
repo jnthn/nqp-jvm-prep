@@ -9,7 +9,7 @@ jast_test(
         my $m := JAST::Method.new(:name('one'), :returns('Integer'));
         $m.append(JAST::Instruction.new( :op('iconst_1') ));
         $m.append(JAST::Instruction.new( :op('ireturn') ));
-        $c.add_method($m);W
+        $c.add_method($m);
     },
     'System.out.println(new Integer(JASTTest.one()).toString());',
     "1\n",
