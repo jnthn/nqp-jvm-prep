@@ -341,11 +341,11 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') {
     my $c := JAST::Class.new(:name('JASTTest'), :super('java.lang.Object'));
     $jast_maker($c);
     spurt('jastdump.temp', $c.dump());
+    my $cps := is_windows ?? ";" !! ":";
     run('java',
-        '-cp bin;3rdparty/bcel/bcel-5.2.jar',
+        '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'jastdump.temp', 'JASTTest.class');
-
     # Compile the test program.
     spurt('RunTest.java', '
         public class RunTest {
@@ -383,5 +383,10 @@ sub run($cmd, *@args) {
 }
 
 sub unlink($file) {
-    run('del', $file);
+    my $command := is_windows ?? "del" !! "rm";
+    run($command, $file);
+}
+
+sub is_windows() {
+    pir::interpinfo__Si(30) eq "windows";
 }
