@@ -492,12 +492,19 @@ public final class Ops {
     }
     
     /* Associative operations. */
-    public static SixModelObject atkey(SixModelObject arr, String key, ThreadContext tc) {
-        return arr.at_key_boxed(tc, key);
+    public static SixModelObject atkey(SixModelObject hash, String key, ThreadContext tc) {
+        return hash.at_key_boxed(tc, key);
     }
-    public static SixModelObject bindkey(SixModelObject arr, String key, SixModelObject value, ThreadContext tc) {
-    	arr.bind_key_boxed(tc, key, value);
+    public static SixModelObject bindkey(SixModelObject hash, String key, SixModelObject value, ThreadContext tc) {
+    	hash.bind_key_boxed(tc, key, value);
     	return value;
+    }
+    public static long existskey(SixModelObject hash, String key, ThreadContext tc) {
+        return hash.exists_key(tc, key);
+    }
+    public static SixModelObject deletekey(SixModelObject hash, String key, ThreadContext tc) {
+    	hash.delete_key(tc, key);
+    	return hash;
     }
     
     /* Aggregate operations. */
