@@ -8,7 +8,6 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
-* Remaining associative ops (exists, delete)
 * Attribute access ops (need P6opaque work to be useful)
 * Boxing/unboxing (also kinda need P6opaque work)
 * Loops
@@ -17,7 +16,6 @@ QAST to JAST Compiler
 * Flattening arguments
 * Closures
 * Named lexical lookup fallback
-* Missing trig ops
 * Missing numeric ops
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
   but in the future we'll have to re-visit this and do NFG...)
