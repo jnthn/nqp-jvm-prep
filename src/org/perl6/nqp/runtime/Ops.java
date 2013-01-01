@@ -564,4 +564,29 @@ public final class Ops {
 	public static String chr(long val) {
 		return (new StringBuffer()).append((char) val).toString();
 	}
+
+    /* bitwise operations. */
+	public static long bitor_i(long valA, long valB) {
+		return valA | valB;
+	}
+
+	public static long bitxor_i(long valA, long valB) {
+		return valA ^ valB;
+	}
+	
+	public static long bitand_i(long valA, long valB) {
+		return valA & valB;
+	}
+
+	public static long bitshiftl_i(long valA, long valB) {
+		return valA << valB;
+	}
+
+	public static long bitshiftr_i(long valA, long valB) {
+		return valA >> valB;
+	}
+
+	public static long bitneg_i(long val) {
+		return ~val;
+	}
 }
