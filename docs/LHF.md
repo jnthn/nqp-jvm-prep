@@ -1,34 +1,10 @@
 # Low Hanging Fruit
 Some (comparatively :-)) easy tasks for those who want to get involved.
 
-## Add missing trig and numeric ops
-The Math class in the Java Class Library only provides some of the trig ops
-that we need directly. Those ones are already implemented. For the rest, add
-implementations of them to the org.perl6.nqp.runtime.Ops class and update the
-QAST compiler to know about them. The full list we should have is:
-
-* sin_n
-* asin_n
-* cos_n
-* acos_n
-* tan_n
-* atan_n
-* atan2_n
-* sec_n
-* asec_n
-* sin_n
-* asin_n
-* sinh_n
-* cosh_n
-* tanh_n
-* sech_n
-
-There are also some numeric ones missing:
+## Add missing numeric ops (and tests)
 
 * gcd_i
 * lcm_i
-
-Add some tests for the things you add.
 
 ## Bitwise ops
 The integer bitwise ops are to do. They are:
