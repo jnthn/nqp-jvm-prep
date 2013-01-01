@@ -20,9 +20,8 @@ the system. If you've got some ideas on how to sort something out here, go
 for it!
 
 ## String handling
-Currently there are no string related ops. Take a look at what is available
-for this in the NQP on Parrot implementation:
+Some string ops are implemented, but the full list is at:
 
   https://github.com/perl6/nqp/blob/master/src/QAST/Operations.nqp#L1408
 
-And see about adding them, along with tests.
+Add tests to t/qast_string.t

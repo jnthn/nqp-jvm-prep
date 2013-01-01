@@ -536,4 +536,32 @@ public final class Ops {
 		return valA * (valB / gcd_i(valA, valB));
 	}
 
+    /* String operations. */
+	public static long chars(String val) {
+	    return val.length();	
+	}
+	
+	public static String lc(String val) {
+	    return val.toLowerCase();
+	}
+
+	public static String uc(String val) {
+	    return val.toUpperCase();	
+	}
+
+	public static String x(String val, long count) {
+		StringBuilder retval = new StringBuilder();
+		for (long ii = 1; ii <= count; ii++) {
+			retval.append(val);
+		}
+	    return retval.toString();
+	}
+
+	public static String concat(String valA, String valB) {
+		return valA + valB;
+	}
+
+	public static String chr(long val) {
+		return (new StringBuffer()).append((char) val).toString();
+	}
 }
