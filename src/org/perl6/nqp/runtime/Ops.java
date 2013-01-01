@@ -531,4 +531,9 @@ public final class Ops {
 		return BigInteger.valueOf(valA).gcd(BigInteger.valueOf(valB))
 				.longValue();
 	}
+
+	public static long lcm_i(long valA, long valB) {
+		return valA * (valB / gcd_i(valA, valB));
+	}
+
 }
