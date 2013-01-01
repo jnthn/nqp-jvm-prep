@@ -1,6 +1,4 @@
-#!nqp
-
-use JASTNodes;
+use helper;
 
 plan(20);
 
@@ -333,60 +331,3 @@ jast_test(
      System.out.println(JASTTest.tc(1));',
     "did not throw\ncaught\n",
     "Can throw and catch exceptions");
-
-# ~~ Test Infrastructure ~~
-
-sub jast_test($jast_maker, $exercise, $expected, $desc = '') {
-    # Turn JAST into JVM bytecode.
-    my $c := JAST::Class.new(:name('JASTTest'), :super('java.lang.Object'));
-    $jast_maker($c);
-    spurt('jastdump.temp', $c.dump());
-    my $cps := is_windows() ?? ";" !! ":";
-    run('java',
-        '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
-        'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
-        'jastdump.temp', 'JASTTest.class');
-    # Compile the test program.
-    spurt('RunTest.java', '
-        public class RunTest {
-            public static void main(String[] argv)
-            {
-                ' ~ $exercise ~ '
-            }
-        }');
-    run('javac', 'RunTest.java');
-    
-    # Run it and get test output.
-    run('java', 'RunTest', '> output.temp');
-    my $output := slurp('output.temp');
-    $output := subst($output, /\r\n/, "\n", :global);
-    ok($output eq $expected, $desc);
-
-    # Cleanup.
-    try unlink('jastdump.temp');
-    try unlink('JASTTest.class');
-    try unlink('RunTest.java');
-    try unlink('RunTest.class');
-    try unlink('output.temp');
-}
-
-sub spurt($file, $stuff) {
-    my $fh := pir::new__Ps('FileHandle');
-    $fh.open($file, "w");
-    $fh.encoding('utf8');
-    $fh.print($stuff);
-    $fh.close();
-}
-
-sub run($cmd, *@args) {
-    pir::spawnw__Is($cmd ~ ' ' ~ nqp::join(' ', @args));
-}
-
-sub unlink($file) {
-    my $command := is_windows() ?? "del" !! "rm";
-    run($command, $file);
-}
-
-sub is_windows() {
-    pir::interpinfo__Si(30) eq "MSWin32";
-}
