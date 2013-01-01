@@ -1107,7 +1107,7 @@ sub qast_test($qast_maker, $expected, $desc = '') {
     my $jast := QAST::CompilerJAST.jast($qast_maker());
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
-    my $cps := is_windows ?? ";" !! ":";
+    my $cps := is_windows() ?? ";" !! ":";
     run('java',
         '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
@@ -1143,10 +1143,10 @@ sub run($cmd, *@args) {
 }
 
 sub unlink($file) {
-    my $command := is_windows ?? "del" !! "rm";
+    my $command := is_windows() ?? "del" !! "rm";
     run($command, $file);
 }
 
 sub is_windows() {
-    pir::interpinfo__Si(30) eq "windows";
+    pir::interpinfo__Si(30) eq "MSWin32";
 }
