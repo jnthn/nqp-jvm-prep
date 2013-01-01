@@ -14,11 +14,6 @@ The integer bitwise ops are to do. They are:
 Note that these should all operate on longs (which is what the _i suffix
 always indicates in the JVM port). Would be good to add some tests too.
 
-## Split up QAST tests a bit
-Right now there's one big, and growing, test file: qast.t. It may be a good
-idea to split it into a few files, e.g. for those that focus on variables,
-conditionals, basic stuff (like literals), OO things, etc.
-
 ## Work out build stuff
 At the moment, there's nothing really set up for building the Java bit of
 the system. If you've got some ideas on how to sort something out here, go
