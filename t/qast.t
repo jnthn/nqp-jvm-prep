@@ -1,6 +1,6 @@
 use QASTJASTCompiler;
 
-plan(49);
+plan(50);
 
 qast_test(
     -> {
@@ -1100,6 +1100,84 @@ qast_test(
     },
     "1\n2\n3\n",
     "Basic atkey and bindkey usage");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('h'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('hash'),
+                    QAST::SVal.new( :value('whisky') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    ),
+                    QAST::SVal.new( :value('vodka') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('vodka') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('whisky') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('beer') )
+                )),
+            QAST::Op.new(
+                :op('deletekey'),
+                QAST::Var.new( :name('h'), :scope('local') ),
+                QAST::SVal.new( :value('whisky') )
+            ),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('vodka') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('whisky') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('existskey'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('beer') )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n1\n0\n1\n0\n0\n",
+    "existskey and deletekey");
 
 # trig ops
 my @ops := (
