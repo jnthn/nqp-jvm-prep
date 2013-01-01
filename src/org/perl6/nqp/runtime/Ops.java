@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import java.math.BigInteger;
+
 import org.perl6.nqp.sixmodel.*;
 
 /**
@@ -523,5 +525,10 @@ public final class Ops {
     
     public static double sech_n(double val) {
         return 1 / Math.cosh(val);
-    }    
+    }
+
+	public static long gcd_i(long valA, long valB) {
+		return BigInteger.valueOf(valA).gcd(BigInteger.valueOf(valB))
+				.longValue();
+	}
 }

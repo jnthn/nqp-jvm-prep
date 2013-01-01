@@ -3,7 +3,6 @@ Some (comparatively :-)) easy tasks for those who want to get involved.
 
 ## Add missing numeric ops (and tests)
 
-* gcd_i
 * lcm_i
 
 ## Bitwise ops

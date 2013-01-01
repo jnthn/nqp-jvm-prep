@@ -700,6 +700,9 @@ QAST::OperationsJAST.map_classlib_core_op('sec_n', $TYPE_OPS, 'sec_n', [$RT_NUM]
 QAST::OperationsJAST.map_classlib_core_op('asec_n', $TYPE_OPS, 'asec_n', [$RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_classlib_core_op('sech_n', $TYPE_OPS, 'sech_n', [$RT_NUM], $RT_NUM);
 
+# esoteric math opcodes
+QAST::OperationsJAST.map_classlib_core_op('gcd_i', $TYPE_OPS, 'gcd_i', [$RT_INT, $RT_INT], $RT_INT);
+
 # aggregate opcodes
 QAST::OperationsJAST.map_classlib_core_op('atpos', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('atkey', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
