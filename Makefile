@@ -10,7 +10,7 @@ QASTJASTCompiler.pbc: JASTNodes.pbc lib/QAST/JASTCompiler.nqp
 	nqp --target=pir --output=QASTJASTCompiler.pir lib/QAST/JASTCompiler.nqp
 	parrot -o QASTJASTCompiler.pbc QASTJASTCompiler.pir
 
-helper.pbc: t/helper.nqp
+helper.pbc: t/helper.nqp QASTJASTCompiler.pbc
 	nqp --target=pir --output=helper.pir t/helper.nqp
 	parrot -o helper.pbc helper.pir
 
