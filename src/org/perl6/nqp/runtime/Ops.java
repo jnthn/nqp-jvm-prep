@@ -470,13 +470,22 @@ public final class Ops {
         return meth;
     }
     
+    /* Attribute operations. */
+    public static SixModelObject getattr(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
+        return obj.get_attribute_boxed(tc, ch, name, STable.NO_HINT);
+    }
+    public static SixModelObject bindattr(SixModelObject obj, SixModelObject ch, String name, SixModelObject value, ThreadContext tc) {
+        obj.bind_attribute_boxed(tc, ch, name, STable.NO_HINT, value);
+        return value;
+    }
+    
     /* Positional operations. */
     public static SixModelObject atpos(SixModelObject arr, long idx, ThreadContext tc) {
         return arr.at_pos_boxed(tc, idx);
     }
     public static SixModelObject bindpos(SixModelObject arr, long idx, SixModelObject value, ThreadContext tc) {
-    	arr.bind_pos_boxed(tc, idx, value);
-    	return value;
+        arr.bind_pos_boxed(tc, idx, value);
+        return value;
     }
     public static SixModelObject push(SixModelObject arr, SixModelObject value, ThreadContext tc) {
         arr.push_boxed(tc, value);
@@ -498,15 +507,15 @@ public final class Ops {
         return hash.at_key_boxed(tc, key);
     }
     public static SixModelObject bindkey(SixModelObject hash, String key, SixModelObject value, ThreadContext tc) {
-    	hash.bind_key_boxed(tc, key, value);
-    	return value;
+        hash.bind_key_boxed(tc, key, value);
+        return value;
     }
     public static long existskey(SixModelObject hash, String key, ThreadContext tc) {
         return hash.exists_key(tc, key);
     }
     public static SixModelObject deletekey(SixModelObject hash, String key, ThreadContext tc) {
-    	hash.delete_key(tc, key);
-    	return hash;
+        hash.delete_key(tc, key);
+        return hash;
     }
     
     /* Aggregate operations. */
@@ -527,66 +536,66 @@ public final class Ops {
         return 1 / Math.cosh(val);
     }
 
-	public static long gcd_i(long valA, long valB) {
-		return BigInteger.valueOf(valA).gcd(BigInteger.valueOf(valB))
-				.longValue();
-	}
+    public static long gcd_i(long valA, long valB) {
+        return BigInteger.valueOf(valA).gcd(BigInteger.valueOf(valB))
+                .longValue();
+    }
 
-	public static long lcm_i(long valA, long valB) {
-		return valA * (valB / gcd_i(valA, valB));
-	}
+    public static long lcm_i(long valA, long valB) {
+        return valA * (valB / gcd_i(valA, valB));
+    }
 
     /* String operations. */
-	public static long chars(String val) {
-	    return val.length();	
-	}
-	
-	public static String lc(String val) {
-	    return val.toLowerCase();
-	}
+    public static long chars(String val) {
+        return val.length();    
+    }
+    
+    public static String lc(String val) {
+        return val.toLowerCase();
+    }
 
-	public static String uc(String val) {
-	    return val.toUpperCase();	
-	}
+    public static String uc(String val) {
+        return val.toUpperCase();    
+    }
 
-	public static String x(String val, long count) {
-		StringBuilder retval = new StringBuilder();
-		for (long ii = 1; ii <= count; ii++) {
-			retval.append(val);
-		}
-	    return retval.toString();
-	}
+    public static String x(String val, long count) {
+        StringBuilder retval = new StringBuilder();
+        for (long ii = 1; ii <= count; ii++) {
+            retval.append(val);
+        }
+        return retval.toString();
+    }
 
-	public static String concat(String valA, String valB) {
-		return valA + valB;
-	}
+    public static String concat(String valA, String valB) {
+        return valA + valB;
+    }
 
-	public static String chr(long val) {
-		return (new StringBuffer()).append((char) val).toString();
-	}
+    public static String chr(long val) {
+        return (new StringBuffer()).append((char) val).toString();
+    }
 
     /* bitwise operations. */
-	public static long bitor_i(long valA, long valB) {
-		return valA | valB;
-	}
+    public static long bitor_i(long valA, long valB) {
+        return valA | valB;
+    }
 
-	public static long bitxor_i(long valA, long valB) {
-		return valA ^ valB;
-	}
-	
-	public static long bitand_i(long valA, long valB) {
-		return valA & valB;
-	}
+    public static long bitxor_i(long valA, long valB) {
+        return valA ^ valB;
+    }
+    
+    public static long bitand_i(long valA, long valB) {
+        return valA & valB;
+    }
 
-	public static long bitshiftl_i(long valA, long valB) {
-		return valA << valB;
-	}
+    public static long bitshiftl_i(long valA, long valB) {
+        return valA << valB;
+    }
 
-	public static long bitshiftr_i(long valA, long valB) {
-		return valA >> valB;
-	}
+    public static long bitshiftr_i(long valA, long valB) {
+        return valA >> valB;
+    }
 
-	public static long bitneg_i(long val) {
-		return ~val;
-	}
+    public static long bitneg_i(long val) {
+        return ~val;
+    }
 }
