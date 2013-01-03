@@ -470,6 +470,35 @@ public final class Ops {
         return meth;
     }
     
+    /* Box/unbox operations. */
+    public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
+        SixModelObject res = type.st.REPR.allocate(tc, type.st);
+        res.initialize(tc);
+        res.set_int(tc, value);
+        return res;
+    }
+    public static SixModelObject box_n(double value, SixModelObject type, ThreadContext tc) {
+        SixModelObject res = type.st.REPR.allocate(tc, type.st);
+        res.initialize(tc);
+        res.set_num(tc, value);
+        return res;
+    }
+    public static SixModelObject box_s(String value, SixModelObject type, ThreadContext tc) {
+        SixModelObject res = type.st.REPR.allocate(tc, type.st);
+        res.initialize(tc);
+        res.set_str(tc, value);
+        return res;
+    }
+    public static long unbox_i(SixModelObject obj, ThreadContext tc) {
+    	return obj.get_int(tc);
+    }
+    public static double unbox_n(SixModelObject obj, ThreadContext tc) {
+    	return obj.get_num(tc);
+    }
+    public static String unbox_s(SixModelObject obj, ThreadContext tc) {
+    	return obj.get_str(tc);
+    }
+    
     /* Attribute operations. */
     public static SixModelObject getattr(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
         return obj.get_attribute_boxed(tc, ch, name, STable.NO_HINT);
