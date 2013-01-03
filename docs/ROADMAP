@@ -8,8 +8,7 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
-* Attribute access ops (need P6opaque work to be useful)
-* Boxing/unboxing (also kinda need P6opaque work)
+* Native attribute access ops (need P6opaque work to be useful)
 * Loops
 * QAST::Var contextuals
 * Slurpy parameters
@@ -21,7 +20,7 @@ QAST to JAST Compiler
 
 6model
 * P6int, P6num, P6str REPRs need to learn about flattening
-* P6opaque REPR needs to support attributes and box/unbox
+* P6opaque REPR needs to support native attributes and box/unbox
 * Work something out for bigint REPR
 
 Runtime
