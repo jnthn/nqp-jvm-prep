@@ -24,6 +24,22 @@ public class ThreadContext {
      */
     public int lastParameterExisted;
     
+    /**
+     * When we wish to look up or bind native or inlined things in an
+     * object, we need a way to pass around some native value. The
+     * following set of slots, along with a flag indicating value
+     * type, provide a way to do that.
+     */
+    public long native_i;
+    public double native_n;
+    public String native_s;
+    public Object native_j;
+    public int native_type;
+    public static final int NATIVE_INT = 1;
+    public static final int NATIVE_NUM = 2;
+    public static final int NATIVE_STR = 3;
+    public static final int NATIVE_JVM_OBJ = 4;
+    
     public ThreadContext(GlobalContext gc) {
         this.gc = gc;
     }

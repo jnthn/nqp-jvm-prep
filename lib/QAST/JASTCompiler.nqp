@@ -749,7 +749,13 @@ QAST::OperationsJAST.map_classlib_core_op('bootarray', $TYPE_OPS, 'bootarray', [
 QAST::OperationsJAST.map_classlib_core_op('boothash', $TYPE_OPS, 'boothash', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('create', $TYPE_OPS, 'create', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getattr', $TYPE_OPS, 'getattr', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getattr_i', $TYPE_OPS, 'getattr_i', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getattr_n', $TYPE_OPS, 'getattr_n', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getattr_s', $TYPE_OPS, 'getattr_s', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindattr', $TYPE_OPS, 'bindattr', [$RT_OBJ, $RT_OBJ, $RT_STR, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindattr_i', $TYPE_OPS, 'bindattr_i', [$RT_OBJ, $RT_OBJ, $RT_STR, $RT_INT], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindattr_n', $TYPE_OPS, 'bindattr_n', [$RT_OBJ, $RT_OBJ, $RT_STR, $RT_NUM], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindattr_s', $TYPE_OPS, 'bindattr_s', [$RT_OBJ, $RT_OBJ, $RT_STR, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('unbox_i', $TYPE_OPS, 'unbox_i', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('unbox_n', $TYPE_OPS, 'unbox_n', [$RT_OBJ], $RT_NUM, :tc);
 QAST::OperationsJAST.map_classlib_core_op('unbox_s', $TYPE_OPS, 'unbox_s', [$RT_OBJ], $RT_STR, :tc);

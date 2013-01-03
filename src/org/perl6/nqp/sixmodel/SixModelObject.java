@@ -28,16 +28,23 @@ public abstract class SixModelObject {
     }
     
     /**
-     * Attribute access functions.
+     * Attribute access functions. The native variants load the value into
+     * or store a value from the Thread Context.
      */
     public SixModelObject get_attribute_boxed(ThreadContext tc, SixModelObject class_handle,
     		String name, long hint) {
     	throw new RuntimeException("This representation does not support attributes");
     }
+    public void get_attribute_native(ThreadContext tc, SixModelObject class_handle, String name, long hint) {
+    	throw new RuntimeException("This representation does not support natively typed attributes");
+    }
     public void bind_attribute_boxed(ThreadContext tc,SixModelObject class_handle,
     		String name, long hint, SixModelObject value) {
     	throw new RuntimeException("This representation does not support attributes");
-    } 
+    }
+    public void bind_attribute_native(ThreadContext tc,SixModelObject class_handle, String name, long hint) {
+    	throw new RuntimeException("This representation does not support natively typed attributes");
+    }
     public long is_attribute_initialized(ThreadContext tc, SixModelObject class_handle,
     		String name, long hint) {
     	throw new RuntimeException("This representation does not support attributes");

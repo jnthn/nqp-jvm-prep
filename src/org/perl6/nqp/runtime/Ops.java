@@ -490,21 +490,60 @@ public final class Ops {
         return res;
     }
     public static long unbox_i(SixModelObject obj, ThreadContext tc) {
-    	return obj.get_int(tc);
+        return obj.get_int(tc);
     }
     public static double unbox_n(SixModelObject obj, ThreadContext tc) {
-    	return obj.get_num(tc);
+        return obj.get_num(tc);
     }
     public static String unbox_s(SixModelObject obj, ThreadContext tc) {
-    	return obj.get_str(tc);
+        return obj.get_str(tc);
     }
     
     /* Attribute operations. */
     public static SixModelObject getattr(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
         return obj.get_attribute_boxed(tc, ch, name, STable.NO_HINT);
     }
+    public static long getattr_i(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
+        obj.get_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type == ThreadContext.NATIVE_INT)
+            return tc.native_i;
+        else
+            throw new RuntimeException("Attribute '" + name + "' is not a native int");
+    }
+    public static double getattr_n(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
+        obj.get_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type == ThreadContext.NATIVE_NUM)
+            return tc.native_n;
+        else
+            throw new RuntimeException("Attribute '" + name + "' is not a native num");
+    }
+    public static String getattr_s(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
+        obj.get_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type == ThreadContext.NATIVE_STR)
+            return tc.native_s;
+        else
+            throw new RuntimeException("Attribute '" + name + "' is not a native str");
+    }
     public static SixModelObject bindattr(SixModelObject obj, SixModelObject ch, String name, SixModelObject value, ThreadContext tc) {
         obj.bind_attribute_boxed(tc, ch, name, STable.NO_HINT, value);
+        return value;
+    }
+    public static long bindattr_i(SixModelObject obj, SixModelObject ch, String name, long value, ThreadContext tc) {
+        tc.native_i = value;
+        tc.native_type = ThreadContext.NATIVE_INT;
+        obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
+        return value;
+    }
+    public static double bindattr_n(SixModelObject obj, SixModelObject ch, String name, double value, ThreadContext tc) {
+        tc.native_n = value;
+        tc.native_type = ThreadContext.NATIVE_NUM;
+        obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
+        return value;
+    }
+    public static String bindattr_s(SixModelObject obj, SixModelObject ch, String name, String value, ThreadContext tc) {
+        tc.native_s = value;
+        tc.native_type = ThreadContext.NATIVE_STR;
+        obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
         return value;
     }
     
