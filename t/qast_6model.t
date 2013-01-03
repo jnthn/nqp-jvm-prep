@@ -1,6 +1,6 @@
 use helper;
 
-plan(5);
+plan(6);
 
 qast_test(
     -> {
@@ -278,3 +278,44 @@ qast_test(
     },
     "2\n",
     "Reference type attribute works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_i'),
+                    QAST::Op.new(
+                        :op('box_i'),
+                        QAST::IVal.new( :value(13) ),
+                        QAST::Op.new( :op('bootint') )
+                    ))),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_n'),
+                    QAST::Op.new(
+                        :op('box_n'),
+                        QAST::NVal.new( :value(3.14) ),
+                        QAST::Op.new( :op('bootnum') )
+                    ))),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_s'),
+                    QAST::Op.new(
+                        :op('box_s'),
+                        QAST::SVal.new( :value('Drop bear!') ),
+                        QAST::Op.new( :op('bootstr') )
+                    )))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "13\n3.14\nDrop bear!\n",
+    "Boxing/unboxing of boot types");
