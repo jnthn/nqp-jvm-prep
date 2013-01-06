@@ -444,6 +444,9 @@ public final class Ops {
         res.initialize(tc);
         return res;
     }
+    public static long isconcrete(SixModelObject obj, ThreadContext tc) {
+        return obj instanceof TypeObject ? 0 : 1;
+    }
     public static SixModelObject knowhow(ThreadContext tc) {
         return tc.gc.KnowHOW;
     }
