@@ -3,6 +3,8 @@ package org.perl6.nqp.runtime;
 import java.math.BigInteger;
 
 import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMHash;
 
 /**
  * Contains complex operations that are more involved that the simple ops that the
@@ -589,6 +591,12 @@ public final class Ops {
     /* Aggregate operations. */
     public static long elems(SixModelObject agg, ThreadContext tc) {
         return agg.elems(tc);
+    }
+    public static long islist(SixModelObject obj, ThreadContext tc) {
+        return obj.st.REPR instanceof VMArray ? 1 : 0;
+    }
+    public static long ishash(SixModelObject obj, ThreadContext tc) {
+        return obj.st.REPR instanceof VMHash ? 1 : 0;
     }
     
     /* Math operations. */
