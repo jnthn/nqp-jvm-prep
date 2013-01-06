@@ -1,6 +1,6 @@
 use helper;
 
-plan(6);
+plan(7);
 
 qast_test(
     -> {
@@ -319,3 +319,56 @@ qast_test(
     },
     "13\n3.14\nDrop bear!\n",
     "Boxing/unboxing of boot types");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new( :op('knowhow') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new( :op('list') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new( :op('hash') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new( :op('bootarray') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isconcrete'),
+                        QAST::Op.new( :op('boothash') )
+                    )),
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n1\n1\n0\n0\n",
+    "isconcrete works");
