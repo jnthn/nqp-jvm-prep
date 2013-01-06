@@ -14,7 +14,7 @@ public class P6Opaque extends REPR {
     public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
         STable st = new STable(this, HOW);
         st.REPRData = new P6OpaqueREPRData();
-        SixModelObject obj = new P6OpaqueBaseInstance();
+        SixModelObject obj = new TypeObject();
         obj.st = st;
         st.WHAT = obj;
         return st.WHAT;

@@ -5,11 +5,12 @@ import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.StorageSpec;
+import org.perl6.nqp.sixmodel.TypeObject;
 
 public class P6str extends REPR {
     public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
         STable st = new STable(this, HOW);
-        SixModelObject obj = new P6strInstance();
+        SixModelObject obj = new TypeObject();
         obj.st = st;
         st.WHAT = obj;
         return st.WHAT;
