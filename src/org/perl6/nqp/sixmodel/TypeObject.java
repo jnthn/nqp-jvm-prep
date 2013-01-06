@@ -1,5 +1,74 @@
 package org.perl6.nqp.sixmodel;
 
-public class TypeObject extends SixModelObject {
+import org.perl6.nqp.runtime.ThreadContext;
 
+public class TypeObject extends SixModelObject {
+    public SixModelObject get_attribute_boxed(ThreadContext tc, SixModelObject class_handle,
+            String name, long hint) {
+        throw new RuntimeException("Cannot look up attributes in a type object");
+    }
+    public void get_attribute_native(ThreadContext tc, SixModelObject class_handle, String name, long hint) {
+        throw new RuntimeException("Cannot look up attributes in a type object");
+    }
+    public void bind_attribute_boxed(ThreadContext tc,SixModelObject class_handle,
+            String name, long hint, SixModelObject value) {
+        throw new RuntimeException("Cannot look up attributes in a type object");
+    }
+    public void bind_attribute_native(ThreadContext tc,SixModelObject class_handle, String name, long hint) {
+        throw new RuntimeException("Cannot look up attributes in a type object");
+    }
+    public long is_attribute_initialized(ThreadContext tc, SixModelObject class_handle,
+            String name, long hint) {
+        throw new RuntimeException("Cannot look up attributes in a type object");
+    }
+    
+    public long get_int(ThreadContext tc) {
+        throw new RuntimeException("Cannot unbox a type object");
+    }
+    public double get_num(ThreadContext tc) {
+        throw new RuntimeException("Cannot unbox a type object");
+    }
+    public String get_str(ThreadContext tc) {
+        throw new RuntimeException("Cannot unbox a type object");
+    }
+    
+    public SixModelObject at_pos_boxed(ThreadContext tc, long index) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void bind_pos_boxed(ThreadContext tc, long index, SixModelObject value) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void set_elems(ThreadContext tc, long count) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void push_boxed(ThreadContext tc, SixModelObject value) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public SixModelObject pop_boxed(ThreadContext tc) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void unshift_boxed(ThreadContext tc, SixModelObject value) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public SixModelObject shift_boxed(ThreadContext tc) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void splice(ThreadContext tc, SixModelObject from, long offset, long count) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public SixModelObject at_key_boxed(ThreadContext tc, String key) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void bind_key_boxed(ThreadContext tc, String key, SixModelObject value) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public long exists_key(ThreadContext tc, String key) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public void delete_key(ThreadContext tc, String key) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
+    public long elems(ThreadContext tc) {
+        throw new RuntimeException("Cannot do aggregate operation on a type object");
+    }
 }
