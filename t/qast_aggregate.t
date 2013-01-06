@@ -1,6 +1,6 @@
 use helper;
 
-plan(5);
+plan(7);
 
 qast_test(
     -> {
@@ -290,3 +290,55 @@ qast_test(
     },
     "1\n1\n0\n1\n0\n0\n",
     "existskey and deletekey");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('islist'),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('islist'),
+                    QAST::Op.new( :op('hash') )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n0\n",
+    "islist");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ishash'),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ishash'),
+                    QAST::Op.new( :op('hash') )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n",
+    "ishash");
