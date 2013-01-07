@@ -1,6 +1,6 @@
 use helper;
 
-plan(7);
+plan(8);
 
 qast_test(
     -> {
@@ -209,7 +209,7 @@ qast_test(
                     )
                 ),
                 
-                # Get its HOW, add a method, and compose it.
+                # Get its HOW, add an attribute, and compose it.
                 QAST::Op.new(
                     :op('bind'),
                     QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
@@ -278,6 +278,84 @@ qast_test(
     },
     "2\n",
     "Reference type attribute works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ),
+                
+                # Get its HOW, add an attribute, and compose it.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('add_attribute'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new'),
+                        QAST::Op.new( :op('knowhowattr') ),
+                        QAST::SVal.new( :value('$!x'), :named('name') ),
+                        QAST::Op.new( :op('bootint'), :named('type') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+                
+                # Create a new instance.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('test'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('create'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                
+                # Store something in the attribute.
+                QAST::Op.new(
+                    :op('bindattr_i'),
+                    QAST::Var.new( :name('test'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::SVal.new( :value('$!x') ),
+                    QAST::IVal.new( :value(34) )),
+
+                # Get it back.
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('getattr_i'),
+                        QAST::Var.new( :name('test'), :scope('local') ),
+                        QAST::Var.new( :name('type'), :scope('local') ),
+                        QAST::SVal.new( :value('$!x') )
+                    ))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "34\n",
+    "Native int attribute works");
 
 qast_test(
     -> {
