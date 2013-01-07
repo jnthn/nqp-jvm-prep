@@ -6,6 +6,8 @@ import org.apache.bcel.generic.FieldGen;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionFactory;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
@@ -72,5 +74,34 @@ public class P6num extends REPR {
         ins[6] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_n", Type.DOUBLE, Constants.PUTFIELD);
         ins[7] = InstructionConstants.RETURN;
         return ins;
+    }
+    
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+        InstructionFactory f = new InstructionFactory(cp);
+        
+        InstructionList getIl = new InstructionList();
+        MethodGen getMeth = new MethodGen(Constants.ACC_PUBLIC, Type.DOUBLE,
+                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;") },
+                new String[] { "tc" },
+                "get_num", c.getClassName(), getIl, cp);
+        getIl.append(InstructionConstants.ALOAD_0);
+        getIl.append(f.createFieldAccess(c.getClassName(), prefix, Type.DOUBLE, Constants.GETFIELD));
+        getIl.append(InstructionConstants.DRETURN);
+        getMeth.setMaxStack();
+        c.addMethod(getMeth.getMethod());
+        getIl.dispose();
+        
+        InstructionList setIl = new InstructionList();
+        MethodGen setMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
+                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"), Type.DOUBLE },
+                new String[] { "tc", "value" },
+                "set_num", c.getClassName(), setIl, cp);
+        setIl.append(InstructionConstants.ALOAD_0);
+        setIl.append(InstructionFactory.createLoad(Type.DOUBLE, 2));
+        setIl.append(f.createFieldAccess(c.getClassName(), prefix, Type.DOUBLE, Constants.PUTFIELD));
+        setIl.append(InstructionConstants.RETURN);
+        setMeth.setMaxStack();
+        c.addMethod(setMeth.getMethod());
+        setIl.dispose();
     }
 }
