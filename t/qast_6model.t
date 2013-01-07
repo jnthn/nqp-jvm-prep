@@ -1,6 +1,6 @@
 use helper;
 
-plan(10);
+plan(13);
 
 qast_test(
     -> {
@@ -553,6 +553,192 @@ qast_test(
     },
     "13\n3.14\nDrop bear!\n",
     "Boxing/unboxing of boot types");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ),
+                
+                # Get its HOW, add an attribute, and compose it.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('add_attribute'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new'),
+                        QAST::Op.new( :op('knowhowattr') ),
+                        QAST::SVal.new( :value('$!x'), :named('name') ),
+                        QAST::Op.new( :op('bootint'), :named('type') ),
+                        QAST::IVal.new( :value(1), :named('box_target') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+
+                # Box/unbox
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unbox_i'),
+                        QAST::Op.new(
+                            :op('box_i'),
+                            QAST::IVal.new( :value(2013) ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "2013\n",
+    "P6opaque box target with native int");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ),
+                
+                # Get its HOW, add an attribute, and compose it.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('add_attribute'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new'),
+                        QAST::Op.new( :op('knowhowattr') ),
+                        QAST::SVal.new( :value('$!x'), :named('name') ),
+                        QAST::Op.new( :op('bootnum'), :named('type') ),
+                        QAST::IVal.new( :value(1), :named('box_target') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+
+                # Box/unbox
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unbox_n'),
+                        QAST::Op.new(
+                            :op('box_n'),
+                            QAST::NVal.new( :value(20.13) ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "20.13\n",
+    "P6opaque box target with native num");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ),
+                
+                # Get its HOW, add an attribute, and compose it.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('add_attribute'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new'),
+                        QAST::Op.new( :op('knowhowattr') ),
+                        QAST::SVal.new( :value('$!x'), :named('name') ),
+                        QAST::Op.new( :op('bootstr'), :named('type') ),
+                        QAST::IVal.new( :value(1), :named('box_target') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+
+                # Box/unbox
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unbox_s'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('Innis and Gunn') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Innis and Gunn\n",
+    "P6opaque box target with native str");
 
 qast_test(
     -> {
