@@ -112,5 +112,8 @@ public abstract class REPR {
     public Instruction[] inlineGet(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+        throw new RuntimeException("This representation does not support being a box target");        
+    }
 }
 

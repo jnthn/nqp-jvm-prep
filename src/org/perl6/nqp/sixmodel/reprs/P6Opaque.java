@@ -219,7 +219,9 @@ public class P6Opaque extends REPR {
              * methods.
              */
             if (box_target) {
-                throw new RuntimeException("P6opaque box/unbox NYI");
+                if (ss.inlineable == StorageSpec.REFERENCE)
+                    throw new RuntimeException("A box_target must not have a reference type attribute");
+                type.st.REPR.generateBoxingMethods(tc, type.st, c, cp, "field_" + i);
             }
         }
         
