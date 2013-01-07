@@ -1,5 +1,8 @@
 package org.perl6.nqp.sixmodel;
 
+import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.Instruction;
 import org.perl6.nqp.runtime.ThreadContext;
 
 /**
@@ -40,7 +43,7 @@ public abstract class REPR {
      * Gets attribute access hint for the representation.
      */
     public long hint_for(ThreadContext tc, STable st, SixModelObject class_handle, String name) {
-    	return STable.NO_HINT;
+    return STable.NO_HINT;
     }
     
     /**
@@ -96,4 +99,18 @@ public abstract class REPR {
     {
         // It's fine for this to be unimplemented.
     }
+    
+    /**
+     * Flattening related functions.
+     */
+    public void inlineStorage(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+        throw new RuntimeException("This representation cannot inline itself into another");
+    }
+    public Instruction[] inlineBind(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+        throw new RuntimeException("This representation cannot inline itself into another");
+    }
+    public Instruction[] inlineGet(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+        throw new RuntimeException("This representation cannot inline itself into another");
+    }
 }
+

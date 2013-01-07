@@ -92,6 +92,23 @@ public class P6Opaque extends REPR {
         int[] bindBoxedMatch = new int[attrHashes.size()];
         InstructionHandle[] bindBoxedTargets = new InstructionHandle[attrHashes.size()];
         
+        /* bind_attribute_native */
+        InstructionList bindNativeIl = new InstructionList();
+        MethodGen bindNativeMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
+                new Type[] {
+                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
+                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
+                    Type.STRING, Type.LONG
+                },
+                new String[] { "tc" , "class_handle", "name", "hint" },
+                "bind_attribute_native", className, bindNativeIl, cp);
+        bindNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
+        bindNativeIl.append(InstructionConstants.L2I);
+        if (attrHashes.size() > 0)
+            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        int[] bindNativeMatch = new int[attrHashes.size()];
+        InstructionHandle[] bindNativeTargets = new InstructionHandle[attrHashes.size()];
+        
         /* get_attribute_boxed */
         InstructionList getBoxedIl = new InstructionList();
         MethodGen getBoxedMeth = new MethodGen(Constants.ACC_PUBLIC, 
@@ -109,6 +126,24 @@ public class P6Opaque extends REPR {
             getBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
         int[] getBoxedMatch = new int[attrHashes.size()];
         InstructionHandle[] getBoxedTargets = new InstructionHandle[attrHashes.size()];
+        
+        /* get_attribute_native */
+        InstructionList getNativeIl = new InstructionList();
+        MethodGen getNativeMeth = new MethodGen(Constants.ACC_PUBLIC, 
+                Type.VOID,
+                new Type[] {
+                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
+                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
+                    Type.STRING, Type.LONG
+                },
+                new String[] { "tc" , "class_handle", "name", "hint" },
+                "get_attribute_native", className, getNativeIl, cp);
+        getNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
+        getNativeIl.append(InstructionConstants.L2I);
+        if (attrHashes.size() > 0)
+            getNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        int[] getNativeMatch = new int[attrHashes.size()];
+        InstructionHandle[] getNativeTargets = new InstructionHandle[attrHashes.size()];
         
         /* Now add all of the required fields and fill out the methods. */
         for (int i = 0; i < attrHashes.size(); i++) {
@@ -139,9 +174,45 @@ public class P6Opaque extends REPR {
                 getBoxedTargets[i] = getBoxedIl.getEnd();
                 getBoxedIl.append(f.createFieldAccess(className, fg.getName(), fg.getType(), Constants.GETFIELD));
                 getBoxedIl.append(InstructionConstants.ARETURN);
+                
+                /* Native variants should just throw. */
+                bindNativeMatch[i] = i;
+                bindNativeIl.append(InstructionConstants.ALOAD_0);
+                bindNativeTargets[i] = bindNativeIl.getEnd();
+                bindNativeIl.append(f.createInvoke(className, "badNative", Type.VOID, new Type[] { }, Constants.INVOKEVIRTUAL));
+                getNativeMatch[i] = i;
+                getNativeIl.append(InstructionConstants.ALOAD_0);
+                getNativeTargets[i] = getNativeIl.getEnd();
+                getNativeIl.append(f.createInvoke(className, "badNative", Type.VOID, new Type[] { }, Constants.INVOKEVIRTUAL));
             }
             else {
-                throw new RuntimeException("P6opaque native attributes NYI");
+                /* Generate field prefix and have target REPR install the field. */
+                String prefix = "field_" + i;
+                type.st.REPR.inlineStorage(tc, type.st, c, cp, prefix);
+                
+                /* Install bind/get instructions. */
+                Instruction[] bindInstructions = type.st.REPR.inlineBind(tc, type.st, c, cp, prefix);
+                bindNativeMatch[i] = i;
+                bindNativeIl.append(bindInstructions[0]);
+                bindNativeTargets[i] = bindNativeIl.getEnd();
+                for (int j = 1; j < bindInstructions.length; j++)
+                    bindNativeIl.append(bindInstructions[j]);
+                Instruction[] getInstructions = type.st.REPR.inlineGet(tc, type.st, c, cp, prefix);
+                getNativeMatch[i] = i;
+                getNativeIl.append(getInstructions[0]);
+                getNativeTargets[i] = getNativeIl.getEnd();
+                for (int j = 1; j < getInstructions.length; j++)
+                    getNativeIl.append(getInstructions[j]);
+                
+                /* Reference variants should just throw. */
+                bindBoxedMatch[i] = i;
+                bindBoxedIl.append(InstructionConstants.ALOAD_0);
+                bindBoxedTargets[i] = bindBoxedIl.getEnd();
+                bindBoxedIl.append(f.createInvoke(className, "badReference", Type.VOID, new Type[] { }, Constants.INVOKEVIRTUAL));
+                getBoxedMatch[i] = i;
+                getBoxedIl.append(InstructionConstants.ALOAD_0);
+                getBoxedTargets[i] = getBoxedIl.getEnd();
+                getBoxedIl.append(f.createInvoke(className, "badReference", Type.VOID, new Type[] { }, Constants.INVOKEVIRTUAL));
             }            
             
             /* If this is a box/unbox target, make sure it gets the appropriate
@@ -172,6 +243,26 @@ public class P6Opaque extends REPR {
         c.addMethod(bindBoxedMeth.getMethod());
         bindBoxedIl.dispose();
         
+        /* Finish bind_native_attribute. */
+        InstructionHandle bindNativeTsPos = bindNativeIl.getStart().getNext().getNext();
+        bindNativeIl.append(InstructionConstants.ALOAD_0);
+        if (attrHashes.size() > 0)
+            bindNativeTsPos.setInstruction(
+                    new TABLESWITCH(bindNativeMatch, bindNativeTargets, bindNativeIl.getEnd()));
+        bindNativeIl.append(InstructionConstants.ALOAD_2);
+        bindNativeIl.append(InstructionFactory.createLoad(Type.STRING, 3));
+        bindNativeIl.append(f.createInvoke(
+                className, "resolveAttribute", Type.INT,
+                new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
+                Constants.INVOKEVIRTUAL));
+        if (attrHashes.size() > 0)
+            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindNativeTsPos));
+        else
+            bindNativeIl.append(InstructionConstants.RETURN);
+        bindNativeMeth.setMaxStack();
+        c.addMethod(bindNativeMeth.getMethod());
+        bindNativeIl.dispose();
+        
         /* Finish get_boxed_attribute. */
         InstructionHandle getBoxedTsPos = getBoxedIl.getStart().getNext().getNext();
         getBoxedIl.append(InstructionConstants.ALOAD_0);
@@ -193,6 +284,27 @@ public class P6Opaque extends REPR {
         getBoxedMeth.setMaxStack();
         c.addMethod(getBoxedMeth.getMethod());
         getBoxedIl.dispose();
+        
+        /* Finish get_native_attribute. */
+        InstructionHandle getNativeTsPos = getNativeIl.getStart().getNext().getNext();
+        getNativeIl.append(InstructionConstants.ALOAD_0);
+        if (attrHashes.size() > 0)
+            getNativeTsPos.setInstruction(
+                    new TABLESWITCH(getNativeMatch, getNativeTargets, getNativeIl.getEnd()));
+        getNativeIl.append(InstructionConstants.ALOAD_2);
+        getNativeIl.append(InstructionFactory.createLoad(Type.STRING, 3));
+        getNativeIl.append(f.createInvoke(
+                className, "resolveAttribute", Type.INT,
+                new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
+                Constants.INVOKEVIRTUAL));
+        if (attrHashes.size() > 0)
+            getNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getNativeTsPos));
+        else {
+            getNativeIl.append(InstructionConstants.RETURN);
+        }
+        getNativeMeth.setMaxStack();
+        c.addMethod(getNativeMeth.getMethod());
+        getNativeIl.dispose();
         
         /* Finally, add empty constructor and generate the JVM storage class. */
         c.addEmptyConstructor(Constants.ACC_PUBLIC);
