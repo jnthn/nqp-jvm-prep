@@ -535,20 +535,23 @@ public final class Ops {
     }
     public static long bindattr_i(SixModelObject obj, SixModelObject ch, String name, long value, ThreadContext tc) {
         tc.native_i = value;
-        tc.native_type = ThreadContext.NATIVE_INT;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type != ThreadContext.NATIVE_INT)
+            throw new RuntimeException("Attribute '" + name + "' is not a native int");
         return value;
     }
     public static double bindattr_n(SixModelObject obj, SixModelObject ch, String name, double value, ThreadContext tc) {
         tc.native_n = value;
-        tc.native_type = ThreadContext.NATIVE_NUM;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type != ThreadContext.NATIVE_NUM)
+            throw new RuntimeException("Attribute '" + name + "' is not a native num");
         return value;
     }
     public static String bindattr_s(SixModelObject obj, SixModelObject ch, String name, String value, ThreadContext tc) {
         tc.native_s = value;
-        tc.native_type = ThreadContext.NATIVE_STR;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
+        if (tc.native_type != ThreadContext.NATIVE_STR)
+            throw new RuntimeException("Attribute '" + name + "' is not a native str");
         return value;
     }
     
