@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import java.util.HashMap;
+
 import org.perl6.nqp.sixmodel.KnowHOWBootstrapper;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
@@ -45,11 +47,36 @@ public class GlobalContext {
     public ThreadContext mainThread;
     
     /**
+     * HLL configuration (maps HLL name to the configuration).
+     */
+    private HashMap<String, HLLConfig> hllConfiguration;
+    
+    /**
      * Initializes the runtime environment.
      */
     public GlobalContext()
     {
+        hllConfiguration = new HashMap<String, HLLConfig>();
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);
+    }
+    
+    /**
+     * Gets HLL configuration object for the specified language.
+     */
+    public HLLConfig getHLLConfigFor(String language) {
+        synchronized (hllConfiguration) {
+            HLLConfig config = hllConfiguration.get(language);
+            if (config == null) {
+                config = new HLLConfig();
+                config.intBoxType = BOOTInt;
+                config.numBoxType = BOOTNum;
+                config.strBoxType = BOOTStr;
+                config.slurpyArrayType = BOOTArray;
+                config.slurpyHashType = BOOTHash;
+                hllConfiguration.put(language, config);
+            }
+            return config;
+        }
     }
 }

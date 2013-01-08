@@ -24,31 +24,36 @@ public abstract class CompilationUnit {
     public CallSiteDescriptor[] callSites;
     
     /**
+     * HLL configuration for this compilation unit.
+     */
+    public HLLConfig hllConfig;
+    
+    /**
      * When a compilation unit is serving as the main entry point, its main
      * method will just delegate to here. Thus this needs to trigger some
      * initialization work and then invoke the required main code.
      */
     public static void enterFromMain(Class<?> cuType, int entryCodeRefIdx, String[] argv)
             throws Exception {
-        CompilationUnit cu = setupCompilationUnit(cuType);
         ThreadContext tc = (new GlobalContext()).mainThread;
+        CompilationUnit cu = setupCompilationUnit(tc, cuType);
         Ops.invoke(tc, cu.codeRefs[entryCodeRefIdx], -1);
     }
     
     /**
      * Takes the class object for some compilation unit and sets it up. 
      */
-    public static CompilationUnit setupCompilationUnit(Class<?> cuType)
+    public static CompilationUnit setupCompilationUnit(ThreadContext tc, Class<?> cuType)
             throws InstantiationException, IllegalAccessException {
         CompilationUnit cu = (CompilationUnit)cuType.newInstance();
-        cu.initializeCompilationUnit();
+        cu.initializeCompilationUnit(tc);
         return cu;
     }
     
     /**
      * Does initialization work for the compilation unit.
      */
-    public void initializeCompilationUnit() {
+    public void initializeCompilationUnit(ThreadContext tc) {
         /* Place code references into a lookup table by unique ID. */
         codeRefs = getCodeRefs();
         for (CodeRef c : codeRefs)
@@ -62,6 +67,9 @@ public abstract class CompilationUnit {
         
         /* Build callsite descriptors. */
         callSites = getCallSites();
+        
+        /* Get HLL configuration object. */
+        hllConfig = tc.gc.getHLLConfigFor(this.hllName());
     }
     
     /**
@@ -98,4 +106,9 @@ public abstract class CompilationUnit {
      * that are used by this compilation unit.
      */
     public abstract CallSiteDescriptor[] getCallSites();
+    
+    /**
+     * Code generation emits this to supply the HLL name from QAST::CompUnit.
+     */
+    public abstract String hllName();
 }

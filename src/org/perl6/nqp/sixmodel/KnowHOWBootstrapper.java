@@ -7,7 +7,7 @@ public class KnowHOWBootstrapper {
     {
         REPRRegistry.setup();
         CompilationUnit knowhowUnit = new KnowHOWMethods();
-        knowhowUnit.initializeCompilationUnit();
+        knowhowUnit.initializeCompilationUnit(tc);
         bootstrapKnowHOW(tc, knowhowUnit);
         bootstrapKnowHOWAttribute(tc, knowhowUnit);
         tc.gc.BOOTArray = bootType(tc, "BOOTArray", "VMArray");

@@ -680,4 +680,20 @@ public final class Ops {
     public static long bitneg_i(long val) {
         return ~val;
     }
+    
+    /* HLL configuration and compiler related options. */
+    public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
+        HLLConfig config = tc.gc.getHLLConfigFor(language);
+        if (configHash.exists_key(tc, "int_box") != 0)
+            config.intBoxType = configHash.at_key_boxed(tc, "int_box");
+        if (configHash.exists_key(tc, "num_box") != 0)
+            config.numBoxType = configHash.at_key_boxed(tc, "num_box");
+        if (configHash.exists_key(tc, "str_box") != 0)
+            config.strBoxType = configHash.at_key_boxed(tc, "str_box");
+        if (configHash.exists_key(tc, "slurpy_array") != 0)
+            config.slurpyArrayType = configHash.at_key_boxed(tc, "slurpy_array");
+        if (configHash.exists_key(tc, "slurpy_hash") != 0)
+            config.slurpyHashType = configHash.at_key_boxed(tc, "slurpy_hash");
+        return configHash;
+    }
 }

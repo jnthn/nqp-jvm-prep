@@ -241,4 +241,8 @@ public class KnowHOWMethods extends CompilationUnit {
     public CallSiteDescriptor[] getCallSites() {
         return new CallSiteDescriptor[0];
     }
+
+    public String hllName() {
+        return "";
+    }
 }

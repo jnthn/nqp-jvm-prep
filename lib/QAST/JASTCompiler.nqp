@@ -766,6 +766,9 @@ QAST::OperationsJAST.map_classlib_core_op('box_i', $TYPE_OPS, 'box_i', [$RT_INT,
 QAST::OperationsJAST.map_classlib_core_op('box_n', $TYPE_OPS, 'box_n', [$RT_NUM, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('box_s', $TYPE_OPS, 'box_s', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 
+# language/compiler ops
+QAST::OperationsJAST.map_classlib_core_op('sethllconfig', $TYPE_OPS, 'sethllconfig', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
+
 class QAST::CompilerJAST {
     # Responsible for handling issues around code references, building the
     # switch statement dispatcher, etc.
@@ -1325,6 +1328,12 @@ class QAST::CompilerJAST {
             $main_meth.append(JAST::Instruction.new( :op('return') ));
             $*JCLASS.add_method($main_meth);
         }
+        
+        # Add method that returns HLL name.
+        my $hll_meth := JAST::Method.new( :name('hllName'), :returns($TYPE_STR), :static(0) );
+        $hll_meth.append(JAST::PushSVal.new( :value($*HLL) ));
+        $hll_meth.append(JAST::Instruction.new( :op('areturn') ));
+        $*JCLASS.add_method($hll_meth);
         
         return $*JCLASS;
     }
