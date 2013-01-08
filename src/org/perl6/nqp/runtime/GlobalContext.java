@@ -59,6 +59,7 @@ public class GlobalContext {
         hllConfiguration = new HashMap<String, HLLConfig>();
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);
+        setupConfig(hllConfiguration.get("")); // BOOT* not available earlier.
     }
     
     /**
@@ -69,14 +70,18 @@ public class GlobalContext {
             HLLConfig config = hllConfiguration.get(language);
             if (config == null) {
                 config = new HLLConfig();
-                config.intBoxType = BOOTInt;
-                config.numBoxType = BOOTNum;
-                config.strBoxType = BOOTStr;
-                config.slurpyArrayType = BOOTArray;
-                config.slurpyHashType = BOOTHash;
+                setupConfig(config);
                 hllConfiguration.put(language, config);
             }
             return config;
         }
+    }
+
+    private void setupConfig(HLLConfig config) {
+        config.intBoxType = BOOTInt;
+        config.numBoxType = BOOTNum;
+        config.strBoxType = BOOTStr;
+        config.slurpyArrayType = BOOTArray;
+        config.slurpyHashType = BOOTHash;
     }
 }
