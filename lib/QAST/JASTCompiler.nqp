@@ -1422,22 +1422,28 @@ class QAST::CompilerJAST {
             # Analyze parameters to get count of required/optional and make sure
             # all is in order.
             my int $pos_required := 0;
-            my int $pos_accepted := 0;
+            my int $pos_optional := 0;
+            my int $pos_slurpy   := 0;
             for $block.params {
                 if $_.named {
                     # Don't count.
                 }
                 elsif $_.slurpy {
-                    nqp::die("Slurpy parameters NYI");
+                    $pos_slurpy := 1;
                 }
                 elsif $_.default {
-                    $pos_accepted++;
+                    if $pos_slurpy {
+                        nqp::die("Optional positionals must come before all slurpy positionals");
+                    }
+                    $pos_optional++;
                 }
                 else {
-                    if $pos_accepted != $pos_required {
-                        nqp::die("Optional positionals must come after all required positionals");
+                    if $pos_optional {
+                        nqp::die("Required positionals must come before all optional positionals");
                     }
-                    $pos_accepted++;
+                    if $pos_slurpy {
+                        nqp::die("Required positionals must come before all slurpy positionals");
+                    }
                     $pos_required++;
                 }
             }
@@ -1445,18 +1451,30 @@ class QAST::CompilerJAST {
             # Emit arity check instruction.
             $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
             $*JMETH.append(JAST::PushIndex.new( :value($pos_required) ));
-            $*JMETH.append(JAST::PushIndex.new( :value($pos_accepted) ));
+            $*JMETH.append(JAST::PushIndex.new( :value($pos_slurpy ?? -1 !! $pos_required + $pos_optional) ));
             $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 "checkarity", 'Void', $TYPE_CF, 'Integer', 'Integer' ));
             
             # Emit instructions to load each parameter.
             my int $param_idx := 0;
             for $block.params {
+                my $type;
                 if $_.slurpy {
-                    nqp::die("Slurpy parameters NYI");
+                    $type := $RT_OBJ;
+                    $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
+                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    if $_.named {
+                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "namedslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF ));
+                    }
+                    else {
+                        $*JMETH.append(JAST::PushIndex.new( :value($pos_required + $pos_optional) ));
+                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                            "posslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF, 'Integer' ));
+                    }
                 }
                 else {
-                    my $type := rttype_from_typeobj($_.returns);
+                    $type    := rttype_from_typeobj($_.returns);
                     my $jt   := jtype($type);
                     my $tc   := typechar($type);
                     my $opt  := $_.default ?? "opt_" !! "";
@@ -1483,12 +1501,12 @@ class QAST::CompilerJAST {
                         $*STACK.obtain($default);
                         $*JMETH.append($lbl);
                     }
-                    if $_.scope eq 'local' {
-                        $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
-                    }
-                    else {
-                        nqp::die("Lexical parameters NYI");
-                    }
+                }
+                if $_.scope eq 'local' {
+                    $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
+                }
+                else {
+                    nqp::die("Lexical parameters NYI");
                 }
                 $param_idx++;
             }
