@@ -94,7 +94,7 @@ public final class Ops {
     /* Invocation arity check. */
     public static void checkarity(CallFrame cf, int required, int accepted) {
         int positionals = cf.callSite.numPositionals;
-        if (positionals < required || positionals > accepted)
+        if (positionals < required || positionals > accepted && accepted != -1)
             throw new RuntimeException("Wrong number of arguments passed; expected " +
                 required + ".." + accepted + ", but got " + positionals);
     }
@@ -185,6 +185,37 @@ public final class Ops {
             cf.tc.lastParameterExisted = 0;
             return null;
         }
+    }
+    
+    /* Slurpy positional parameter. */
+    public static SixModelObject posslurpy(ThreadContext tc, CallFrame cf, int fromIdx) {
+        CallSiteDescriptor cs = cf.callSite;
+        
+        /* Create result. */
+        HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
+        SixModelObject resType = hllConfig.slurpyArrayType;
+        SixModelObject result = resType.st.REPR.allocate(tc, resType.st);
+        result.initialize(tc);
+        
+        /* Populate it. */
+        for (int i = fromIdx; i < cs.numPositionals; i++) {
+            switch (cs.argFlags[i]) {
+            case CallSiteDescriptor.ARG_OBJ:
+                result.push_boxed(tc, cf.caller.oArg[cs.argIdx[i]]);
+                break;
+            case CallSiteDescriptor.ARG_INT:
+                result.push_boxed(tc, box_i(cf.caller.iArg[cs.argIdx[i]], hllConfig.intBoxType, tc));
+                break;
+            case CallSiteDescriptor.ARG_NUM:
+                result.push_boxed(tc, box_n(cf.caller.nArg[cs.argIdx[i]], hllConfig.numBoxType, tc));
+                break;
+            case CallSiteDescriptor.ARG_STR:
+                result.push_boxed(tc, box_s(cf.caller.sArg[cs.argIdx[i]], hllConfig.strBoxType, tc));
+                break;
+            }
+        }
+        
+        return result;
     }
     
     /* Required named parameter getting. */
