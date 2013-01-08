@@ -347,6 +347,40 @@ public final class Ops {
         }
     }
     
+    /* Slurpy named parameter. */
+    public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf) {
+        CallSiteDescriptor cs = cf.callSite;
+        
+        /* Create result. */
+        HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
+        SixModelObject resType = hllConfig.slurpyHashType;
+        SixModelObject result = resType.st.REPR.allocate(tc, resType.st);
+        result.initialize(tc);
+        
+        /* Populate it. */
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        for (String name : cf.workingNameMap.keySet()) {
+            Integer lookup = cf.workingNameMap.get(name);
+            switch (lookup & 7) {
+            case CallSiteDescriptor.ARG_OBJ:
+                result.bind_key_boxed(tc, name, cf.caller.oArg[lookup >> 3]);
+                break;
+            case CallSiteDescriptor.ARG_INT:
+                result.bind_key_boxed(tc, name, box_i(cf.caller.iArg[lookup >> 3], hllConfig.intBoxType, tc));
+                break;
+            case CallSiteDescriptor.ARG_NUM:
+                result.bind_key_boxed(tc, name, box_n(cf.caller.nArg[lookup >> 3], hllConfig.numBoxType, tc));
+                break;
+            case CallSiteDescriptor.ARG_STR:
+                result.bind_key_boxed(tc, name, box_s(cf.caller.sArg[lookup >> 3], hllConfig.strBoxType, tc));
+                break;
+            }
+        }
+        
+        return result;
+    }
+    
     /* Return value setting. */
     public static void return_o(SixModelObject v, CallFrame cf) {
         CallFrame caller = cf.caller;
