@@ -10,7 +10,6 @@ QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
 * Loops
 * QAST::Var contextuals
-* Slurpy parameters
 * Flattening arguments
 * Closures
 * Named lexical lookup fallback
@@ -22,7 +21,6 @@ QAST to JAST Compiler
 
 Runtime
 * Implementation of flattening args
-* Implementation of slurpy params
 * Implement ops for lexical handling by name
 * Implement various 6model related ops
 
