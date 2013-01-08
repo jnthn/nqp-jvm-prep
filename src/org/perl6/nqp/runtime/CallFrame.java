@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import java.util.HashMap;
+
 import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
@@ -72,4 +74,9 @@ public class CallFrame {
     public static final int RET_INT = 1;
     public static final int RET_NUM = 2;
     public static final int RET_STR = 3;
+    
+    /**
+     * Current working copy of the named arguments data.
+     */
+    public HashMap<String, Integer> workingNameMap;
 }

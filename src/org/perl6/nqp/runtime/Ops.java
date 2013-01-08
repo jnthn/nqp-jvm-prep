@@ -1,6 +1,7 @@
 package org.perl6.nqp.runtime;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
@@ -221,7 +222,9 @@ public final class Ops {
     /* Required named parameter getting. */
     public static SixModelObject namedparam_o(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
                 return cf.caller.oArg[lookup >> 3];
@@ -233,7 +236,9 @@ public final class Ops {
     }
     public static long namedparam_i(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
                 return cf.caller.iArg[lookup >> 3];
@@ -245,7 +250,9 @@ public final class Ops {
     }
     public static double namedparam_n(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
                 return cf.caller.nArg[lookup >> 3];
@@ -257,7 +264,9 @@ public final class Ops {
     }
     public static String namedparam_s(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
                 return cf.caller.sArg[lookup >> 3];
@@ -271,7 +280,9 @@ public final class Ops {
     /* Optional named parameter getting. */
     public static SixModelObject namedparam_opt_o(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
             if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
@@ -286,7 +297,9 @@ public final class Ops {
     }
     public static long namedparam_opt_i(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
             if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
@@ -301,7 +314,9 @@ public final class Ops {
     }
     public static double namedparam_opt_n(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
             if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
@@ -316,7 +331,9 @@ public final class Ops {
     }
     public static String namedparam_opt_s(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
-        Integer lookup = cs.nameMap.get(name);
+        if (cf.workingNameMap == null)
+            cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
+        Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
             if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
