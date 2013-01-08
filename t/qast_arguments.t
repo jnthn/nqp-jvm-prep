@@ -1,6 +1,6 @@
 use helper;
 
-plan(5);
+plan(6);
 
 qast_test(
     -> {
@@ -149,3 +149,62 @@ qast_test(
     },
     "Hola\nHi\n",
     "Optional string named parameter");
+    
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&slurp_em'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Var.new( :name('s'), :scope('local'), :decl('param'), :slurpy(1) ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('elems'),
+                                QAST::Var.new( :name('s'), :scope('local') )
+                            )),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_i'),
+                                QAST::Op.new(
+                                    :op('atpos'),
+                                    QAST::Var.new( :name('s'), :scope('local') ),
+                                    QAST::IVal.new( :value(0) )
+                                ))),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_n'),
+                                QAST::Op.new(
+                                    :op('atpos'),
+                                    QAST::Var.new( :name('s'), :scope('local') ),
+                                    QAST::IVal.new( :value(1) )
+                                ))),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_s'),
+                                QAST::Op.new(
+                                    :op('atpos'),
+                                    QAST::Var.new( :name('s'), :scope('local') ),
+                                    QAST::IVal.new( :value(2) )
+                                )))
+                    )),
+                QAST::Op.new(
+                    :op('call'), :name('&slurp_em'), :returns(str),
+                    QAST::IVal.new( :value(5) ),
+                    QAST::NVal.new( :value(9.8) ),
+                    QAST::SVal.new( :value('FREE BROWNIES') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "3\n5\n9.8\nFREE BROWNIES\n",
+    "Slurpy positional parameters");
