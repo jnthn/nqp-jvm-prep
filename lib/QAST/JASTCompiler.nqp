@@ -357,10 +357,17 @@ for <if unless> -> $op_name {
             $il.append(JAST::Instruction.new( :op('dcmpl') ));
         }
         elsif $cond_type == $RT_STR {
-            nqp::die("if/unless on str NYI");
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'istrue_s', 'Long', $TYPE_STR ));
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
         }
         else {
-            nqp::die("Invalid type for test while compiling conditional");
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'istrue', 'Long', $TYPE_SMO, $TYPE_TC ));
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
         }
         $il.append(JAST::Instruction.new($else_lbl,
             :op($op_name eq 'if' ?? 'ifeq' !! 'ifne')));

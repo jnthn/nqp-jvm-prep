@@ -759,6 +759,9 @@ public final class Ops {
     public static long isfalse(SixModelObject obj, ThreadContext tc) {
         return istrue(obj, tc) == 0 ? 1 : 0;
     }
+    public static long istrue_s(String str) {
+        return str.equals("") || str.equals("0") ? 0 : 1;
+    }
     
     /* Math operations. */
     public static double sec_n(double val) {
