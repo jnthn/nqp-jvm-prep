@@ -11,6 +11,9 @@ my $TYPE_CSD  := 'Lorg/perl6/nqp/runtime/CallSiteDescriptor;';
 my $TYPE_SMO  := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR  := 'Ljava/lang/String;';
 my $TYPE_MATH := 'Ljava/lang/Math;';
+my $TYPE_EX_NEXT := 'Lorg/perl6/nqp/runtime/NextControlException;';
+my $TYPE_EX_REDO := 'Lorg/perl6/nqp/runtime/RedoControlException;';
+my $TYPE_EX_LAST := 'Lorg/perl6/nqp/runtime/LastControlException;';
 
 # Represents the result of turning some QAST into JAST. That includes any
 # instructions, but also some metadata that goes with them.
@@ -442,6 +445,149 @@ for <if unless> -> $op_name {
         }
     });
 }
+
+QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
+    my $handler := 1;
+    my @operands;
+    for $op.list {
+        if $_.named eq 'nohandler' { $handler := 0; }
+        else { @operands.push($_) }
+    }
+    
+    if +@operands != 2 {
+        nqp::die("Operation 'for' needs 2 operands");
+    }
+    unless nqp::istype(@operands[1], QAST::Block) {
+        nqp::die("Operation 'for' expects a block as its second operand");
+    }
+    if @operands[1].blocktype eq 'immediate' {
+        @operands[1].blocktype('declaration');
+    }
+    
+    # Create result temporary if we'll need one.
+    my $res := $*WANT == $RT_VOID ?? 0 !! $*TA.fresh_o();
+    
+    # Evaluate the thing we'll iterate over, get the iterator and
+    # store it in a temporary.
+    my $il := JAST::InstructionList.new();
+    my $list_res := $qastcomp.as_jast(@operands[0]);
+    $il.append($list_res.jast);
+    $*STACK.obtain($list_res);
+    if $res {
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('astore'), $res ));
+    }
+    my $iter_tmp := $*TA.fresh_o();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'),
+        $TYPE_OPS, 'iter', $TYPE_SMO, $TYPE_SMO, $TYPE_TC ));
+    $il.append(JAST::Instruction.new( :op('astore'), $iter_tmp ));
+    
+    # Do similar for the block.
+    my $block_res := $qastcomp.as_jast(@operands[1], :want($RT_OBJ));
+    my $block_tmp := $*TA.fresh_o();
+    $il.append($block_res.jast);
+    $*STACK.obtain($block_res);
+    $il.append(JAST::Instruction.new( :op('astore'), $block_tmp ));
+    
+    # Some labels we'll need.
+    my $lbl_next := JAST::Label.new( :name('for_next') );
+    my $lbl_redo := JAST::Label.new( :name('for_redo') );
+    my $lbl_done := JAST::Label.new( :name('for_done') );
+    
+    # Emit loop test.
+    my $loop_il := JAST::InstructionList.new();
+    $loop_il.append($lbl_next);
+    $loop_il.append(JAST::Instruction.new( :op('aload'), $iter_tmp ));
+    $loop_il.append(JAST::Instruction.new( :op('aload_1') ));
+    $loop_il.append(JAST::Instruction.new( :op('invokestatic'),
+        $TYPE_OPS, 'istrue', 'Long', $TYPE_SMO, $TYPE_TC ));
+    $loop_il.append(JAST::Instruction.new( :op('l2i') ));
+    $loop_il.append(JAST::Instruction.new( :op('ifeq'), $lbl_done ));
+    
+    # Fetch values into temporaries (on the stack ain't enough in case
+    # of redo).
+    my $val_il := JAST::InstructionList.new();
+    my @val_temps;
+    my $arity := @operands[1].arity || 1;
+    while $arity > 0 {
+        my $tmp := $*TA.fresh_o();
+        $val_il.append(JAST::Instruction.new( :op('aload'), $iter_tmp ));
+        $val_il.append(JAST::Instruction.new( :op('aload_1') ));
+        $val_il.append(JAST::Instruction.new( :op('invokestatic'),
+            $TYPE_OPS, 'shift', $TYPE_SMO, $TYPE_SMO, $TYPE_TC ));
+        $val_il.append(JAST::Instruction.new( :op('astore'), $tmp ));
+        nqp::push(@val_temps, $tmp);
+        $arity := $arity - 1;
+    }
+    $val_il.append($lbl_redo);
+    
+    # Now do block invocation.
+    my $inv_il := JAST::InstructionList.new();
+    my @callsite;
+    my int $i := 0;
+    for @val_temps {
+        $inv_il.append(JAST::Instruction.new( :op('aload'), $_ ));
+        $inv_il.append(JAST::Instruction.new( :op('aload'), 'oArgs' ));
+        $inv_il.append(JAST::PushIndex.new( :value($i++) ));
+        $inv_il.append(JAST::Instruction.new( :op('invokestatic'),
+            $TYPE_OPS, 'arg', 'Void', $TYPE_SMO, "[$TYPE_SMO", 'Integer' ));
+        nqp::push(@callsite, arg_type($RT_OBJ));
+    }
+    my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite, []);
+    if +@callsite > $*MAX_ARGS_O { $*MAX_ARGS_O := +@callsite }
+    $inv_il.append(JAST::Instruction.new( :op('aload_1') ));
+    $inv_il.append(JAST::Instruction.new( :op('aload'), $block_tmp ));
+    $inv_il.append(JAST::PushIndex.new( :value($cs_idx) ));
+    $inv_il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
+    
+    # Load result onto the stack, unless in void context.
+    if $res {
+        $inv_il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+        $inv_il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            'result_o', $TYPE_SMO, $TYPE_CF ));
+        $inv_il.append(JAST::Instruction.new( :op('astore'), $res ));
+    }
+
+    # Wrap block invocation in redo handler if needed.
+    if $handler {
+        my $catch := JAST::InstructionList.new();
+        $catch.append(JAST::Instruction.new( :op('pop') ));
+        $catch.append(JAST::Instruction.new( :op('goto'), $lbl_redo ));
+        $inv_il := JAST::TryCatch.new( :try($inv_il), :$catch, :type($TYPE_EX_REDO) );
+    }
+    $val_il.append($inv_il);
+    
+    # Wrap value fetching and call in "next" handler if needed.
+    if $handler {
+        $val_il := JAST::TryCatch.new(
+            :try($val_il),
+            :catch(JAST::Instruction.new( :op('pop') )),
+            :type($TYPE_EX_NEXT)
+        );
+    }
+    $loop_il.append($val_il);
+    $loop_il.append(JAST::Instruction.new( :op('goto'), $lbl_next ));
+    
+    # Emit postlude, wrapping in last handler if needed.
+    if $handler {
+        my $catch := JAST::InstructionList.new();
+        $catch.append(JAST::Instruction.new( :op('pop') ));
+        $catch.append(JAST::Instruction.new( :op('goto'), $lbl_done ));
+        $loop_il := JAST::TryCatch.new( :try($loop_il), :$catch, :type($TYPE_EX_LAST) );
+    }
+    $il.append($loop_il);
+    $il.append($lbl_done);
+    
+    # Result, as needed.
+    if $res {
+        $il.append(JAST::Instruction.new( :op('aload'), $res ));
+        result($il, $RT_OBJ)
+    }
+    else {
+        result($il, $RT_VOID)
+    }
+});
 
 QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
     if +$op.list != 2 {
