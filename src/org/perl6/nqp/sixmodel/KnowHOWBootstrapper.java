@@ -16,6 +16,7 @@ public class KnowHOWBootstrapper {
         tc.gc.BOOTInt = bootType(tc, "BOOTInt", "P6int");
         tc.gc.BOOTNum = bootType(tc, "BOOTNum", "P6num");
         tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
+        Ops.setboolspec(tc.gc.BOOTIter, BoolificationSpec.MODE_ITER, null, tc);
     }
 
     private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {

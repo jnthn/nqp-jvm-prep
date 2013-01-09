@@ -6,6 +6,8 @@ import java.util.HashMap;
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
 import org.perl6.nqp.sixmodel.reprs.VMHash;
+import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
+import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
 
 /**
  * Contains complex operations that are more involved that the simple ops that the
@@ -687,6 +689,36 @@ public final class Ops {
         return obj.st.REPR instanceof VMHash ? 1 : 0;
     }
     
+    /* Iteration. */
+    public static SixModelObject iter(SixModelObject agg, ThreadContext tc) {
+        if (agg.st.REPR instanceof VMArray) {
+            SixModelObject iterType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.arrayIteratorType;
+            VMIterInstance iter = (VMIterInstance)iterType.st.REPR.allocate(tc, iterType.st);
+            iter.target = agg;
+            iter.idx = -1;
+            iter.limit = agg.elems(tc);
+            iter.iterMode = VMIterInstance.MODE_ARRAY;
+            return iter;
+        }
+        else if (agg.st.REPR instanceof VMHash) {
+            SixModelObject iterType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.hashIteratorType;
+            VMIterInstance iter = (VMIterInstance)iterType.st.REPR.allocate(tc, iterType.st);
+            iter.target = agg;
+            iter.hashKeyIter = ((VMHashInstance)agg).storage.keySet().iterator();
+            iter.iterMode = VMIterInstance.MODE_HASH;
+            return iter;
+        }
+        else {
+            throw new RuntimeException("Can only use iter with representation VMArray and VMHash");
+        }
+    }
+    public static String iterkey_s(SixModelObject obj, ThreadContext tc) {
+        return ((VMIterInstance)obj).key_s(tc);
+    }
+    public static SixModelObject iterval(SixModelObject obj, ThreadContext tc) {
+        return ((VMIterInstance)obj).val(tc);
+    }
+    
     /* Boolification operations. */
     public static SixModelObject setboolspec(SixModelObject obj, long mode, SixModelObject method, ThreadContext tc) {
         BoolificationSpec bs = new BoolificationSpec();
@@ -711,6 +743,8 @@ public final class Ops {
             return str.equals("") || str.equals("0") ? 0 : 1;
         case BoolificationSpec.MODE_NOT_TYPE_OBJECT:
             return obj instanceof TypeObject ? 0 : 1;
+        case BoolificationSpec.MODE_ITER:
+            return ((VMIterInstance)obj).boolify() ? 1 : 0;
         default:
             throw new RuntimeException("Unable to boolify this object");
         }
