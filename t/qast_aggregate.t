@@ -351,7 +351,7 @@ qast_test(
                 :op('bind'),
                 QAST::Var.new( :name('it'), :scope('local'), :decl('var') ),
                 QAST::Op.new(
-                    :op('iter'),
+                    :op('iterator'),
                     QAST::Op.new(
                         :op('list'),
                         QAST::Op.new(
@@ -422,7 +422,7 @@ qast_test(
                 :op('bind'),
                 QAST::Var.new( :name('it'), :scope('local'), :decl('var') ),
                 QAST::Op.new(
-                    :op('iter'),
+                    :op('iterator'),
                     QAST::Op.new(
                         :op('hash'),
                         QAST::SVal.new( :value('Noah') ),
