@@ -687,6 +687,38 @@ public final class Ops {
         return obj.st.REPR instanceof VMHash ? 1 : 0;
     }
     
+    /* Boolification operations. */
+    public static SixModelObject setboolspec(SixModelObject obj, long mode, SixModelObject method, ThreadContext tc) {
+        BoolificationSpec bs = new BoolificationSpec();
+        bs.Mode = (int)mode;
+        bs.Method = method;
+        obj.st.BoolificationSpec = bs;
+        return obj;
+    }
+    public static long istrue(SixModelObject obj, ThreadContext tc) {
+        BoolificationSpec bs = obj.st.BoolificationSpec;
+        switch (bs == null ? -1 : bs.Mode) {
+        case BoolificationSpec.MODE_UNBOX_INT:
+            return obj instanceof TypeObject || obj.get_int(tc) == 0 ? 0 : 1;
+        case BoolificationSpec.MODE_UNBOX_NUM:
+            return obj instanceof TypeObject || obj.get_num(tc) == 0.0 ? 0 : 1;
+        case BoolificationSpec.MODE_UNBOX_STR_NOT_EMPTY:
+            return obj instanceof TypeObject || obj.get_str(tc).equals("") ? 0 : 1;
+        case BoolificationSpec.MODE_UNBOX_STR_NOT_EMPTY_OR_ZERO:
+            if (obj instanceof TypeObject)
+                return 0;
+            String str = obj.get_str(tc);
+            return str.equals("") || str.equals("0") ? 0 : 1;
+        case BoolificationSpec.MODE_NOT_TYPE_OBJECT:
+            return obj instanceof TypeObject ? 0 : 1;
+        default:
+            throw new RuntimeException("Unable to boolify this object");
+        }
+    }
+    public static long isfalse(SixModelObject obj, ThreadContext tc) {
+        return istrue(obj, tc) == 0 ? 1 : 0;
+    }
+    
     /* Math operations. */
     public static double sec_n(double val) {
         return 1 / Math.cos(val);
