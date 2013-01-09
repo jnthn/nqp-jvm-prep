@@ -320,6 +320,29 @@ QAST::OperationsJAST.add_core_op('hash', -> $qastcomp, $op {
 });
 
 # Conditionals.
+sub boolify_instructions($il, $cond_type) {
+    if $cond_type == $RT_INT {
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+    }
+    elsif $cond_type == $RT_NUM {
+        $il.append(JAST::PushNVal.new( :value(0.0) ));
+        $il.append(JAST::Instruction.new( :op('dcmpl') ));
+    }
+    elsif $cond_type == $RT_STR {
+        $il.append(JAST::Instruction.new( :op('invokestatic'),
+            $TYPE_OPS, 'istrue_s', 'Long', $TYPE_STR ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+    }
+    else {
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'),
+            $TYPE_OPS, 'istrue', 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+    }
+}
 for <if unless> -> $op_name {
     QAST::OperationsJAST.add_core_op($op_name, -> $qastcomp, $op {
         # Check operand count.
@@ -347,28 +370,7 @@ for <if unless> -> $op_name {
         }
         
         # Emit test.
-        my int $cond_type := $cond.type;
-        if $cond_type == $RT_INT {
-            $il.append(JAST::PushIVal.new( :value(0) ));
-            $il.append(JAST::Instruction.new( :op('lcmp') ));
-        }
-        elsif $cond_type == $RT_NUM {
-            $il.append(JAST::PushNVal.new( :value(0.0) ));
-            $il.append(JAST::Instruction.new( :op('dcmpl') ));
-        }
-        elsif $cond_type == $RT_STR {
-            $il.append(JAST::Instruction.new( :op('invokestatic'),
-                $TYPE_OPS, 'istrue_s', 'Long', $TYPE_STR ));
-            $il.append(JAST::PushIVal.new( :value(0) ));
-            $il.append(JAST::Instruction.new( :op('lcmp') ));
-        }
-        else {
-            $il.append(JAST::Instruction.new( :op('aload_1') ));
-            $il.append(JAST::Instruction.new( :op('invokestatic'),
-                $TYPE_OPS, 'istrue', 'Long', $TYPE_SMO, $TYPE_TC ));
-            $il.append(JAST::PushIVal.new( :value(0) ));
-            $il.append(JAST::Instruction.new( :op('lcmp') ));
-        }
+        boolify_instructions($il, $cond.type);
         $il.append(JAST::Instruction.new($else_lbl,
             :op($op_name eq 'if' ?? 'ifeq' !! 'ifne')));
         
