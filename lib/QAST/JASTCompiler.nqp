@@ -455,6 +455,120 @@ for <if unless> -> $op_name {
     });
 }
 
+# Loops.
+for ('', 'repeat_') -> $repness {
+    for <while until> -> $op_name {
+        QAST::OperationsJAST.add_core_op("$repness$op_name", -> $qastcomp, $op {
+            # Check if we need a handler and operand count.
+            my $handler := 1;
+            my @operands;
+            for $op.list {
+                if $_.named eq 'nohandler' { $handler := 0; }
+                else { @operands.push($_) }
+            }
+            if +@operands != 2 && +@operands != 3 {
+                nqp::die("Operation '$repness$op_name' needs 2 or 3 operands");
+            }
+            
+            # Create labels.
+            my $while_id := $qastcomp.unique($op_name);
+            my $test_lbl := JAST::Label.new( :name($while_id ~ '_test') );
+            my $next_lbl := JAST::Label.new( :name($while_id ~ '_next') );
+            my $redo_lbl := JAST::Label.new( :name($while_id ~ '_redo') );
+            my $done_lbl := JAST::Label.new( :name($while_id ~ '_done') );
+            
+            # Emit loop prelude, evaluating condition. 
+            my $il := JAST::InstructionList.new();
+            if $repness {
+                # It's a repeat_ variant, need to go straight into the
+                # loop body unconditionally.
+                $il.append(JAST::Instruction.new( :op('goto'), $redo_lbl ));
+            }
+            $il.append($test_lbl);
+            my $cond_res := $qastcomp.as_jast(@operands[0]);
+            $il.append($cond_res.jast);
+            $*STACK.obtain($cond_res);
+            
+            # Compile loop body, then do any analysis of result type if
+            # in non-void context.
+            my $body_res := $qastcomp.as_jast(@operands[1]);
+            my $res;
+            my $res_type;
+            if $*WANT != $RT_VOID {
+                $res_type := $cond_res.type == $body_res.type
+                    ?? $cond_res.type
+                    !! $RT_OBJ;
+                $res := $*TA."fresh_{typechar($res_type)}"();
+            }
+            
+            # If we're non-void, store the condition's evaluation as a
+            # result.
+            if $res {
+                $il.append(dup_ins($cond_res.type));
+                $il.append($qastcomp.coercion($cond_res, $res_type));
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res ));
+            }
+            
+            # Emit test.
+            boolify_instructions($il, $cond_res.type);
+            $il.append(JAST::Instruction.new($done_lbl,
+                :op($op_name eq 'while' ?? 'ifeq' !! 'ifne')));
+
+            # Emit the loop body; stash the result if needed.
+            $il.append($redo_lbl);
+            my $body_il := JAST::InstructionList.new();
+            $body_il.append($body_res.jast);
+            $*STACK.obtain($body_res);
+            if $res {
+                $body_il.append($qastcomp.coercion($body_res, $res_type));
+                $body_il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res ));
+            }
+            else {
+                $body_il.append(pop_ins($body_res.type));
+            }
+            
+            # Add redo and next handler if needed.
+            if $handler {
+                my $catch := JAST::InstructionList.new();
+                $catch.append(JAST::Instruction.new( :op('pop') ));
+                $catch.append(JAST::Instruction.new( :op('goto'), $redo_lbl ));
+                $body_il := JAST::TryCatch.new( :try($body_il), :$catch, :type($TYPE_EX_REDO) );
+                $body_il := JAST::TryCatch.new(
+                    :try($body_il),
+                    :catch(JAST::Instruction.new( :op('pop') )),
+                    :type($TYPE_EX_NEXT) );
+            }
+            $il.append($body_il);
+            
+            # If there's a third child, evaluate it as part of the
+            # "next".
+            if +@operands == 3 {
+                my $next_res := $qastcomp.as_jast(@operands[2], :want($RT_VOID));
+                $il.append($next_res.jast);
+            }
+            
+            # Emit the iteration jump and end label.
+            $il.append(JAST::Instruction.new( :op('goto'), $test_lbl ));
+            $il.append($done_lbl);
+            
+            # If needed, wrap the whole thing in a last exception handler.
+            if $handler {
+                $il := JAST::TryCatch.new(
+                    :try($il),
+                    :catch(JAST::Instruction.new( :op('pop') )),
+                    :type($TYPE_EX_LAST) );
+            }
+
+            if $res {
+                result($il, $res_type)
+            }
+            else {
+                result($il, $RT_VOID)
+            }
+        });
+    }
+}
+
 QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     my $handler := 1;
     my @operands;
