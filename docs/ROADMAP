@@ -8,8 +8,6 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
-* Loops ([repeat_]?[while|until])
-* Iteration (op for)
 * QAST::Var contextuals
 * Flattening arguments
 * Closures
@@ -20,7 +18,7 @@ QAST to JAST Compiler
 * defor
 
 6model
-* BoolificationSpec
+* BoolificationSpec - method and bigint cases
 * ContainerSpec
 * Type check handling
 * Work something out for bigint REPR
