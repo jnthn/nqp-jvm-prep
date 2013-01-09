@@ -1,6 +1,6 @@
 use helper;
 
-plan(2);
+plan(3);
 
 qast_test(
     -> {
@@ -45,3 +45,40 @@ qast_test(
     },
     "Yeti\nModus Hoperandi\n",
     "QAST::Stmt evalutes to the last value");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('for'),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new(
+                        :op('box_s'),
+                        QAST::SVal.new( :value('Cucumber') ),
+                        QAST::Op.new( :op('bootstr') )
+                   ),
+                   QAST::Op.new(
+                        :op('box_s'),
+                        QAST::SVal.new( :value('Hummus') ),
+                        QAST::Op.new( :op('bootstr') )
+                   )
+                ),
+                QAST::Block.new(
+                    QAST::Op.new(
+                        :op('say'),
+                        QAST::Op.new(
+                            :op('unbox_s'),
+                            QAST::Var.new( :name('x'), :scope('local'), :decl('param') )
+                        )
+                    )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Cucumber\nHummus\n",
+    "for");
