@@ -287,7 +287,7 @@ class JAST::TryCatch is JAST::Node {
             $!try.dump() ~ "\n" ~
         ".catch $!type\n" ~
             $!catch.dump() ~ "\n" ~
-        ".endtry\n"
+        ".endtry"
     }
 }
 
