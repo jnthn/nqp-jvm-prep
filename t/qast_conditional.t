@@ -1,6 +1,6 @@
 use helper;
 
-plan(7);
+plan(10);
 
 qast_test(
     -> {
@@ -201,3 +201,95 @@ qast_test(
     "cookies\n",
     "Simple test for ifnull and null");
 
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::NVal.new( :value(0.0) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::NVal.new( :value(4.2) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "false\ntrue\n",
+    "if with num condition");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::SVal.new( :value("") ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::SVal.new( :value("0") ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::SVal.new( :value("Jalfrezi") ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "false\nfalse\ntrue\n",
+    "if with str condition");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::Op.new(
+                        :op('iterator'),
+                        QAST::Op.new( :op('list') )
+                    ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                ),
+                QAST::Op.new(
+                    :op('if'),
+                    QAST::Op.new(
+                        :op('iterator'),
+                        QAST::Op.new( :op('list'), QAST::Op.new( :op('list') ) )
+                    ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('true') ) ),
+                    QAST::Op.new( :op('say'), QAST::SVal.new( :value('false') ) )
+                )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "false\ntrue\n",
+    "if with object condition");
