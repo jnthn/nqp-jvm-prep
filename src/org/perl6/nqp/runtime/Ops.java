@@ -415,9 +415,16 @@ public final class Ops {
     
     /* Get returned result. */
     public static SixModelObject result_o(CallFrame cf) {
-        if (cf.retType == CallFrame.RET_OBJ)
+        switch (cf.retType) {
+        case CallFrame.RET_INT:
+            return box_i(cf.iRet, cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+        case CallFrame.RET_NUM:
+            return box_n(cf.nRet, cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+        case CallFrame.RET_STR:
+                return box_s(cf.sRet, cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+        default:
             return cf.oRet;
-        throw new RuntimeException("Return value coercion NYI");
+        }
     }
     public static long result_i(CallFrame cf) {
         if (cf.retType == CallFrame.RET_INT)
