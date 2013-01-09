@@ -1,6 +1,6 @@
 use helper;
 
-plan(4);
+plan(5);
 
 qast_test(
     -> {
@@ -124,3 +124,45 @@ qast_test(
     },
     "5\n4\n3\n2\n1\ndone\n0\n",
     "while");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('$i'), :scope('lexical'), :decl('var'), :returns(int) ),
+                QAST::IVal.new( :value(-1) )
+            ),
+            QAST::Op.new(
+                :op('repeat_until'),
+                QAST::Var.new( :name('$i'), :scope('lexical') ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Var.new( :name('$i'), :scope('lexical') )
+                ),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('$i'), :scope('lexical') ),
+                    QAST::Op.new(
+                        :op('add_i'),
+                        QAST::Var.new( :name('$i'), :scope('lexical') ),
+                        QAST::IVal.new( :value(1) )
+                    )
+                )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::SVal.new( :value('done') )
+                ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Var.new( :name('$i'), :scope('lexical') )
+                ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "-1\n0\ndone\n1\n",
+    "repeat_until");
