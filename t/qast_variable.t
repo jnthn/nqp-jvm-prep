@@ -1,6 +1,6 @@
 use helper;
 
-plan(5);
+plan(6);
 
 qast_test(
     -> {
@@ -140,3 +140,57 @@ qast_test(
     "Everybody loves Magical Trevor\n",
     "Lexical string variable in outer scope");
 
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&thunk'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('bind'),
+                            QAST::Var.new( :name('$x'), :scope('lexical'), :decl('var'), :returns(str) ),
+                            QAST::Var.new( :name('_x'), :scope('local'), :decl('param'), :returns(str) )
+                        ),
+                        QAST::Op.new(
+                            :op('takeclosure'),
+                            QAST::Block.new(
+                                QAST::Var.new( :name('$x'), :scope('lexical') )
+                            )
+                        ))),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('a'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('call'), :name('&thunk'),
+                        QAST::SVal.new( :value('Barley') )
+                    )),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('b'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('call'), :name('&thunk'),
+                        QAST::SVal.new( :value('Hops') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('call'), :returns(str),
+                        QAST::Var.new( :name('a'), :scope('local') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('call'), :returns(str),
+                        QAST::Var.new( :name('b'), :scope('local') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Barley\nHops\n",
+    "Basic closure test");
