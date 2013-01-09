@@ -839,6 +839,18 @@ public final class Ops {
         return ~val;
     }
     
+    /* Code object related. */
+    public static SixModelObject takeclosure(SixModelObject code, ThreadContext tc) {
+        if (code instanceof CodeRef) {
+            CodeRef clone = (CodeRef)code.clone(tc);
+            clone.outer = tc.curFrame;
+            return clone;
+        }
+        else {
+            throw new RuntimeException("takeclosure can only be used with a CodeRef");
+        }
+    }
+    
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
         HLLConfig config = tc.gc.getHLLConfigFor(language);

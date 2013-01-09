@@ -122,4 +122,11 @@ public abstract class SixModelObject {
     public long elems(ThreadContext tc) {
         throw new RuntimeException("This representation does not implement elems");
     }
+    
+    /**
+     * Clones the object.
+     */
+    public SixModelObject clone(ThreadContext tc) {
+        throw new RuntimeException("This representation does not implement cloning");
+    }
 }

@@ -27,4 +27,21 @@ public class CodeRef extends SixModelObject {
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
                 oMaxArgs, iMaxArgs, nMaxArgs, sMaxArgs);
     }
+    
+    /**
+     * Clones the object.
+     */
+    public SixModelObject clone(ThreadContext tc) {
+        CodeRef clone = new CodeRef();
+        clone.st = this.st;
+        clone.staticInfo = this.staticInfo;
+        clone.outer = this.outer;
+        return clone;
+    }
+    
+    /**
+     * Private constructor for the sake of clone.
+     */
+    private CodeRef() {
+    }
 }
