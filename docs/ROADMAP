@@ -8,15 +8,21 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
-* Loops
+* Loops ([repeat_]?[while|until])
+* Iteration (op for)
 * QAST::Var contextuals
 * Flattening arguments
 * Closures
 * Named lexical lookup fallback
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
   but in the future we'll have to re-visit this and do NFG...)
+* xor
+* defor
 
 6model
+* BoolificationSpec
+* ContainerSpec
+* Type check handling
 * Work something out for bigint REPR
 
 Runtime
@@ -44,3 +50,20 @@ Parsing
 * Ops for regexes
 * Work out how backtracking will work (probably jumplist)
 * Compilation of QAST::Regex
+* alt
+* altseq
+* anchor
+* cclass
+* concat
+* cong
+* conjseq
+* dba
+* enumcharlist
+* literal
+* pass
+* qastnode
+* quant
+* scan
+* subcapture
+* subrule
+
