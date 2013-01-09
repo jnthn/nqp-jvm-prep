@@ -27,6 +27,11 @@ public class GlobalContext {
     public SixModelObject BOOTHash;
     
     /**
+     * BOOTIter type; a basic, method-less type with the VMIter REPR.
+     */
+    public SixModelObject BOOTIter;
+    
+    /**
      * BOOTInt type; a basic, method-less type with the P6int REPR.
      */
     public SixModelObject BOOTInt;
@@ -83,5 +88,7 @@ public class GlobalContext {
         config.strBoxType = BOOTStr;
         config.slurpyArrayType = BOOTArray;
         config.slurpyHashType = BOOTHash;
+        config.arrayIteratorType = BOOTIter;
+        config.hashIteratorType = BOOTIter;
     }
 }

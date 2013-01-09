@@ -22,4 +22,14 @@ public class HLLConfig {
      * The type to use for slurpy hashes.
      */
     public SixModelObject slurpyHashType;
+    
+    /**
+     * The type to use for array iteration (should have VMIter REPR).
+     */
+    public SixModelObject arrayIteratorType;
+    
+    /**
+     * The type to use for hash iteration (should have VMIter REPR).
+     */
+    public SixModelObject hashIteratorType;
 }

@@ -12,6 +12,7 @@ public class KnowHOWBootstrapper {
         bootstrapKnowHOWAttribute(tc, knowhowUnit);
         tc.gc.BOOTArray = bootType(tc, "BOOTArray", "VMArray");
         tc.gc.BOOTHash = bootType(tc, "BOOTHash", "VMHash");
+        tc.gc.BOOTIter = bootType(tc, "BOOTIter", "VMIter");
         tc.gc.BOOTInt = bootType(tc, "BOOTInt", "P6int");
         tc.gc.BOOTNum = bootType(tc, "BOOTNum", "P6num");
         tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
