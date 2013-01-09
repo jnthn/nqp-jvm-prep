@@ -1,6 +1,6 @@
 use helper;
 
-plan(13);
+plan(14);
 
 qast_test(
     -> {
@@ -792,3 +792,119 @@ qast_test(
     },
     "0\n1\n1\n1\n0\n0\n",
     "isconcrete works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                # Create a new type.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('type'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new_type'),
+                        QAST::Op.new( :op('knowhow') )
+                    )
+                ),
+                
+                # Get its HOW, add an attribute, set boolification mode
+                # and compose it.
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('how'), :scope('local'), :decl('var') ),
+                    QAST::Op.new(
+                        :op('how'),
+                        QAST::Var.new( :name('type'), :scope('local') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('add_attribute'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::Op.new(
+                        :op('callmethod'), :name('new'),
+                        QAST::Op.new( :op('knowhowattr') ),
+                        QAST::SVal.new( :value('$!x'), :named('name') ),
+                        QAST::Op.new( :op('bootstr'), :named('type') ),
+                        QAST::IVal.new( :value(1), :named('box_target') )
+                    )
+                ),
+                QAST::Op.new(
+                    :op('setboolspec'),
+                    QAST::Var.new( :name('type'), :scope('local') ),
+                    QAST::IVal.new( :value(4) ), # MODE_UNBOX_STR_NOT_EMPTY_OR_ZERO
+                    QAST::Op.new( :op('null') )
+                ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('compose'),
+                    QAST::Var.new( :name('how'), :scope('local') ),
+                    QAST::Var.new( :name('type'), :scope('local') )
+                ),
+
+                # istrue
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('istrue'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('istrue'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('0') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('istrue'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('Stilton') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        ))),
+                
+                # isfalse
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isfalse'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isfalse'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('0') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isfalse'),
+                        QAST::Op.new(
+                            :op('box_s'),
+                            QAST::SVal.new( :value('Stilton') ),
+                            QAST::Var.new( :name('type'), :scope('local') )
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n0\n1\n1\n1\n0\n",
+    "Boolification");
