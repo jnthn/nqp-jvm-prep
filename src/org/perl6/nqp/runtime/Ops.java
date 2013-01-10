@@ -1,6 +1,9 @@
 package org.perl6.nqp.runtime;
 
 import java.math.BigInteger;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.*;
@@ -812,6 +815,19 @@ public final class Ops {
 
     public static String chr(long val) {
         return (new StringBuffer()).append((char) val).toString();
+    }
+
+    public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest md = MessageDigest.getInstance("SHA1");
+
+        byte[] inBytes = str.getBytes("UTF-8");
+        byte[] outBytes = md.digest(inBytes);
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : outBytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
     }
 
     /* bitwise operations. */
