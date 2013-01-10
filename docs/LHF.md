@@ -42,11 +42,6 @@ Just add ops; they need to take the ThreadContext (use :tc in QASTCompilerJAST)
 and use the lexical name info as in the contextuals task (this may actually be
 a bit easier).
 
-## sha1 op
-Implement nqp::sha1, which takes a string and returns another string that
-represents its sha1. Can probably draw on an implementation from the Java
-class library.
-
 ## Process related opcodes
 Implement nqp::exit (takes integer exit code) and nqp::sleep (takes double
 number of seconds).
