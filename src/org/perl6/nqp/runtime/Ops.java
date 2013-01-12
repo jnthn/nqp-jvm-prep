@@ -110,10 +110,18 @@ public final class Ops {
     /* Required positional parameter fetching. */
     public static SixModelObject posparam_o(CallFrame cf, int idx) {
         CallSiteDescriptor cs = cf.callSite;
-        if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
+        switch (cs.argFlags[idx]) {
+        case CallSiteDescriptor.ARG_OBJ:
             return cf.caller.oArg[cs.argIdx[idx]];
-        else
-            throw new RuntimeException("Argument auto-boxing NYI");
+        case CallSiteDescriptor.ARG_INT:
+            return box_i(cf.caller.iArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+        case CallSiteDescriptor.ARG_NUM:
+            return box_n(cf.caller.nArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+        case CallSiteDescriptor.ARG_STR:
+            return box_s(cf.caller.sArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+        default:
+            throw new RuntimeException("Error in argument processing");
+        }
     }
     public static long posparam_i(CallFrame cf, int idx) {
         CallSiteDescriptor cs = cf.callSite;
@@ -245,10 +253,18 @@ public final class Ops {
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
-            if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
+            switch (lookup & 7) {
+            case CallSiteDescriptor.ARG_OBJ:
                 return cf.caller.oArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument auto-boxing NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+            case CallSiteDescriptor.ARG_NUM:
+                return box_n(cf.caller.nArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+            case CallSiteDescriptor.ARG_STR:
+                return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else
             throw new RuntimeException("Required named argument '" + name + "' not passed");
@@ -328,10 +344,18 @@ public final class Ops {
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
-            if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
+            switch (lookup & 7) {
+            case CallSiteDescriptor.ARG_OBJ:
                 return cf.caller.oArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument auto-boxing NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+            case CallSiteDescriptor.ARG_NUM:
+                return box_n(cf.caller.nArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+            case CallSiteDescriptor.ARG_STR:
+                return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else {
             cf.tc.lastParameterExisted = 0;
