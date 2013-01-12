@@ -1,6 +1,6 @@
 use helper;
 
-plan(8);
+plan(10);
 
 qast_test(
     -> {
@@ -305,3 +305,82 @@ qast_test(
     },
     "25\n6.9\nKarai\n",
     "Flattening positional arguments");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&many_things'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('a'), :scope('local'), :decl('param'), :returns(int) )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('b'), :scope('local'), :decl('param'), :returns(num) )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('c'), :scope('local'), :decl('param'), :returns(str) )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&many_things'),
+                    QAST::IVal.new( :value(25) ),
+                    QAST::Op.new(
+                        :op('list'), :flat(1),
+                        QAST::NVal.new( :value(6.9) )
+                    ),
+                    QAST::SVal.new( :value('Karai') ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "25\n6.9\nKarai\n",
+    "Flattening positional arguments in middle of other args");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&many_named_things'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('a'), :scope('local'), :decl('param'), :returns(int), :named('a') )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('b'), :scope('local'), :decl('param'), :returns(num), :named('b') )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('c'), :scope('local'), :decl('param'), :returns(str), :named('c') )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&many_named_things'),
+                    QAST::Op.new(
+                        :op('hash'), :flat(1), :named(1),
+                        QAST::SVal.new( :value('c') ),
+                        QAST::SVal.new( :value('Byriani') ),
+                        QAST::SVal.new( :value('a') ),
+                        QAST::IVal.new( :value(42) ),
+                        QAST::SVal.new( :value('b') ),
+                        QAST::NVal.new( :value(4.2) )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "42\n4.2\nByriani\n",
+    "Flattening named arguments");
