@@ -99,6 +99,8 @@ public final class Ops {
     
     /* Invocation arity check. */
     public static void checkarity(CallFrame cf, int required, int accepted) {
+        if (cf.callSite.hasFlattening)
+            cf.callSite.explodeFlattening(cf);
         int positionals = cf.callSite.numPositionals;
         if (positionals < required || positionals > accepted && accepted != -1)
             throw new RuntimeException("Wrong number of arguments passed; expected " +
