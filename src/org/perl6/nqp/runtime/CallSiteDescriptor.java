@@ -29,7 +29,7 @@ public class CallSiteDescriptor {
      * arg index << 3 + type flag. */
     public HashMap<String, Integer> nameMap;
     
-    /* Singleton empty name mape. */
+    /* Singleton empty name map. */
     private static HashMap<String, Integer> emptyNameMap = new HashMap<String, Integer>();
     
     /* Number of normal positional arguments. */
