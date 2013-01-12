@@ -1,6 +1,6 @@
 use helper;
 
-plan(11);
+plan(12);
 
 qast_test(
     -> {
@@ -423,3 +423,45 @@ qast_test(
     },
     "42\n4.2\nByriani\n",
     "Flattening named arguments within other args");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&boxer'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_i'),
+                                QAST::Var.new( :name('a'), :scope('local'), :decl('param') )
+                            )),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_n'),
+                                QAST::Var.new( :name('b'), :scope('local'), :decl('param') )
+                            )),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_s'),
+                                QAST::Var.new( :name('c'), :scope('local'), :decl('param') )
+                            )))),
+                QAST::Op.new(
+                    :op('call'), :name('&boxer'),
+                    QAST::IVal.new( :value(101) ),
+                    QAST::NVal.new( :value(2.7) ),
+                    QAST::SVal.new( :value('Pathia') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "101\n2.7\nPathia\n",
+    "Auto-boxing of arguments");
