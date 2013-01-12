@@ -954,6 +954,7 @@ public final class Ops {
         return (new StringBuffer()).append((char) val).toString();
     }
 
+    /* serialization context related opcodes */
     public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest md = MessageDigest.getInstance("SHA1");
 
