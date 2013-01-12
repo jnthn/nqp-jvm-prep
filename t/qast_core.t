@@ -1,6 +1,6 @@
 use helper;
 
-plan(5);
+plan(8);
 
 qast_test(
     -> {
@@ -166,3 +166,63 @@ qast_test(
     },
     "-1\n0\ndone\n1\n",
     "repeat_until");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('add_i'),
+                    QAST::NVal.new( :value(4.1) ),
+                    QAST::SVal.new( :value('3') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "7\n",
+    "num and str coercion to int");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('add_n'),
+                    QAST::IVal.new( :value(5) ),
+                    QAST::SVal.new( :value('3.2') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "8.2\n",
+    "int and str coercion to num");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('concat'),
+                    QAST::IVal.new( :value(5) ),
+                    QAST::NVal.new( :value('3.9') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "53.9\n",
+    "int and num coercion to str");
