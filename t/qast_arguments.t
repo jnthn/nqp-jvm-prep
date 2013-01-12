@@ -1,6 +1,6 @@
 use helper;
 
-plan(7);
+plan(8);
 
 qast_test(
     -> {
@@ -267,3 +267,41 @@ qast_test(
     },
     "3\n5\n6.5\nVenison\n",
     "Slurpy named parameters");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&many_things'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('a'), :scope('local'), :decl('param'), :returns(int) )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('b'), :scope('local'), :decl('param'), :returns(num) )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('c'), :scope('local'), :decl('param'), :returns(str) )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&many_things'),
+                    QAST::Op.new(
+                        :op('list'), :flat(1),
+                        QAST::IVal.new( :value(25) ),
+                        QAST::NVal.new( :value(6.9) ),
+                        QAST::SVal.new( :value('Karai') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "25\n6.9\nKarai\n",
+    "Flattening positional arguments");
