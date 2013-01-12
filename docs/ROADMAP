@@ -9,8 +9,6 @@ some of the QAST things need runtime support).
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
 * QAST::Var contextuals
-* Flattening arguments
-* Closures
 * Named lexical lookup fallback
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
   but in the future we'll have to re-visit this and do NFG...)
@@ -24,7 +22,6 @@ QAST to JAST Compiler
 * Work something out for bigint REPR
 
 Runtime
-* Implementation of flattening args
 * Implement ops for lexical handling by name
 * Implement various 6model related ops
 
