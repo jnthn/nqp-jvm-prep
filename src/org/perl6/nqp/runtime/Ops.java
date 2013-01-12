@@ -882,4 +882,28 @@ public final class Ops {
             config.slurpyHashType = configHash.at_key_boxed(tc, "slurpy_hash");
         return configHash;
     }
+    
+    /* Coercions. */
+    public static long coerce_s2i(String in) {
+        try {
+            return Long.parseLong(in);
+        }
+        catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    public static double coerce_s2n(String in) {
+        try {
+            return Double.parseDouble(in);
+        }
+        catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+    public static String coerce_i2s(long in) {
+        return Long.toString(in);
+    }
+    public static String coerce_n2s(double in) {
+        return Double.toString(in);
+    }
 }

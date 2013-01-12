@@ -217,8 +217,7 @@ class QAST::OperationsJAST {
             while $i < $expected_args {
                 my $type := @stack_in[$i];
                 my $operand := $node[$i];
-                my $operand_res := $qastcomp.as_jast($node[$i]);
-                # XXX coercion...
+                my $operand_res := $qastcomp.as_jast($node[$i], :want($type));
                 $il.append($operand_res.jast);
                 $i++;
                 nqp::push(@arg_res, $operand_res);
@@ -2108,6 +2107,43 @@ class QAST::CompilerJAST {
         }
         elsif $desired == $RT_VOID {
             $il.append(pop_ins($got));
+        }
+        elsif $desired == $RT_INT {
+            if $got == $RT_NUM {
+                $il.append(JAST::Instruction.new( :op('d2l') ));
+            }
+            elsif $got == $RT_STR {
+                $il.append(JAST::Instruction.new( :op('invokestatic'),
+                    $TYPE_OPS, 'coerce_s2i', 'Long', $TYPE_STR ));
+            }
+            else {
+                nqp::die("Auto-unboxing NYI");
+            }
+        }
+        elsif $desired == $RT_NUM {
+            if $got == $RT_INT {
+                $il.append(JAST::Instruction.new( :op('l2d') ));
+            }
+            elsif $got == $RT_STR {
+                $il.append(JAST::Instruction.new( :op('invokestatic'),
+                    $TYPE_OPS, 'coerce_s2n', 'Double', $TYPE_STR ));
+            }
+            else {
+                nqp::die("Auto-unboxing NYI");
+            }
+        }
+        elsif $desired == $RT_STR {
+            if $got == $RT_INT {
+                $il.append(JAST::Instruction.new( :op('invokestatic'),
+                    $TYPE_OPS, 'coerce_i2s', $TYPE_STR, 'Long' ));
+            }
+            elsif $got == $RT_NUM {
+                $il.append(JAST::Instruction.new( :op('invokestatic'),
+                    $TYPE_OPS, 'coerce_n2s', $TYPE_STR, 'Double' ));
+            }
+            else {
+                nqp::die("Auto-unboxing NYI");
+            }
         }
         else {
             nqp::die("Coercion from type '$got' to '$desired' NYI");
