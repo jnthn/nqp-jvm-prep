@@ -109,6 +109,10 @@ class QAST::OperationsJAST {
     # Hash of hash of code.
     my %hll_ops;
     
+    # Mapping of how to box/unbox by HLL.
+    my %hll_box;
+    my %hll_unbox;
+    
     # What we know about inlinability.
     my %core_inlinability;
     my %hll_inlinability;
@@ -231,6 +235,34 @@ class QAST::OperationsJAST {
             $il.append($instruction);
             result($il, $stack_out)
         }
+    }
+
+    # Adds a HLL box handler.
+    method add_hll_box($hll, $type, $handler) {
+        unless $type == $RT_INT || $type == $RT_NUM || $type == $RT_STR {
+            nqp::die("Unknown box type '$type'");
+        }
+        %hll_box{$hll} := {} unless nqp::existskey(%hll_box, $hll);
+        %hll_box{$hll}{$type} := $handler;
+    }
+
+    # Adds a HLL unbox handler.
+    method add_hll_unbox($hll, $type, $handler) {
+        unless $type == $RT_INT || $type == $RT_NUM || $type == $RT_STR {
+            nqp::die("Unknown unbox type '$type'");
+        }
+        %hll_unbox{$hll} := {} unless nqp::existskey(%hll_unbox, $hll);
+        %hll_unbox{$hll}{$type} := $handler;
+    }
+
+    # Generates instructions to box what's currently on the stack top.
+    method box($qastcomp, $hll, $type) {
+        %hll_box{$hll}{$type}($qastcomp)
+    }
+
+    # Generates instructions to unbox what's currently on the stack top.
+    method unbox($qastcomp, $hll, $type) {
+        %hll_unbox{$hll}{$type}($qastcomp)
     }
 }
 
@@ -929,6 +961,59 @@ QAST::OperationsJAST.add_core_op('bind', -> $qastcomp, $op {
     # the compilation of the QAST::Var to handle the rest.
     my $*BINDVAL := @children[1];
     $qastcomp.as_jast(@children[0])
+});
+
+# Default ways to box/unbox (for no particular HLL).
+QAST::OperationsJAST.add_hll_box('', $RT_INT, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'bootint', $TYPE_SMO, $TYPE_TC ));
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'box_i', $TYPE_SMO, 'Long', $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_box('', $RT_NUM, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'bootnum', $TYPE_SMO, $TYPE_TC ));
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'box_n', $TYPE_SMO, 'Double', $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_box('', $RT_STR, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'bootstr', $TYPE_SMO, $TYPE_TC ));
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'box_s', $TYPE_SMO, $TYPE_STR, $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_unbox('', $RT_INT, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'unbox_i', 'Long', $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_unbox('', $RT_NUM, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'unbox_n', 'Double', $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_unbox('', $RT_STR, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'unbox_s', $TYPE_STR, $TYPE_SMO, $TYPE_TC ));
+    $il
 });
 
 # Arithmetic ops
@@ -2108,6 +2193,16 @@ class QAST::CompilerJAST {
         elsif $desired == $RT_VOID {
             $il.append(pop_ins($got));
         }
+        elsif $desired == $RT_OBJ {
+            my $hll := '';
+            try $hll := $*HLL;
+            return QAST::OperationsJAST.box(self, $hll, $got);
+        }
+        elsif $got == $RT_OBJ {
+            my $hll := '';
+            try $hll := $*HLL;
+            return QAST::OperationsJAST.unbox(self, $hll, $desired);
+        }
         elsif $desired == $RT_INT {
             if $got == $RT_NUM {
                 $il.append(JAST::Instruction.new( :op('d2l') ));
@@ -2117,7 +2212,7 @@ class QAST::CompilerJAST {
                     $TYPE_OPS, 'coerce_s2i', 'Long', $TYPE_STR ));
             }
             else {
-                nqp::die("Auto-unboxing NYI");
+                nqp::die("Unknown coercion case for int");
             }
         }
         elsif $desired == $RT_NUM {
@@ -2129,7 +2224,7 @@ class QAST::CompilerJAST {
                     $TYPE_OPS, 'coerce_s2n', 'Double', $TYPE_STR ));
             }
             else {
-                nqp::die("Auto-unboxing NYI");
+                nqp::die("Unknown coercion case for num");
             }
         }
         elsif $desired == $RT_STR {
@@ -2142,7 +2237,7 @@ class QAST::CompilerJAST {
                     $TYPE_OPS, 'coerce_n2s', $TYPE_STR, 'Double' ));
             }
             else {
-                nqp::die("Auto-unboxing NYI");
+                nqp::die("Unknown coercion case for str");
             }
         }
         else {
