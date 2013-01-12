@@ -760,6 +760,10 @@ public final class Ops {
     public static SixModelObject shift(SixModelObject arr, ThreadContext tc) {
         return arr.shift_boxed(tc);
     }
+    public static SixModelObject splice(SixModelObject arr, SixModelObject from, long offset, long count, ThreadContext tc) {
+        arr.splice(tc, from, offset, count);
+        return arr;
+    }
     
     /* Associative operations. */
     public static SixModelObject atkey(SixModelObject hash, String key, ThreadContext tc) {

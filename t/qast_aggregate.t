@@ -1,6 +1,6 @@
 use helper;
 
-plan(9);
+plan(12);
 
 qast_test(
     -> {
@@ -485,3 +485,123 @@ qast_test(
     },
     "1\n1125\n0\n",
     "Hash iteration");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('l'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('splice'),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::IVal.new( :value(2) ),
+                QAST::IVal.new( :value(0) )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                ))
+        );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "2\n4\n",
+    "Splice has the right elems");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('l'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('splice'),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::IVal.new( :value(2) ),
+                QAST::IVal.new( :value(2) )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                ))
+        );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "2\n4\n",
+    "Splice has the right elems at the end");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('l'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('splice'),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::Var.new( :name('l'), :scope('local') ),
+                QAST::IVal.new( :value(0) ),
+                QAST::IVal.new( :value(2) )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                ))
+        );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "2\n2\n",
+    "Splice has the right elems replacing two");
