@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
-import org.perl6.nqp.sixmodel.reprs.VMHash;
 import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 
 /**
