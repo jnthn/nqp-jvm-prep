@@ -42,10 +42,6 @@ Just add ops; they need to take the ThreadContext (use :tc in QASTCompilerJAST)
 and use the lexical name info as in the contextuals task (this may actually be
 a bit easier).
 
-## Process related opcodes
-Implement nqp::exit (takes integer exit code) and nqp::sleep (takes double
-number of seconds).
-
 ## Work out build stuff
 At the moment, there's nothing really set up for building the Java bit of
 the system. If you've got some ideas on how to sort something out here, go
