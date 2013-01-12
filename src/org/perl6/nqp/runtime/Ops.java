@@ -248,7 +248,7 @@ public final class Ops {
             if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
                 return cf.caller.oArg[lookup >> 3];
             else
-                throw new RuntimeException("Argument coercion NYI");
+                throw new RuntimeException("Argument auto-boxing NYI");
         }
         else
             throw new RuntimeException("Required named argument '" + name + "' not passed");
@@ -259,10 +259,18 @@ public final class Ops {
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
-            if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_INT:
                 return cf.caller.iArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_NUM:
+                return (long)cf.caller.nArg[lookup >> 3];
+            case CallSiteDescriptor.ARG_STR:
+                return coerce_s2i(cf.caller.sArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_int(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else
             throw new RuntimeException("Required named argument '" + name + "' not passed");
@@ -273,10 +281,18 @@ public final class Ops {
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
-            if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_NUM:
                 return cf.caller.nArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return (double)cf.caller.iArg[lookup >> 3];
+            case CallSiteDescriptor.ARG_STR:
+                return coerce_s2n(cf.caller.sArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_num(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else
             throw new RuntimeException("Required named argument '" + name + "' not passed");
@@ -287,10 +303,18 @@ public final class Ops {
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
-            if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_STR:
                 return cf.caller.sArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return coerce_i2s(cf.caller.iArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_NUM:
+                return coerce_n2s(cf.caller.nArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_str(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else
             throw new RuntimeException("Required named argument '" + name + "' not passed");
@@ -307,7 +331,7 @@ public final class Ops {
             if ((lookup & 7) == CallSiteDescriptor.ARG_OBJ)
                 return cf.caller.oArg[lookup >> 3];
             else
-                throw new RuntimeException("Argument coercion NYI");
+                throw new RuntimeException("Argument auto-boxing NYI");
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -321,10 +345,18 @@ public final class Ops {
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
-            if ((lookup & 7) == CallSiteDescriptor.ARG_INT)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_INT:
                 return cf.caller.iArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_NUM:
+                return (long)cf.caller.nArg[lookup >> 3];
+            case CallSiteDescriptor.ARG_STR:
+                return coerce_s2i(cf.caller.sArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_int(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -338,10 +370,18 @@ public final class Ops {
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
-            if ((lookup & 7) == CallSiteDescriptor.ARG_NUM)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_NUM:
                 return cf.caller.nArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return (double)cf.caller.iArg[lookup >> 3];
+            case CallSiteDescriptor.ARG_STR:
+                return coerce_s2n(cf.caller.sArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_num(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -355,10 +395,18 @@ public final class Ops {
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             cf.tc.lastParameterExisted = 1;
-            if ((lookup & 7) == CallSiteDescriptor.ARG_STR)
+            switch ((lookup & 7)) {
+            case CallSiteDescriptor.ARG_STR:
                 return cf.caller.sArg[lookup >> 3];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            case CallSiteDescriptor.ARG_INT:
+                return coerce_i2s(cf.caller.iArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_NUM:
+                return coerce_n2s(cf.caller.nArg[lookup >> 3]);
+            case CallSiteDescriptor.ARG_OBJ:
+                return cf.caller.oArg[lookup >> 3].get_str(cf.tc);
+            default:
+                throw new RuntimeException("Error in argument processing");
+            }
         }
         else {
             cf.tc.lastParameterExisted = 0;
