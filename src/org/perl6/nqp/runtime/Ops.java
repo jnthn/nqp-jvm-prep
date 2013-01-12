@@ -113,28 +113,52 @@ public final class Ops {
         if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
             return cf.caller.oArg[cs.argIdx[idx]];
         else
-            throw new RuntimeException("Argument coercion NYI");
+            throw new RuntimeException("Argument auto-boxing NYI");
     }
     public static long posparam_i(CallFrame cf, int idx) {
         CallSiteDescriptor cs = cf.callSite;
-        if (cs.argFlags[idx] == CallSiteDescriptor.ARG_INT)
+        switch (cs.argFlags[idx]) {
+        case CallSiteDescriptor.ARG_INT:
             return cf.caller.iArg[cs.argIdx[idx]];
-        else
-            throw new RuntimeException("Argument coercion NYI");
+        case CallSiteDescriptor.ARG_NUM:
+            return (long)cf.caller.nArg[cs.argIdx[idx]];
+        case CallSiteDescriptor.ARG_STR:
+            return coerce_s2i(cf.caller.sArg[cs.argIdx[idx]]);
+        case CallSiteDescriptor.ARG_OBJ:
+            return cf.caller.oArg[cs.argIdx[idx]].get_int(cf.tc);
+        default:
+            throw new RuntimeException("Error in argument processing");
+        }
     }
     public static double posparam_n(CallFrame cf, int idx) {
         CallSiteDescriptor cs = cf.callSite;
-        if (cs.argFlags[idx] == CallSiteDescriptor.ARG_NUM)
+        switch (cs.argFlags[idx]) {
+        case CallSiteDescriptor.ARG_NUM:
             return cf.caller.nArg[cs.argIdx[idx]];
-        else
-            throw new RuntimeException("Argument coercion NYI");
+        case CallSiteDescriptor.ARG_INT:
+            return (double)cf.caller.iArg[cs.argIdx[idx]];
+        case CallSiteDescriptor.ARG_STR:
+            return coerce_s2n(cf.caller.sArg[cs.argIdx[idx]]);
+        case CallSiteDescriptor.ARG_OBJ:
+            return cf.caller.oArg[cs.argIdx[idx]].get_num(cf.tc);
+        default:
+            throw new RuntimeException("Error in argument processing");
+        }
     }
     public static String posparam_s(CallFrame cf, int idx) {
         CallSiteDescriptor cs = cf.callSite;
-        if (cs.argFlags[idx] == CallSiteDescriptor.ARG_STR)
+        switch (cs.argFlags[idx]) {
+        case CallSiteDescriptor.ARG_STR:
             return cf.caller.sArg[cs.argIdx[idx]];
-        else
-            throw new RuntimeException("Argument coercion NYI");
+        case CallSiteDescriptor.ARG_INT:
+            return coerce_i2s(cf.caller.iArg[cs.argIdx[idx]]);
+        case CallSiteDescriptor.ARG_NUM:
+            return coerce_n2s(cf.caller.nArg[cs.argIdx[idx]]);
+        case CallSiteDescriptor.ARG_OBJ:
+            return cf.caller.oArg[cs.argIdx[idx]].get_str(cf.tc);
+        default:
+            throw new RuntimeException("Error in argument processing");
+        }
     }
     
     /* Optional positional parameter fetching. */
@@ -142,10 +166,7 @@ public final class Ops {
         CallSiteDescriptor cs = cf.callSite;
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            if (cs.argFlags[idx] == CallSiteDescriptor.ARG_OBJ)
-                return cf.caller.oArg[cs.argIdx[idx]];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            return posparam_o(cf, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -156,10 +177,7 @@ public final class Ops {
         CallSiteDescriptor cs = cf.callSite;
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            if (cs.argFlags[idx] == CallSiteDescriptor.ARG_INT)
-                return cf.caller.iArg[cs.argIdx[idx]];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            return posparam_i(cf, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -170,10 +188,7 @@ public final class Ops {
         CallSiteDescriptor cs = cf.callSite;
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            if (cs.argFlags[idx] == CallSiteDescriptor.ARG_NUM)
-                return cf.caller.nArg[cs.argIdx[idx]];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            return posparam_n(cf, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -184,10 +199,7 @@ public final class Ops {
         CallSiteDescriptor cs = cf.callSite;
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            if (cs.argFlags[idx] == CallSiteDescriptor.ARG_STR)
-                return cf.caller.sArg[cs.argIdx[idx]];
-            else
-                throw new RuntimeException("Argument coercion NYI");
+            return posparam_s(cf, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
