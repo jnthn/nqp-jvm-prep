@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.reprs.VMHash;
+import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 
 /**
  * Contains the statically known details of a call site. These are shared rather
@@ -115,7 +117,19 @@ public class CallSiteDescriptor {
                 }
                 break;
             case ARG_OBJ | ARG_FLAT | ARG_NAMED:
-                throw new RuntimeException("Flattening named things NYI");
+                SixModelObject flatHash = oldObjArgs[oldObjArgsIdx++];
+                if (flatHash instanceof VMHashInstance) {
+                    HashMap<String, SixModelObject> storage = ((VMHashInstance)flatHash).storage;
+                    for (String key : storage.keySet()) {
+                        newNames.add(key);
+                        newObjArgs.add(storage.get(key));
+                        newFlags.add((byte)(ARG_OBJ | ARG_NAMED));
+                    }
+                }
+                else {
+                    throw new RuntimeException("Flattening named argument must have VMHash REPR");
+                }
+                break;
             case ARG_OBJ:
                 newObjArgs.add(oldObjArgs[oldObjArgsIdx++]);
                 newFlags.add(af);
