@@ -1,6 +1,6 @@
 use helper;
 
-plan(8);
+plan(10);
 
 qast_test(
     -> {
@@ -215,7 +215,7 @@ qast_test(
                 QAST::Op.new(
                     :op('concat'),
                     QAST::IVal.new( :value(5) ),
-                    QAST::NVal.new( :value('3.9') )
+                    QAST::NVal.new( :value(3.9) )
                 )));
         QAST::CompUnit.new(
             $block,
@@ -226,3 +226,107 @@ qast_test(
     },
     "53.9\n",
     "int and num coercion to str");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(100) ),
+                    QAST::NVal.new( :value(3.3) ),
+                    QAST::SVal.new( :value('Gangnam Style') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_i'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    ))),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_n'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(1) )
+                    ))),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_s'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(2) )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "100\n3.3\nGangnam Style\n",
+    "automatic boxing");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(100) ),
+                    QAST::NVal.new( :value(3.3) ),
+                    QAST::SVal.new( :value('Gangnam Style') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('mul_i'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    ),
+                    QAST::IVal.new( :value(2) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('add_n'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(1) )
+                    ),
+                    QAST::NVal.new( :value(5.5) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('concat'),
+                    QAST::SVal.new( :value('Oppan ') ),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name('x'), :scope('local') ),
+                        QAST::IVal.new( :value(2) )
+                    )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "200\n8.8\nOppan Gangnam Style\n",
+    "automatic boxing and unboxing");
