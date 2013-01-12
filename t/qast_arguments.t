@@ -1,6 +1,6 @@
 use helper;
 
-plan(10);
+plan(11);
 
 qast_test(
     -> {
@@ -384,3 +384,42 @@ qast_test(
     },
     "42\n4.2\nByriani\n",
     "Flattening named arguments");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&many_named_things'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('a'), :scope('local'), :decl('param'), :returns(int), :named('a') )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('b'), :scope('local'), :decl('param'), :returns(num), :named('b') )
+                        ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Var.new( :name('c'), :scope('local'), :decl('param'), :returns(str), :named('c') )
+                        ))),
+                QAST::Op.new(
+                    :op('call'), :name('&many_named_things'),
+                    QAST::SVal.new( :value('Byriani'), :named('c') ),
+                    QAST::Op.new(
+                        :op('hash'), :flat(1), :named(1),
+                        QAST::SVal.new( :value('a') ),
+                        QAST::IVal.new( :value(42) ),
+                    ),
+                    QAST::NVal.new( :value(4.2), :named('b') ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "42\n4.2\nByriani\n",
+    "Flattening named arguments within other args");
