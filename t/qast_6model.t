@@ -1,6 +1,6 @@
 use helper;
 
-plan(15);
+plan(16);
 
 qast_test(
     -> {
@@ -937,3 +937,65 @@ qast_test(
     },
     "0\n1\n",
     "defined works, just like isconcrete by default");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('eqaddr'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::Op.new( :op('knowhow') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('eqaddr'),
+                        QAST::Op.new( :op('bootint') ),
+                        QAST::Op.new( :op('bootnum') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('eqaddr'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('eqaddr'),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        ),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('eqaddr'),
+                        QAST::Op.new(
+                            :op('bind'),
+                            QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                            QAST::Op.new(
+                                :op('create'),
+                                QAST::Op.new( :op('knowhow') )
+                            )),
+                        QAST::Var.new( :name('x'), :scope('local') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n0\n0\n0\n1\n",
+    "eqaddr works");

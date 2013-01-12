@@ -654,6 +654,9 @@ public final class Ops {
             throw new RuntimeException("Method '" + name + "' not found"); 
         return meth;
     }
+    public static long eqaddr(SixModelObject a, SixModelObject b) {
+        return a == b ? 1 : 0;
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
