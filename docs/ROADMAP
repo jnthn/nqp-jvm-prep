@@ -8,12 +8,17 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (splice, delete)
+* QAST::Var attribute scope
 * QAST::Var contextuals
+* QAST::VarWithFallback
 * Named lexical lookup fallback
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
   but in the future we'll have to re-visit this and do NFG...)
 * xor
 * defor
+* nqp::defined
+* nqp::eqaddr
+* lexotic
 
 6model
 * BoolificationSpec - method and bigint cases
