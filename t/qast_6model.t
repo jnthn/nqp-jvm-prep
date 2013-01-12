@@ -1,6 +1,6 @@
 use helper;
 
-plan(14);
+plan(15);
 
 qast_test(
     -> {
@@ -908,3 +908,32 @@ qast_test(
     },
     "0\n0\n1\n1\n1\n0\n",
     "Boolification");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('defined'),
+                        QAST::Op.new( :op('knowhow') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('defined'),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n",
+    "defined works, just like isconcrete by default");
