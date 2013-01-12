@@ -204,7 +204,7 @@ class QAST::OperationsJAST {
         self.add_hll_op($hll, $op, op_mapper($op, $ins, @stack_in, $stack_out, :$tc));
     }
     
-    # Geneartes an operation mapper. Covers a range of operations,
+    # Generates an operation mapper. Covers a range of operations,
     # including those provided by calling a method and those that are
     # just JVM op invocations.
     sub op_mapper($op, $instruction, @stack_in, $stack_out, :$tc = 0) {
