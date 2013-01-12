@@ -872,6 +872,27 @@ public final class Ops {
         System.exit(status);
     }
     
+    public static void sleep(final double seconds) {
+        // Is this really the right behavior, i.e., swallowing all
+        // InterruptedExceptions?  As far as I can tell the original
+        // nqp::sleep could not be interrupted, so that behavior is
+        // duplicated here, but that doesn't mean it's the right thing
+        // to do on the JVM...
+
+        long now = System.currentTimeMillis();
+
+        final long awake = now + (long) (seconds * 1000);
+
+        while ((now = System.currentTimeMillis()) < awake) {
+            long millis = awake - now;
+            try {
+                Thread.sleep(millis);
+            } catch(InterruptedException e) {
+                // swallow
+            }
+        }
+    }
+
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
         HLLConfig config = tc.gc.getHLLConfigFor(language);
