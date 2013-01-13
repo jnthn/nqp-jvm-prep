@@ -1,6 +1,9 @@
 use JASTNodes;
 use QASTNode;
 
+# Should we try handling all the SC stuff?
+my $ENABLE_SC_COMP := 0;
+
 # Some common types we'll need.
 my $TYPE_TC   := 'Lorg/perl6/nqp/runtime/ThreadContext;';
 my $TYPE_CU   := 'Lorg/perl6/nqp/runtime/CompilationUnit;';
@@ -1647,7 +1650,7 @@ class QAST::CompilerJAST {
         my $comp_mode := $cu.compilation_mode;
         my @pre_des   := $cu.pre_deserialize;
         my @post_des  := $cu.post_deserialize;
-        if $comp_mode || @pre_des || @post_des {
+        if $ENABLE_SC_COMP && ($comp_mode || @pre_des || @post_des) {
             # Create a block into which we'll install all of the other
             # pieces.
             my $block := QAST::Block.new( :blocktype('raw') );
