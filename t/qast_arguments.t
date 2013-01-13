@@ -1,6 +1,6 @@
 use helper;
 
-plan(12);
+plan(13);
 
 qast_test(
     -> {
@@ -88,6 +88,36 @@ qast_test(
     },
     "42\n",
     "Integer arguments and return value");
+    
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&add'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('add_i'),
+                            QAST::Var.new( :name('a_param'), :scope('lexical'), :decl('param'), :returns(int) ),
+                            QAST::Var.new( :name('b_param'), :scope('lexical'), :decl('param'), :returns(int) )
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('call'), :name('&add'), :returns(int),
+                        QAST::IVal.new( :value(39) ),
+                        QAST::IVal.new( :value(3) )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "42\n",
+    "Integer arguments and return value (lexical)");
 
 qast_test(
     -> {
