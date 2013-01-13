@@ -1678,8 +1678,16 @@ class QAST::CompilerJAST {
         
         # Compile and include load-time logic, if any.
         if nqp::defined($cu.load) {
-            my $load_jast := self.as_jast(QAST::Block.new( :blocktype('raw'), $cu.load ));
-            nqp::die("QAST2JAST: Load time handling NYI");
+            my $load_block := QAST::Block.new(
+                :blocktype('raw'),
+                $cu.load,
+                QAST::Op.new( :op('null') )
+            );
+            self.as_jast($load_block);
+            my $load_meth := JAST::Method.new( :name('loadIdx'), :returns('Integer') );
+            $load_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($load_block.cuid)) ));
+            $load_meth.append(JAST::Instruction.new( :op('ireturn') ));
+            $*JCLASS.add_method($load_meth);
         }
         
         # Compile and include main-time logic, if any, and then add a Java
