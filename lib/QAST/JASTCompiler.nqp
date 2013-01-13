@@ -1941,6 +1941,10 @@ class QAST::CompilerJAST {
     }
     
     method compile_all_the_stmts(@stmts, $resultchild?, :$node) {
+        unless @stmts {
+            # Empty statement list will break things.
+            @stmts[0] := QAST::Op.new( :op('null') );
+        }
         my $last_res;
         my $il := JAST::InstructionList.new();
         my int $i := 0;
@@ -1966,12 +1970,12 @@ class QAST::CompilerJAST {
             }
             $il.append($last_res.jast)
                 unless $void && nqp::istype($_, QAST::Var);
+            $*STACK.obtain($last_res);
             if $resultchild == $i {
                 # XXX
             }
             $i := $i + 1;
         }
-        $*STACK.obtain($last_res);
         result($il, $last_res.type)
     }
     
