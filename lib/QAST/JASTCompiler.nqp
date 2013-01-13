@@ -2126,6 +2126,22 @@ class QAST::CompilerJAST {
 
             return result($il, $type);
         }
+        elsif $scope eq 'contextual' {
+            my $il := JAST::InstructionList.new();
+            if $*BINDVAL {
+                my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($RT_OBJ));
+                $il.append($valres.jast);
+                $*STACK.obtain($valres);
+            }
+            $il.append(JAST::PushSVal.new( :value($name) ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append($*BINDVAL
+                ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        "binddynlex", $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC )
+                !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        "getdynlex", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+            return result($il, $RT_OBJ);
+        }
         elsif $scope eq 'positional' {
             return self.as_jast_clear_bindval($*BINDVAL
                 ?? QAST::Op.new( :op('positional_bind'), |$node.list, $*BINDVAL)

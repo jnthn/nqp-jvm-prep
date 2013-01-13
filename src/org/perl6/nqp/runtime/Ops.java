@@ -91,6 +91,30 @@ public final class Ops {
         return v; 
     }
     
+    /* Dynamic lexicals. */
+    public static SixModelObject binddynlex(SixModelObject value, String name, ThreadContext tc) {
+        CallFrame curFrame = tc.curFrame;
+        while (curFrame != null) {
+            Integer idx =  curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);
+            if (idx != null) {
+                curFrame.oLex[idx] = value;
+                return value;
+            }
+            curFrame = curFrame.caller;
+        }
+        throw new RuntimeException("Dyanmic variable '" + name + "' not found");
+    }
+    public static SixModelObject getdynlex(String name, ThreadContext tc) {
+        CallFrame curFrame = tc.curFrame;
+        while (curFrame != null) {
+            Integer idx =  curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);
+            if (idx != null)
+                return curFrame.oLex[idx]; 
+            curFrame = curFrame.caller;
+        }
+        return null;
+    }
+    
     /* Argument setting. */
     public static void arg(long v, long[] args, int i) { args[i] = v; }
     public static void arg(double v, double[] args, int i) { args[i] = v; }
