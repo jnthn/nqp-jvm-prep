@@ -2175,6 +2175,43 @@ class QAST::CompilerJAST {
                         "getdynlex", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
             return result($il, $RT_OBJ);
         }
+        elsif $scope eq 'attribute' {
+            # Ensure we have object and class handle.
+            my @args := $node.list;
+            if +@args != 2 {
+                nqp::die("An attribute lookup needs an object and a class handle");
+            }
+            
+            # Compile object, handle and name.
+            my $il := JAST::InstructionList.new();
+            my $obj_res := self.as_jast_clear_bindval(@args[0], :want($RT_OBJ));
+            $il.append($obj_res.jast);
+            my $han_res := self.as_jast_clear_bindval(@args[1], :want($RT_OBJ));
+            $il.append($han_res.jast);
+            my $name_res := self.as_jast_clear_bindval(QAST::SVal.new( :value($name) ), :want($RT_STR));
+            $il.append($name_res.jast);
+            
+            # Go by whether it's a bind or lookup.
+            my $type := rttype_from_typeobj($node.returns);
+            my $jtype := jtype($type);
+            my $suffix := $type == $RT_OBJ ?? '' !! '_' ~ typechar($type);
+            if $*BINDVAL {
+                my $val_res := self.as_jast_clear_bindval($*BINDVAL, :want($type));
+                $il.append($val_res.jast);
+                $*STACK.obtain($obj_res, $han_res, $name_res, $val_res);
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "bindattr$suffix", $jtype, $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $jtype, $TYPE_TC ));
+            }
+            else {
+                $*STACK.obtain($obj_res, $han_res, $name_res);
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "getattr$suffix", $jtype, $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+            }
+            
+            return result($il, $type);
+        }
         elsif $scope eq 'positional' {
             return self.as_jast_clear_bindval($*BINDVAL
                 ?? QAST::Op.new( :op('positional_bind'), |$node.list, $*BINDVAL)
