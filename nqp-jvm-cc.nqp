@@ -19,10 +19,12 @@ sub MAIN(*@ARGS) {
         'QAST2JASTOutput'
     });
     $nqpcomp.HOW.add_method($nqpcomp, 'jvm', method ($class, *%adverbs) {
-        my $cps := is_windows() ?? ";" !! ":";
-        run('java',
-            '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
-            'QAST2JASTOutput');
+        -> {
+            my $cps := is_windows() ?? ";" !! ":";
+            run('java',
+                '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+                'QAST2JASTOutput');
+        }
     });
     
     $nqpcomp.command_line(@ARGS, :encoding('utf8'), :transcode('ascii iso-8859-1'));

@@ -62,7 +62,7 @@ sub qast_test($qast_maker, $expected, $desc = '') is export {
     unlink('QAST2JASTOutput.output');
 }
 
-sub spurt($file, $stuff) {
+sub spurt($file, $stuff) is export {
     my $fh := pir::new__Ps('FileHandle');
     $fh.open($file, "w");
     $fh.encoding('utf8');
@@ -70,15 +70,15 @@ sub spurt($file, $stuff) {
     $fh.close();
 }
 
-sub run($cmd, *@args) {
+sub run($cmd, *@args) is export {
     pir::spawnw__Is($cmd ~ ' ' ~ nqp::join(' ', @args));
 }
 
-sub unlink($file) {
+sub unlink($file) is export {
     my $command := is_windows() ?? "del" !! "rm";
     run($command, $file);
 }
 
-sub is_windows() {
+sub is_windows() is export {
     pir::interpinfo__Si(30) eq "MSWin32";
 }
