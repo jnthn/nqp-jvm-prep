@@ -1877,7 +1877,11 @@ class QAST::CompilerJAST {
                     $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
                 }
                 else {
-                    nqp::die("Lexical parameters NYI");
+                    my $jtype := jtype($type);
+                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $*JMETH.append(JAST::PushIndex.new( :value($block.lexical_idx($_.name)) ));
+                    $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        'bindlex_' ~ typechar($type), $jtype, $jtype, $TYPE_CF, 'Integer' ));
                 }
                 $param_idx++;
             }
