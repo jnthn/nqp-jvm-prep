@@ -471,7 +471,7 @@ for <if unless> -> $op_name {
                 $il.append($qastcomp.coercion($then, $res_type));
                 $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
                 $il.append($else_lbl);
-                $il.append(JAST::Instruction.new( :op(store_ins($old_res_type)), $old_res_temp ));
+                $il.append(JAST::Instruction.new( :op(load_ins($old_res_type)), $old_res_temp ));
                 $il.append($qastcomp.coercion($cond, $res_type));
                 $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
             }
