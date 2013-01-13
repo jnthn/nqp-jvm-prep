@@ -257,12 +257,12 @@ class QAST::OperationsJAST {
 
     # Generates instructions to box what's currently on the stack top.
     method box($qastcomp, $hll, $type) {
-        %hll_box{$hll}{$type}($qastcomp)
+        (%hll_box{$hll}{$type} // %hll_box{''}{$type})($qastcomp)
     }
 
     # Generates instructions to unbox what's currently on the stack top.
     method unbox($qastcomp, $hll, $type) {
-        %hll_unbox{$hll}{$type}($qastcomp)
+        (%hll_unbox{$hll}{$type} // %hll_unbox{''}{$type})($qastcomp)
     }
 }
 
