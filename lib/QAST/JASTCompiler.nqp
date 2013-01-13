@@ -648,9 +648,10 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     $il.append(JAST::Instruction.new( :op('astore'), $block_tmp ));
     
     # Some labels we'll need.
-    my $lbl_next := JAST::Label.new( :name('for_next') );
-    my $lbl_redo := JAST::Label.new( :name('for_redo') );
-    my $lbl_done := JAST::Label.new( :name('for_done') );
+    my $for_id := $qastcomp.unique('for');
+    my $lbl_next := JAST::Label.new( :name($for_id ~ 'next') );
+    my $lbl_redo := JAST::Label.new( :name($for_id ~ 'redo') );
+    my $lbl_done := JAST::Label.new( :name($for_id ~ 'done') );
     
     # Emit loop test.
     my $loop_il := JAST::InstructionList.new();
