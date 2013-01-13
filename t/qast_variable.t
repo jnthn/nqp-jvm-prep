@@ -1,6 +1,6 @@
 use helper;
 
-plan(6);
+plan(7);
 
 qast_test(
     -> {
@@ -194,3 +194,50 @@ qast_test(
     },
     "Barley\nHops\n",
     "Basic closure test");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&a'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_s'),
+                                QAST::Var.new( :name('$*x'), :scope('contextual') )
+                            )),
+                        QAST::Op.new(
+                            :op('bind'),
+                            QAST::Var.new( :name('$*x'), :scope('contextual') ),
+                            QAST::SVal.new( :value("Then Drink Whisky") )
+                        ))),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&b'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('bind'),
+                            QAST::Var.new( :name('$*x'), :scope('lexical'), :decl('var') ),
+                            QAST::SVal.new( :value("Burn After Reading") )
+                        ),
+                        QAST::Op.new( :op('call'), :name('&a') ),
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::Op.new(
+                                :op('unbox_s'),
+                                QAST::Var.new( :name('$*x'), :scope('contextual') )
+                            ))
+                    )),
+                QAST::Op.new( :op('call'), :name('&b') )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Burn After Reading\nThen Drink Whisky\n",
+    "Dynamic lookup");
