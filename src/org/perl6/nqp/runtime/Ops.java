@@ -681,6 +681,12 @@ public final class Ops {
     public static long eqaddr(SixModelObject a, SixModelObject b) {
         return a == b ? 1 : 0;
     }
+    public static long isnull(SixModelObject obj) {
+        return obj == null ? 1 : 0;
+    }
+    public static long isnull_s(String str) {
+        return str == null ? 1 : 0;
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
@@ -709,12 +715,6 @@ public final class Ops {
     }
     public static String unbox_s(SixModelObject obj, ThreadContext tc) {
         return obj.get_str(tc);
-    }
-    public static long isnull(SixModelObject obj) {
-        return obj == null ? 1 : 0;
-    }
-    public static long isnull_s(String str) {
-        return str == null ? 1 : 0;
     }
     
     /* Attribute operations. */
