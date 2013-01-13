@@ -1,4 +1,4 @@
-all: jast
+all: jast helper.pbc
 
 jast: JASTNodes.pbc QASTJASTCompiler.pbc
 
