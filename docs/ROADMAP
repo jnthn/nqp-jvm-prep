@@ -8,7 +8,6 @@ some of the QAST things need runtime support).
 
 QAST to JAST Compiler
 * Remaining positional ops (existspos, deletepos)
-* QAST::Var attribute scope
 * QAST::VarWithFallback
 * Named lexical lookup fallback
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
