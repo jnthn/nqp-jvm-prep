@@ -2303,4 +2303,8 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('invokespecial'), $type, '<init>', 'Void' ));
         $il.append(JAST::Instruction.new( :op('athrow') ));
     }
+    
+    multi method as_jast($unknown, :$want) {
+        nqp::die("Unknown QAST node type " ~ $unknown.HOW.name($unknown));
+    }
 }
