@@ -826,6 +826,16 @@ public final class Ops {
         return obj.st.REPR instanceof VMHash ? 1 : 0;
     }
     
+    /* Container operations. */
+    public static long iscont(SixModelObject obj) {
+    	return obj.st.ContainerSpec == null ? 0 : 1;
+    }
+    public static SixModelObject decont(SixModelObject obj, ThreadContext tc) {
+    	if (obj.st.ContainerSpec == null)
+    		return obj;
+    	throw new RuntimeException("Decontainerization NYI");
+    }
+    
     /* Iteration. */
     public static SixModelObject iter(SixModelObject agg, ThreadContext tc) {
         if (agg.st.REPR instanceof VMArray) {
