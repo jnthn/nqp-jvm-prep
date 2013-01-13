@@ -1974,6 +1974,17 @@ class QAST::CompilerJAST {
         $result
     }
     
+    multi method as_jast(QAST::VM $node, :$want) {
+        if $node.supports('jvm') {
+            return nqp::defined($want)
+                ?? self.as_jast($node.alternative('jvm'), :$want)
+                !! self.as_jast($node.alternative('jvm'));
+        }
+        else {
+            nqp::die("To compile on the JVM backend, QAST::VM must have an alternative 'jvm'");
+        }
+    }
+    
     multi method as_jast(QAST::Var $node, :$want) {
         self.compile_var($node)
     }
