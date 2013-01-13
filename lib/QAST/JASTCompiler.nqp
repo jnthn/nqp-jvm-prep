@@ -1949,7 +1949,7 @@ class QAST::CompilerJAST {
         my $il := JAST::InstructionList.new();
         my int $i := 0;
         my int $n := +@stmts;
-        my $all_void := $*WANT eq 'v';
+        my $all_void := $*WANT == $RT_VOID;
         # XXX Need to support this.
         if nqp::defined($resultchild) {
             nqp::die("No support for resultchild yet");
