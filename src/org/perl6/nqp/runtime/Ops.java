@@ -710,6 +710,12 @@ public final class Ops {
     public static String unbox_s(SixModelObject obj, ThreadContext tc) {
         return obj.get_str(tc);
     }
+    public static long isnull(SixModelObject obj) {
+        return obj == null ? 1 : 0;
+    }
+    public static long isnull_s(String str) {
+        return str == null ? 1 : 0;
+    }
     
     /* Attribute operations. */
     public static SixModelObject getattr(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
