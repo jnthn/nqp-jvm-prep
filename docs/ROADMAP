@@ -7,7 +7,7 @@ trees to test.) There are some dependencies between the various sections (like,
 some of the QAST things need runtime support).
 
 QAST to JAST Compiler
-* Remaining positional ops (splice, delete)
+* Remaining positional ops (existspos, deletepos)
 * QAST::Var attribute scope
 * QAST::Var contextuals
 * QAST::VarWithFallback
@@ -16,8 +16,6 @@ QAST to JAST Compiler
   but in the future we'll have to re-visit this and do NFG...)
 * xor
 * defor
-* nqp::defined
-* nqp::eqaddr
 * lexotic
 
 6model
