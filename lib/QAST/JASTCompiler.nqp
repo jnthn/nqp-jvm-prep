@@ -2143,7 +2143,7 @@ class QAST::CompilerJAST {
     
     method as_jast_clear_bindval($node, :$want) {
         my $*BINDVAL := 0;
-        $want ?? self.as_jast($node, :$want) !! self.as_jast($node)
+        nqp::defined($want) ?? self.as_jast($node, :$want) !! self.as_jast($node)
     }
     
     multi method as_jast(QAST::Want $node, :$want) {
