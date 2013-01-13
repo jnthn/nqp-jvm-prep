@@ -1,6 +1,6 @@
 use helper;
 
-plan(16);
+plan(17);
 
 qast_test(
     -> {
@@ -999,3 +999,41 @@ qast_test(
     },
     "1\n0\n0\n0\n1\n",
     "eqaddr works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isnull'),
+                        QAST::Op.new( :op('knowhow') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isnull'),
+                        QAST::Op.new( :op('null') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isnull_s'),
+                        QAST::SVal.new( :value('Unicorn') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('isnull_s'),
+                        QAST::Op.new( :op('null_s') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n0\n1\n",
+    "isnull and isnull_s work");
