@@ -1,6 +1,6 @@
 use helper;
 
-plan(17);
+plan(18);
 
 qast_test(
     -> {
@@ -1037,3 +1037,31 @@ qast_test(
     },
     "0\n1\n0\n1\n",
     "isnull and isnull_s work");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('can'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::SVal.new( :value('new_type') )
+                    )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('can'),
+                        QAST::Op.new( :op('knowhow') ),
+                        QAST::SVal.new( :value('omgzmilkshake') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n0\n",
+    "can works");

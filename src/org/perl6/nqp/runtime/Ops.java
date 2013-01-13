@@ -678,6 +678,10 @@ public final class Ops {
             throw new RuntimeException("Method '" + name + "' not found"); 
         return meth;
     }
+    public static long can(SixModelObject invocant, String name, ThreadContext tc) {
+        SixModelObject meth = invocant.st.MethodCache.get(name);
+        return meth == null ? 0 : 1;
+    }
     public static long eqaddr(SixModelObject a, SixModelObject b) {
         return a == b ? 1 : 0;
     }
