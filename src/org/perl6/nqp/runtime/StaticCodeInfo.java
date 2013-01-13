@@ -56,8 +56,9 @@ public class StaticCodeInfo {
     public Integer oTryGetLexicalIdx(String name) {
         if (oLexicalMap == null) {
             HashMap<String, Integer> map = new HashMap<String, Integer>();
-            for (int i = 0; i < oLexicalNames.length; i++)
-                map.put(oLexicalNames[i], i);
+            if (oLexicalNames != null)
+                for (int i = 0; i < oLexicalNames.length; i++)
+                    map.put(oLexicalNames[i], i);
             oLexicalMap = map;
         }
         return oLexicalMap.get(name);
@@ -66,8 +67,9 @@ public class StaticCodeInfo {
     public Integer iTryGetLexicalIdx(String name) {
         if (iLexicalMap == null) {
             HashMap<String, Integer> map = new HashMap<String, Integer>();
-            for (int i = 0; i < iLexicalNames.length; i++)
-                map.put(iLexicalNames[i], i);
+            if (iLexicalNames != null)
+                for (int i = 0; i < iLexicalNames.length; i++)
+                    map.put(iLexicalNames[i], i);
             iLexicalMap = map;
         }
         return iLexicalMap.get(name);
@@ -76,8 +78,9 @@ public class StaticCodeInfo {
     public Integer nTryGetLexicalIdx(String name) {
         if (nLexicalMap == null) {
             HashMap<String, Integer> map = new HashMap<String, Integer>();
-            for (int i = 0; i < nLexicalNames.length; i++)
-                map.put(nLexicalNames[i], i);
+            if (nLexicalNames != null)
+                for (int i = 0; i < nLexicalNames.length; i++)
+                    map.put(nLexicalNames[i], i);
             nLexicalMap = map;
         }
         return nLexicalMap.get(name);
@@ -86,8 +89,9 @@ public class StaticCodeInfo {
     public Integer sTryGetLexicalIdx(String name) {
         if (sLexicalMap == null) {
             HashMap<String, Integer> map = new HashMap<String, Integer>();
-            for (int i = 0; i < sLexicalNames.length; i++)
-                map.put(sLexicalNames[i], i);
+            if (sLexicalNames != null)
+                for (int i = 0; i < sLexicalNames.length; i++)
+                    map.put(sLexicalNames[i], i);
             sLexicalMap = map;
         }
         return sLexicalMap.get(name);
