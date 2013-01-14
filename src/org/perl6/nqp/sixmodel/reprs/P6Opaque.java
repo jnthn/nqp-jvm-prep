@@ -3,10 +3,11 @@ package org.perl6.nqp.sixmodel.reprs;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.bcel.Constants;
 import org.apache.bcel.generic.*;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
-import com.sun.org.apache.bcel.internal.Constants;
 
 public class P6Opaque extends REPR {
     private static long typeId = 0;

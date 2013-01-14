@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.apache.bcel.Constants;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.FieldGen;
@@ -15,8 +16,6 @@ import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.StorageSpec;
 import org.perl6.nqp.sixmodel.TypeObject;
-
-import com.sun.org.apache.bcel.internal.Constants;
 
 public class P6int extends REPR {
 	public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {

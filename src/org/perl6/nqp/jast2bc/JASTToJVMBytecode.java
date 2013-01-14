@@ -4,9 +4,9 @@ import java.util.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import org.apache.bcel.generic.*;
 
-import com.sun.org.apache.bcel.internal.Constants;
+import org.apache.bcel.Constants;
+import org.apache.bcel.generic.*;
 
 public class JASTToJVMBytecode {
     public static void main(String[] argv)
