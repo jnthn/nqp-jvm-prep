@@ -25,3 +25,6 @@ bin: $(JAVAS)
 
 test: all
 	prove --exec=nqp t/*.t
+
+clean:
+	perl -MExtUtils::Command -e rm_rf bin *.pir *.pbc *.class *.dump
