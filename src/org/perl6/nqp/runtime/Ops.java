@@ -1004,6 +1004,12 @@ public final class Ops {
             throw new RuntimeException("takeclosure can only be used with a CodeRef");
         }
     }
+
+    /* process related opcodes */
+    public static long exit(final long status) {
+        System.exit((int) status);
+        return status;
+    }
     
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {

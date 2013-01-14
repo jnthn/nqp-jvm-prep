@@ -33,8 +33,7 @@ and use the lexical name info as in the contextuals task (this may actually be
 a bit easier).
 
 ## Process related opcodes
-Implement nqp::exit (takes integer exit code) and nqp::sleep (takes double
-number of seconds).
+Implement nqp::sleep (takes double number of seconds).
 
 ## Work out build stuff
 At the moment, there's nothing really set up for building the Java bit of
