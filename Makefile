@@ -20,7 +20,7 @@ helper.pbc: t/helper.nqp QASTJASTCompiler.pbc
 	parrot -o helper.pbc helper.pir
 
 bin: $(JAVAS)
-	mkdir -p bin
+	perl -MExtUtils::Command -e mkpath bin
 	javac -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
 
 test: all
