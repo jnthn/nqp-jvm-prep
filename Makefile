@@ -1,4 +1,9 @@
-all: jast helper.pbc
+JAVAS=src/org/perl6/nqp/jast2bc/*.java \
+      src/org/perl6/nqp/runtime/*.java \
+	  src/org/perl6/nqp/sixmodel/*.java \
+	  src/org/perl6/nqp/sixmodel/reprs/*.java
+
+all: jast helper.pbc bin
 
 jast: JASTNodes.pbc QASTJASTCompiler.pbc
 
@@ -14,5 +19,9 @@ helper.pbc: t/helper.nqp QASTJASTCompiler.pbc
 	nqp --target=pir --output=helper.pir t/helper.nqp
 	parrot -o helper.pbc helper.pir
 
-test: jast helper.pbc
+bin: $(JAVAS)
+	perl -MExtUtils::Command -e mkpath bin
+	javac -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
+
+test: all
 	prove --exec=nqp t/*.t
