@@ -2267,6 +2267,20 @@ class QAST::CompilerJAST {
         result($il, $RT_OBJ)
     }
     
+     multi method as_jast(QAST::WVal $node, :$want) {
+        my $val    := $node.value;
+        my $sc     := nqp::getobjsc($val);
+        my $handle := nqp::scgethandle($sc);
+        my $idx    := nqp::scgetobjidx($sc, $val);
+        my $il     := JAST::InstructionList.new();
+        $il.append(JAST::PushSVal.new( :value($handle) ));
+        $il.append(JAST::PushIVal.new( :value($idx) ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'wval',
+            $TYPE_SMO, $TYPE_STR, 'Long', $TYPE_TC ));
+        result($il, $RT_OBJ);
+    }
+    
     method coerce($res, $desired) {
         my $got := $res.type;
         if $got == $desired {
