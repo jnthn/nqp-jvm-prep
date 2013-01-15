@@ -967,6 +967,10 @@ QAST::OperationsJAST.add_core_op('bind', -> $qastcomp, $op {
     $qastcomp.as_jast(@children[0])
 });
 
+# Exception handling/munging.
+QAST::OperationsJAST.map_classlib_core_op('die_s', $TYPE_OPS, 'die_s', [$RT_STR], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('die', $TYPE_OPS, 'die', [$RT_OBJ], $RT_OBJ, :tc);
+
 # Default ways to box/unbox (for no particular HLL).
 QAST::OperationsJAST.add_hll_box('', $RT_INT, -> $qastcomp {
     my $il := JAST::InstructionList.new();

@@ -1033,6 +1033,16 @@ public final class Ops {
 
         return seconds;
     }
+    
+    /* Exception related. */
+    public static String die_s(String msg, ThreadContext tc) {
+    	// TODO Implement exceptions properly.
+    	throw new RuntimeException(msg);
+    }
+    public static SixModelObject die(SixModelObject msg, ThreadContext tc) {
+    	// TODO Implement exceptions properly.
+    	throw new RuntimeException(msg.get_str(tc));
+    }
 
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
