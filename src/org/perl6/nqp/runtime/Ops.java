@@ -993,6 +993,52 @@ public final class Ops {
         return ~val;
     }
     
+    /* Relational. */
+    public static long iseq_i(long a, long b) {
+    	return a == b ? 1 : 0;
+    }
+    public static long isne_i(long a, long b) {
+    	return a != b ? 1 : 0;
+    }
+    public static long islt_i(long a, long b) {
+    	return a < b ? 1 : 0;
+    }
+    public static long isle_i(long a, long b) {
+    	return a <= b ? 1 : 0;
+    }
+    public static long isgt_i(long a, long b) {
+    	return a > b ? 1 : 0;
+    }
+    public static long isge_i(long a, long b) {
+    	return a >= b ? 1 : 0;
+    }
+    
+    public static long iseq_n(double a, double b) {
+    	return a == b ? 1 : 0;
+    }
+    public static long isne_n(double a, double b) {
+    	return a != b ? 1 : 0;
+    }
+    public static long islt_n(double a, double b) {
+    	return a < b ? 1 : 0;
+    }
+    public static long isle_n(double a, double b) {
+    	return a <= b ? 1 : 0;
+    }
+    public static long isgt_n(double a, double b) {
+    	return a > b ? 1 : 0;
+    }
+    public static long isge_n(double a, double b) {
+    	return a >= b ? 1 : 0;
+    }
+    
+    public static long iseq_s(String a, String b) {
+    	return a.equals(b) ? 1 : 0;
+    }
+    public static long isne_s(String a, String b) {
+    	return a.equals(b) ? 0 : 1;
+    }
+    
     /* Code object related. */
     public static SixModelObject takeclosure(SixModelObject code, ThreadContext tc) {
         if (code instanceof CodeRef) {

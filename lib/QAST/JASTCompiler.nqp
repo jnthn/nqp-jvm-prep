@@ -1090,6 +1090,24 @@ QAST::OperationsJAST.map_classlib_core_op('bitshiftl_i', $TYPE_OPS, 'bitshiftl_i
 QAST::OperationsJAST.map_classlib_core_op('bitshiftr_i', $TYPE_OPS, 'bitshiftr_i', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('bitneg_i', $TYPE_OPS, 'bitneg_i', [$RT_INT], $RT_INT);
 
+# relational opcodes
+QAST::OperationsJAST.map_classlib_core_op('iseq_i', $TYPE_OPS, 'iseq_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isne_i', $TYPE_OPS, 'isne_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('islt_i', $TYPE_OPS, 'islt_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isle_i', $TYPE_OPS, 'isle_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isgt_i', $TYPE_OPS, 'isgt_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isge_i', $TYPE_OPS, 'isge_i', [$RT_INT, $RT_INT], $RT_INT);
+
+QAST::OperationsJAST.map_classlib_core_op('iseq_n', $TYPE_OPS, 'iseq_n', [$RT_NUM, $RT_NUM], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isne_n', $TYPE_OPS, 'isne_n', [$RT_NUM, $RT_NUM], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('islt_n', $TYPE_OPS, 'islt_n', [$RT_NUM, $RT_NUM], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isle_n', $TYPE_OPS, 'isle_n', [$RT_NUM, $RT_NUM], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isgt_n', $TYPE_OPS, 'isgt_n', [$RT_NUM, $RT_NUM], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isge_n', $TYPE_OPS, 'isge_n', [$RT_NUM, $RT_NUM], $RT_INT);
+
+QAST::OperationsJAST.map_classlib_core_op('iseq_s', $TYPE_OPS, 'iseq_s', [$RT_STR, $RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isne_s', $TYPE_OPS, 'isne_s', [$RT_STR, $RT_STR], $RT_INT);
+
 # aggregate opcodes
 QAST::OperationsJAST.map_classlib_core_op('atpos', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('atkey', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
