@@ -1,6 +1,6 @@
 use helper;
 
-plan(10);
+plan(11);
 
 qast_test(
     -> {
@@ -330,3 +330,40 @@ qast_test(
     },
     "200\n8.8\nOppan Gangnam Style\n",
     "automatic boxing and unboxing");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('&x'), :scope('lexical'), :decl('var') ),
+                QAST::Block.new(
+                    QAST::Op.new(
+                        :op('lexotic'), :name('RETURN'),
+                        QAST::Op.new(
+                            :op('call'),
+                            QAST::Block.new(
+                                QAST::Op.new(
+                                    :op('call'),
+                                    QAST::Var.new( :name('RETURN'), :scope('lexical') ),
+                                    QAST::SVal.new( :value('badger') )
+                                ),
+                                QAST::SVal.new( :value('oops') )
+                            )),
+                        QAST::SVal.new( :value('oops') )
+                    ))),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('unbox_s'),
+                    QAST::Op.new( :op('call'), :name('&x') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "badger\n",
+    "lexotic works");
