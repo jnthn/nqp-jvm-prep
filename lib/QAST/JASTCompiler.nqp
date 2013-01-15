@@ -1976,6 +1976,7 @@ class QAST::CompilerJAST {
                     $*JMETH.append(JAST::PushIndex.new( :value($block.lexical_idx($_.name)) ));
                     $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                         'bindlex_' ~ typechar($type), $jtype, $jtype, $TYPE_CF, 'Integer' ));
+                    $*JMETH.append(pop_ins($type));
                 }
                 $param_idx++;
             }
