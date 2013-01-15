@@ -1,6 +1,6 @@
 use helper;
 
-plan(12);
+plan(14);
 
 qast_test(
     -> {
@@ -605,3 +605,158 @@ qast_test(
     },
     "2\n2\n",
     "Splice has the right elems replacing two");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('l'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new(
+                        :op('list'), 
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    )
+                )
+            ),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('positional'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    )
+                )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new(
+                    :scope('positional'),
+                    QAST::Var.new( :name('l'), :scope('local') ),
+                    QAST::IVal.new( :value(1) )
+                ),
+                QAST::Op.new(
+                    :op('list'), 
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('l'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('positional'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('positional'),
+                        QAST::Var.new( :name('l'), :scope('local') ),
+                        QAST::IVal.new( :value(1) )
+                    )
+                )),
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n3\n2\n3\n2\n",
+    "QAST::Var positional scope");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('h'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('hash'),
+                    QAST::SVal.new( :value('whisky') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') ),
+                        QAST::Op.new( :op('list') )
+                    ),
+                    QAST::SVal.new( :value('vodka') ),
+                    QAST::Op.new(
+                        :op('list'),
+                        QAST::Op.new( :op('list') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('associative'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('vodka') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('associative'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('whisky') )
+                    )
+                )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new(
+                    :scope('associative'),
+                    QAST::Var.new( :name('h'), :scope('local') ),
+                    QAST::SVal.new( :value('whisky') )
+                ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') ),
+                    QAST::Op.new( :op('list') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new(
+                        :scope('associative'),
+                        QAST::Var.new( :name('h'), :scope('local') ),
+                        QAST::SVal.new( :value('whisky') )
+                    )
+                ))
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n2\n3\n",
+    "QAST::Var associative scope");
