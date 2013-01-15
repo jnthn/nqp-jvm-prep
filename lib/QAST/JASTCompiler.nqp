@@ -967,6 +967,7 @@ QAST::OperationsJAST.add_core_op('lexotic', -> $qastcomp, $op {
     $il.append(JAST::Instruction.new( :op('pop') ));
     
     # Compile the things inside the lexotic
+    my $*WANT := $RT_OBJ;
     my $stmt_res := $qastcomp.coerce($qastcomp.compile_all_the_stmts($op.list()), $RT_OBJ);
     $*STACK.obtain($stmt_res);
     
