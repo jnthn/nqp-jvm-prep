@@ -1,6 +1,6 @@
 use helper;
 
-plan(7);
+plan(9);
 
 qast_test(
     -> {
@@ -139,3 +139,87 @@ qast_test(
     },
     "210\n",
     "lcm_i works");
+    
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_i'),
+                    QAST::IVal.new( :value(42) ),
+                    QAST::IVal.new( :value(27) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_i'),
+                    QAST::IVal.new( :value(42) ),
+                    QAST::IVal.new( :value(42) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('isgt_i'),
+                    QAST::IVal.new( :value(42) ),
+                    QAST::IVal.new( :value(27) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('islt_i'),
+                    QAST::IVal.new( :value(42) ),
+                    QAST::IVal.new( :value(27) )
+                )),
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n1\n0\n",
+    "Integer relationals work");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_n'),
+                    QAST::NVal.new( :value(4.2) ),
+                    QAST::NVal.new( :value(2.7) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_n'),
+                    QAST::NVal.new( :value(4.2) ),
+                    QAST::NVal.new( :value(4.2) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('isgt_n'),
+                    QAST::NVal.new( :value(4.2) ),
+                    QAST::NVal.new( :value(2.7) )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('islt_n'),
+                    QAST::NVal.new( :value(4.2) ),
+                    QAST::NVal.new( :value(2.7) )
+                )),
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n1\n0\n",
+    "Numeric relationals work");

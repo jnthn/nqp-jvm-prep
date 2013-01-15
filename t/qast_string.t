@@ -1,6 +1,6 @@
 use helper;
 
-plan(6);
+plan(7);
 
 qast_test(
     -> {
@@ -117,3 +117,45 @@ qast_test(
     },
     "B\n",
     "chr");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_s'),
+                    QAST::SVal.new( :value('bacon') ),
+                    QAST::SVal.new( :value('cheese') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('iseq_s'),
+                    QAST::SVal.new( :value('bacon') ),
+                    QAST::SVal.new( :value('bacon') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('isne_s'),
+                    QAST::SVal.new( :value('bacon') ),
+                    QAST::SVal.new( :value('cheese') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('isne_s'),
+                    QAST::SVal.new( :value('bacon') ),
+                    QAST::SVal.new( :value('bacon') )
+                )),
+            );
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n1\n1\n0\n",
+    "String relationals work");
