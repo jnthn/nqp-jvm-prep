@@ -558,8 +558,29 @@ public final class Ops {
     /* Invocation. */
     private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
     public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
-        // Get the code ref.
-        if (!(invokee instanceof CodeRef))
+        // If it's lexotic, throw the exception right off.
+    	if (invokee instanceof Lexotic) {
+    		long target = ((Lexotic)invokee).target;
+    		CallSiteDescriptor csd = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
+    		switch (csd.argFlags[0]) {
+    		case CallSiteDescriptor.ARG_OBJ:
+    			throw new LexoticException(target, tc.curFrame.oArg[0]);
+    		case CallSiteDescriptor.ARG_INT:
+    			throw new LexoticException(target, box_i(tc.curFrame.iArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc));
+    		case CallSiteDescriptor.ARG_NUM:
+    			throw new LexoticException(target, box_n(tc.curFrame.nArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc));
+    		case CallSiteDescriptor.ARG_STR:
+    			throw new LexoticException(target, box_s(tc.curFrame.sArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc));
+    		default:
+    			throw new RuntimeException("Invalid lexotic invocation argument");
+    		}
+    	}
+        
+    	// Otherwise, get the code ref.
+    	if (!(invokee instanceof CodeRef))
             throw new Exception("Can only invoke direct CodeRefs so far");
         CodeRef cr = (CodeRef)invokee;
         StaticCodeInfo sci = cr.staticInfo;
@@ -627,6 +648,13 @@ public final class Ops {
         
         // Set curFrame back to caller.
         tc.curFrame = cf.caller;
+    }
+    
+    /* Lexotic. */
+    public static SixModelObject lexotic(long target) {
+    	Lexotic res = new Lexotic();
+    	res.target = target;
+    	return res;
     }
     
     /* Basic 6model operations. */
