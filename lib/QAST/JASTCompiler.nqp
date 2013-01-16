@@ -1017,6 +1017,29 @@ QAST::OperationsJAST.add_core_op('bind', -> $qastcomp, $op {
 QAST::OperationsJAST.map_classlib_core_op('die_s', $TYPE_OPS, 'die_s', [$RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('die', $TYPE_OPS, 'die', [$RT_OBJ], $RT_OBJ, :tc);
 
+# Control exception throwing.
+my %control_map := nqp::hash(
+    'next', $TYPE_EX_NEXT,
+    'last', $TYPE_EX_LAST,
+    'redo', $TYPE_EX_REDO
+);
+QAST::OperationsJAST.add_core_op('control', -> $qastcomp, $op {
+    my $name := $op.name;
+    if nqp::existskey(%control_map, $name) {
+        my $type := %control_map{$name};
+        my $il := JAST::InstructionList.new();
+        $il.append(JAST::Instruction.new( :op('new'), $type ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('invokespecial'), $type, '<init>', 'Void' ));
+        $il.append(JAST::Instruction.new( :op('athrow') ));
+        $il.append(JAST::Instruction.new( :op('aconst_null') ));
+        result($il, $RT_OBJ);
+    }
+    else {
+        nqp::die("Unknown control exception type '$name'");
+    }
+});
+
 # Default ways to box/unbox (for no particular HLL).
 QAST::OperationsJAST.add_hll_box('', $RT_INT, -> $qastcomp {
     my $il := JAST::InstructionList.new();
