@@ -719,6 +719,12 @@ public final class Ops {
     public static long isnull_s(String str) {
         return str == null ? 1 : 0;
     }
+    public static String reprname(SixModelObject obj) {
+    	return obj.st.REPR.name;
+    }
+    public static SixModelObject newtype(SixModelObject how, String reprname, ThreadContext tc) {
+    	return REPRRegistry.getByName(reprname).type_object_for(tc, how);
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
