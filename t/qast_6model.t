@@ -1,6 +1,6 @@
 use helper;
 
-plan(22);
+plan(21);
 
 qast_test(
     -> {
