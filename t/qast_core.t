@@ -1,6 +1,6 @@
 use helper;
 
-plan(11);
+plan(13);
 
 qast_test(
     -> {
@@ -87,6 +87,54 @@ qast_test(
     -> {
         my $block := QAST::Block.new(
             QAST::Op.new(
+                :op('for'),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::IVal.new( :value(2) ),
+                    QAST::IVal.new( :value(3) ),
+                    QAST::IVal.new( :value(4) ),
+                    QAST::IVal.new( :value(5) )
+                ),
+                QAST::Block.new(
+                    QAST::Var.new( :name('x'), :scope('local'), :decl('param'), :returns(int) ),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::Op.new(
+                            :op('iseq_i'),
+                            QAST::Var.new( :name('x'), :scope('local') ),
+                            QAST::IVal.new( :value(2) )
+                        ),
+                        QAST::Op.new( :op('control'), :name('next') )
+                    ),
+                    QAST::Op.new(
+                        :op('say'),
+                        QAST::Var.new( :name('x'), :scope('local') )
+                    ),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::Op.new(
+                            :op('iseq_i'),
+                            QAST::Var.new( :name('x'), :scope('local') ),
+                            QAST::IVal.new( :value(4) )
+                        ),
+                        QAST::Op.new( :op('control'), :name('last') )
+                    )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1\n3\n4\n",
+    "for with control exceptions");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
                 :op('bind'),
                 QAST::Var.new( :name('$i'), :scope('lexical'), :decl('var'), :returns(int) ),
                 QAST::IVal.new( :value(5) )
@@ -166,6 +214,63 @@ qast_test(
     },
     "-1\n0\ndone\n1\n",
     "repeat_until");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('$i'), :scope('lexical'), :decl('var'), :returns(int) ),
+                QAST::IVal.new( :value(5) )
+            ),
+            QAST::Op.new(
+                :op('while'),
+                QAST::Var.new( :name('$i'), :scope('lexical') ),
+                QAST::Stmts.new(
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::Op.new(
+                            :op('iseq_i'),
+                            QAST::Var.new( :name('$i'), :scope('lexical') ),
+                            QAST::IVal.new( :value(4) )
+                        ),
+                        QAST::Op.new( :op('control'), :name('next') )
+                    ),
+                    QAST::Op.new(
+                        :op('say'),
+                        QAST::Var.new( :name('$i'), :scope('lexical') )
+                    ),
+                    QAST::Op.new(
+                        :op('if'),
+                        QAST::Op.new(
+                            :op('iseq_i'),
+                            QAST::Var.new( :name('$i'), :scope('lexical') ),
+                            QAST::IVal.new( :value(2) )
+                        ),
+                        QAST::Op.new( :op('control'), :name('last') )
+                    )),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('$i'), :scope('lexical') ),
+                    QAST::Op.new(
+                        :op('sub_i'),
+                        QAST::Var.new( :name('$i'), :scope('lexical') ),
+                        QAST::IVal.new( :value(1) )
+                    )
+                )),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::SVal.new( :value('done') )
+                ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "5\n3\n2\ndone\n",
+    "while with control exceptionx");
 
 qast_test(
     -> {
