@@ -443,7 +443,7 @@ for <if unless> -> $op_name {
                 $il.append(pop_ins($else.type));
             }
             else {
-                $il.append($qastcomp.coercion($then, $res_type));
+                $il.append($qastcomp.coercion($else, $res_type));
                 $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
             }
         }
