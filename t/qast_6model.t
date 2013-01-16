@@ -1,6 +1,6 @@
 use helper;
 
-plan(20);
+plan(22);
 
 qast_test(
     -> {
@@ -1229,3 +1229,28 @@ qast_test(
     },
     "1\n0\n",
     "can works");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('reprname'),
+                    QAST::Op.new(
+                        :op('newtype'),
+                        QAST::Op.new(
+                            :op('create'),
+                            QAST::Op.new( :op('knowhow') )
+                        ),
+                        QAST::SVal.new( :value('Uninstantiable') )
+                    ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Uninstantiable\n",
+    "newtype and reprname");
