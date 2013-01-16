@@ -748,6 +748,28 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     }
 });
 
+QAST::OperationsJAST.add_core_op('defor', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("Operation 'defor' needs 2 operands");
+    }
+    my $tmp := $op.unique('defined');
+    $qastcomp.as_jast(QAST::Stmts.new(
+        QAST::Op.new(
+            :op('bind'),
+            QAST::Var.new( :name($tmp), :scope('local'), :decl('var') ),
+            $op[0]
+        ),
+        QAST::Op.new(
+            :op('if'),
+            QAST::Op.new(
+                :op('defined'),
+                QAST::Var.new( :name($tmp), :scope('local') )
+            ),
+            QAST::Var.new( :name($tmp), :scope('local') ),
+            $op[1]
+        )))
+});
+
 QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
     if +$op.list != 2 {
         nqp::die("The 'ifnull' op expects two children");
