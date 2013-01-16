@@ -595,7 +595,10 @@ for ('', 'repeat_') -> $repness {
             }
 
             if $res {
-                result($il, $res_type)
+                my $res_il := JAST::InstructionList.new();
+                $res_il.append($il);
+                $res_il.append(JAST::Instruction.new( :op(load_ins($res_type)), $res ));
+                result($res_il, $res_type)
             }
             else {
                 result($il, $RT_VOID)
