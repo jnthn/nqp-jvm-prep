@@ -1120,6 +1120,21 @@ public final class Ops {
             throw new RuntimeException("takeclosure can only be used with a CodeRef");
         }
     }
+    public static String getcodename(SixModelObject code, ThreadContext tc) {
+    	if (code instanceof CodeRef)
+            return ((CodeRef)code).staticInfo.name;
+        else
+            throw new RuntimeException("getcodename can only be used with a CodeRef");
+    }
+    public static SixModelObject setcodename(SixModelObject code, String name, ThreadContext tc) {
+    	if (code instanceof CodeRef) {
+            ((CodeRef)code).staticInfo.name = name;
+            return code;
+    	}
+        else {
+            throw new RuntimeException("setcodename can only be used with a CodeRef");
+        }
+    }
 
     /* process related opcodes */
     public static long exit(final long status) {

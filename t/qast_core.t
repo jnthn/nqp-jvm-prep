@@ -1,6 +1,6 @@
 use helper;
 
-plan(13);
+plan(14);
 
 qast_test(
     -> {
@@ -472,3 +472,40 @@ qast_test(
     },
     "badger\n",
     "lexotic works");
+
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Block.new(
+                    :name('potato')
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('getcodename'),
+                    QAST::Var.new( :name('x'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('setcodename'),
+                QAST::Var.new( :name('x'), :scope('local') ),
+                QAST::SVal.new( :value('spud') )
+            ),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('getcodename'),
+                    QAST::Var.new( :name('x'), :scope('local') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "potato\nspud\n",
+    "getcodename/setcodename");
