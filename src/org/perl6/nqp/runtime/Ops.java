@@ -728,6 +728,31 @@ public final class Ops {
     public static SixModelObject newtype(SixModelObject how, String reprname, ThreadContext tc) {
     	return REPRRegistry.getByName(reprname).type_object_for(tc, how);
     }
+    public static SixModelObject setmethcache(SixModelObject obj, SixModelObject meths, ThreadContext tc) {
+    	SixModelObject iter = iter(meths, tc);
+    	HashMap<String, SixModelObject> cache = new HashMap<String, SixModelObject>();
+    	while (istrue(iter, tc) != 0) {
+    		SixModelObject cur = iter.shift_boxed(tc);
+    		cache.put(iterkey_s(cur, tc), iterval(cur, tc));
+    	}
+    	obj.st.MethodCache = cache;
+    	return obj;
+    }
+    public static SixModelObject setmethcacheauth(SixModelObject obj, long flag, ThreadContext tc) {
+    	int newFlags = obj.st.ModeFlags & (~STable.METHOD_CACHE_AUTHORITATIVE);
+    	if (flag != 0)
+    		newFlags = newFlags | STable.METHOD_CACHE_AUTHORITATIVE;
+    	obj.st.ModeFlags = newFlags;
+    	return obj;
+    }
+    public static SixModelObject settypecache(SixModelObject obj, SixModelObject types, ThreadContext tc) {
+    	long elems = types.elems(tc);
+    	SixModelObject[] cache = new SixModelObject[(int)elems];
+    	for (long i = 0; i < elems; i++)
+    		cache[(int)i] = types.at_pos_boxed(tc, i);
+    	obj.st.TypeCheckCache = cache;
+    	return obj;
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
