@@ -643,11 +643,14 @@ public final class Ops {
         // Current call frame becomes this new one.
         tc.curFrame = cf;
         
-        // Do the invocation.
-        sci.compUnit.InvokeCode(tc, sci.idx);
-        
-        // Set curFrame back to caller.
-        tc.curFrame = cf.caller;
+        try {
+        	// Do the invocation.
+        	sci.compUnit.InvokeCode(tc, sci.idx);
+        }
+        finally {
+        	// Set curFrame back to caller.
+        	tc.curFrame = cf.caller;
+        }
     }
     
     /* Lexotic. */
