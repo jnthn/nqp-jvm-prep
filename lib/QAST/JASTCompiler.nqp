@@ -2458,4 +2458,8 @@ class QAST::CompilerJAST {
     multi method as_jast($unknown, :$want) {
         nqp::die("Unknown QAST node type " ~ $unknown.HOW.name($unknown));
     }
+    
+    method result($il, $type) { result($il, $type) }
+    
+    method operations() { QAST::OperationsJAST }
 }
