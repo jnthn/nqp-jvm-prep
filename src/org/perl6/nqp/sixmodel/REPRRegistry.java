@@ -22,7 +22,9 @@ public class REPRRegistry {
     }
     
     private static void addREPR(String name, REPR REPR) {
-        reprIdMap.put(name, reprs.size());
+        REPR.ID = reprs.size();
+    	REPR.name = name;
+    	reprIdMap.put(name, reprs.size());
         reprs.add(REPR);
     }
     
