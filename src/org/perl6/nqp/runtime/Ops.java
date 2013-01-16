@@ -987,6 +987,14 @@ public final class Ops {
     public static String chr(long val) {
         return (new StringBuffer()).append((char) val).toString();
     }
+    
+    public static String substr2(String val, long offset) {
+    	return val.substring((int)offset);
+    }
+    
+    public static String substr3(String val, long offset, long length) {
+    	return val.substring((int)offset, (int)(offset + length));
+    }
 
     /* serialization context related opcodes */
     public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {

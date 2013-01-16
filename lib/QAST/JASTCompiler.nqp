@@ -1125,6 +1125,16 @@ QAST::OperationsJAST.map_classlib_core_op('x', $TYPE_OPS, 'x', [$RT_STR, $RT_INT
 QAST::OperationsJAST.map_classlib_core_op('concat', $TYPE_OPS, 'concat', [$RT_STR, $RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('chr', $TYPE_OPS, 'chr', [$RT_INT], $RT_STR);
 
+# substr can take 2 or 3 args, so needs special handling.
+QAST::OperationsJAST.map_classlib_core_op('substr2', $TYPE_OPS, 'substr2', [$RT_STR, $RT_INT], $RT_STR);
+QAST::OperationsJAST.map_classlib_core_op('substr3', $TYPE_OPS, 'substr3', [$RT_STR, $RT_INT, $RT_INT], $RT_STR);
+QAST::OperationsJAST.add_core_op('substr', -> $qastcomp, $op {
+    my @operands := $op.list;
+    $qastcomp.as_jast(+@operands == 2
+        ?? QAST::Op.new( :op('substr2'), |@operands )
+        !! QAST::Op.new( :op('substr3'), |@operands ));
+});
+
 # serialization context opcodes
 QAST::OperationsJAST.map_classlib_core_op('sha1', $TYPE_OPS, 'sha1', [$RT_STR], $RT_STR);
 
