@@ -5,10 +5,12 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMArrayInstance;
 import org.perl6.nqp.sixmodel.reprs.VMHash;
 import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
@@ -1032,6 +1034,21 @@ public final class Ops {
         }
 
         return sb.toString();
+    }
+
+    public static SixModelObject split(String delimiter, String string, ThreadContext tc) {
+        String[] parts = string.split(Pattern.quote(delimiter));
+
+        VMArrayInstance arr = new VMArrayInstance();
+
+        for(String part : parts) {
+            P6strInstance str = new P6strInstance();
+            str.set_str(tc, part);
+
+            arr.push_boxed(tc, str);
+        }
+
+        return arr;
     }
 
     public static String substr2(String val, long offset) {

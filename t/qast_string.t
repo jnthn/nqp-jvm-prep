@@ -1,6 +1,6 @@
 use helper;
 
-plan(9);
+plan(10);
 
 qast_test(
     -> {
@@ -216,3 +216,26 @@ qast_test(
     },
     "1:2.3:c\n",
     "join");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('join'),
+                    QAST::SVal.new( :value(' ') ),
+                    QAST::Op.new(
+                      :op('split'),
+                      QAST::SVal.new( :value('a+') ),
+                      QAST::SVal.new( :value('aaaaa+c') )
+                ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "aaaa c\n",
+    "split");
