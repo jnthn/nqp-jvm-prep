@@ -49,6 +49,9 @@ public class SerializationReader {
 	private int reposTableOffset;
 	private int reposTableEntries;
 	
+	/* Serialization contexts we depend on. */
+	SerializationContext[] dependentSCs;
+	
 	public SerializationReader(ThreadContext tc, SerializationContext sc,
 			String[] sh, CodeRef[] cr, ByteBuffer orig) {
 		this.tc = tc;
@@ -64,7 +67,7 @@ public class SerializationReader {
 		
 		// Split the input into the various segments.
 		checkAndDisectInput();
-		
+		resolveDependencies();
 		throw new RuntimeException("Deserialization NYI");
 	}
 	
@@ -169,5 +172,28 @@ public class SerializationReader {
 	    stDataEnd = objTableOffset;
 	    objDataEnd = closureTableOffset;
 	    contextDataEnd = reposTableOffset;
+	}
+	
+	private void resolveDependencies() {
+		dependentSCs = new SerializationContext[depTableEntries];
+		orig.position(depTableOffset);
+		for (int i = 0; i < depTableEntries; i++) {
+	        String handle = lookupString(orig.getInt());
+	        String desc = lookupString(orig.getInt());
+	        SerializationContext sc = tc.gc.scs.get(handle);
+	        if (sc == null) {
+	            if (desc == null)
+	            	desc = handle;
+	        	throw new RuntimeException(
+	                "Missing or wrong version of dependency '" + desc + "'");
+	        }
+	        dependentSCs[i] = sc;
+	    }
+	}
+	
+	private String lookupString(int idx) {
+		if (idx >= sh.length)
+	        throw new RuntimeException("Attempt to read past end of string heap (index " + idx + ")");
+	    return sh[idx];
 	}
 }
