@@ -57,11 +57,24 @@ public class GlobalContext {
     private HashMap<String, HLLConfig> hllConfiguration;
     
     /**
+     * Serialization context lookup hash.
+     */
+    public HashMap<String, SerializationContext> scs;
+    
+    /**
+     * Serialization context wrapper object hash.
+     */
+    public HashMap<String, SixModelObject> scWrappers;
+    
+    /**
      * Initializes the runtime environment.
      */
     public GlobalContext()
     {
         hllConfiguration = new HashMap<String, HLLConfig>();
+        scs = new HashMap<String, SerializationContext>();
+        scWrappers = new HashMap<String, SixModelObject>();
+        
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);
         setupConfig(hllConfiguration.get("")); // BOOT* not available earlier.
