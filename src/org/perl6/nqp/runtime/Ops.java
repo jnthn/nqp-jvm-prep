@@ -1145,7 +1145,29 @@ public final class Ops {
     	throw new RuntimeException("Serialization NYI");
     }
     public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict, ThreadContext tc) {
-    	throw new RuntimeException("Deserialization NYI");
+    	if (scRef instanceof SCRefInstance) {
+    		SerializationContext sc = ((SCRefInstance)scRef).referencedSC;
+    		
+    		String[] shArray = new String[(int)sh.elems(tc)];
+    		for (int i = 0; i < shArray.length; i++) {
+    			SixModelObject strObj = sh.at_pos_boxed(tc, i);
+    			shArray[i] = strObj == null ? null : strObj.get_str(tc);
+    		}
+    		
+    		CodeRef[] crArray = new CodeRef[(int)cr.elems(tc)];
+    		for (int i = 0; i < crArray.length; i++)
+    			crArray[i] = (CodeRef)cr.at_pos_boxed(tc, i);
+    		
+    		SerializationReader sr = new SerializationReader(
+    				tc, sc, shArray, crArray,
+    				Base64.decode(blob));
+    		sr.deserialize();
+    		
+    		return blob;
+    	}
+    	else {
+    		throw new RuntimeException("deserialize was not passed a valid SCRef");
+    	}
     }
     public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
     	return tc.gc.scs.get(sc).root_objects.get((int)idx);

@@ -79,7 +79,8 @@ public abstract class CompilationUnit {
         	}
         	catch (Exception e)
         	{
-        		throw new RuntimeException("Deserialization failed: " + e.getMessage());
+        		e.printStackTrace(System.err);
+        		throw new RuntimeException(e);
         	}
     }
     
