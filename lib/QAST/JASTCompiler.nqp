@@ -1811,7 +1811,8 @@ class QAST::CompilerJAST {
             
             # If we need to do deserialization, emit code for that.
             if $comp_mode {
-                $block.push(self.deserialization_code($cu.sc(), $cu.code_ref_blocks()));
+                $block.push(self.deserialization_code($cu.sc(), $cu.code_ref_blocks(),
+                    $cu.repo_conflict_resolver()));
             }
             
             # Add post-deserialization tasks.
@@ -1821,8 +1822,11 @@ class QAST::CompilerJAST {
             
             # Compile to JAST and register this block as the deserialization
             # handler.
-            my $sc_jast := self.as_jast($block);
-            nqp::die("QAST2JAST: Deserialization/fixup block handling NYI");
+            self.as_jast($block);
+            my $des_meth := JAST::Method.new( :name('deserializeIdx'), :returns('Integer') );
+            $des_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($block.cuid)) ));
+            $des_meth.append(JAST::Instruction.new( :op('ireturn') ));
+            $*JCLASS.add_method($des_meth);
         }
         
         # Compile and include load-time logic, if any.
@@ -1867,6 +1871,73 @@ class QAST::CompilerJAST {
         $*JCLASS.add_method($hll_meth);
         
         return $*JCLASS;
+    }
+    
+    method deserialization_code($sc, @code_ref_blocks, $repo_conf_res) {
+        # Serialize it.
+        my $sh := nqp::list_s();
+        my $serialized := nqp::serialize($sc, $sh);
+        
+        # Now it's serialized, pop this SC off the compiling SC stack.
+        # XXX TODO
+        
+        # String heap QAST.
+        # XXX Should use list_s and null_s
+        my $sh_ast := QAST::Op.new( :op('list') );
+        my $sh_elems := nqp::elems($sh);
+        my $i := 0;
+        while $i < $sh_elems {
+            $sh_ast.push(nqp::isnull_s($sh[$i])
+                ?? QAST::Op.new( :op('null') )
+                !! QAST::SVal.new( :value($sh[$i]) ));
+            $i := $i + 1;
+        }
+        
+        # Code references.
+        my $cr_past := QAST::Op.new( :op('list_b'), |@code_ref_blocks );
+        
+        # Handle repossession conflict resolution code, if any.
+        if $repo_conf_res {
+            $repo_conf_res.push(QAST::Var.new( :name('conflicts'), :scope('local') ));
+        }
+        else {
+            $repo_conf_res := QAST::Op.new(
+                :op('die_s'),
+                QAST::SVal.new( :value('Repossession conflicts occurred during deserialization') )
+            );
+        }
+        
+        # Overall deserialization QAST.
+        QAST::Stmt.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('cur_sc'), :scope('local'), :decl('var') ),
+                QAST::Op.new( :op('createsc'), QAST::SVal.new( :value($sc.handle()) ) )
+            ),
+            QAST::Op.new(
+                :op('scsetdesc'),
+                QAST::Var.new( :name('cur_sc'), :scope('local') ),
+                QAST::SVal.new( :value($sc.description) )
+            ),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('conflicts'), :scope('local'), :decl('var') ),
+                QAST::Op.new( :op('list') )
+            ),
+            QAST::Op.new(
+                :op('deserialize'),
+                QAST::SVal.new( :value($serialized) ),
+                QAST::Var.new( :name('cur_sc'), :scope('local') ),
+                $sh_ast,
+                QAST::Block.new( :blocktype('immediate'), $cr_past ),
+                QAST::Var.new( :name('conflicts'), :scope('local') )
+            ),
+            QAST::Op.new(
+                :op('if'),
+                QAST::Var.new( :name('conflicts'), :scope('local') ),
+                $repo_conf_res
+            )
+        )
     }
     
     multi method as_jast(QAST::Block $node, :$want) {
