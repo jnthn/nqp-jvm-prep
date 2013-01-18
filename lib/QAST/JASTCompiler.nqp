@@ -1978,7 +1978,10 @@ class QAST::CompilerJAST {
             ),
             QAST::Op.new(
                 :op('if'),
-                QAST::Var.new( :name('conflicts'), :scope('local') ),
+                QAST::Op.new(
+                    :op('elems'),
+                    QAST::Var.new( :name('conflicts'), :scope('local') )
+                ),
                 $repo_conf_res
             )
         )
