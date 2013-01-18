@@ -1,6 +1,6 @@
 use helper;
 
-plan(10);
+plan(11);
 
 qast_test(
     -> {
@@ -239,3 +239,32 @@ qast_test(
     },
     "aaaa c\n",
     "split");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::NVal.new( :value(2.3) ),
+                    QAST::SVal.new( :value('c') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('sprintf'),
+                    QAST::SVal.new( :value('%d:%.1f:%s') ),
+                    QAST::Var.new( :name('x'), :scope('local') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1:2.3:c\n",
+    "sprintf");

@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.reprs.P6intInstance;
+import org.perl6.nqp.sixmodel.reprs.P6numInstance;
+import org.perl6.nqp.sixmodel.reprs.P6strInstance;
 import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
 import org.perl6.nqp.sixmodel.reprs.VMArrayInstance;
@@ -1049,6 +1052,29 @@ public final class Ops {
         }
 
         return arr;
+    }
+
+    public static String sprintf(String format, SixModelObject arr, ThreadContext tc) {
+        // This function just assumes that Java's printf format is compatible
+        // with NQP's printf format...
+
+        final int numElems = (int) arr.elems(tc);
+        Object[] args = new Object[numElems];
+
+        for (int i = 0; i < numElems; i++) {
+            SixModelObject obj = arr.at_pos_boxed(tc, i);
+            if (obj instanceof P6intInstance) {
+                args[i] = Long.valueOf(obj.get_int(tc));
+            } else if (obj instanceof P6numInstance) {
+                args[i] = Double.valueOf(obj.get_num(tc));
+            } else if (obj instanceof P6strInstance) {
+                args[i] = obj.get_str(tc);
+            } else {
+                throw new IllegalArgumentException("sprintf only accepts ints, nums, and strs, not " + obj.getClass());
+            }
+        }
+
+        return String.format(format, args);
     }
 
     public static String substr2(String val, long offset) {

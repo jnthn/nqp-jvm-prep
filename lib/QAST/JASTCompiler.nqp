@@ -1205,6 +1205,7 @@ QAST::OperationsJAST.map_classlib_core_op('concat', $TYPE_OPS, 'concat', [$RT_ST
 QAST::OperationsJAST.map_classlib_core_op('chr', $TYPE_OPS, 'chr', [$RT_INT], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('join', $TYPE_OPS, 'join', [$RT_STR, $RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('split', $TYPE_OPS, 'split', [$RT_STR, $RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('sprintf', $TYPE_OPS, 'sprintf', [$RT_STR, $RT_OBJ], $RT_STR, :tc);
 
 # substr can take 2 or 3 args, so needs special handling.
 QAST::OperationsJAST.map_classlib_core_op('substr2', $TYPE_OPS, 'substr2', [$RT_STR, $RT_INT], $RT_STR);
