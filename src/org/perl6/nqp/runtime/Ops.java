@@ -1040,6 +1040,9 @@ public final class Ops {
         }
         return sb.toString();
     }
+    public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
+    	return tc.gc.scs.get(sc).root_objects.get((int)idx);
+    }
 
     /* bitwise operations. */
     public static long bitor_i(long valA, long valB) {
