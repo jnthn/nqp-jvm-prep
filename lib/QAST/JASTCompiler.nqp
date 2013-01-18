@@ -1860,14 +1860,14 @@ class QAST::CompilerJAST {
             }
             
             # Add post-deserialization tasks.
-            for @post_des {
-                $block.push(QAST::Stmt.new($_));
-            }
+            #for @post_des {
+            #    $block.push(QAST::Stmt.new($_));
+            #}
             
             # Compile to JAST and register this block as the deserialization
             # handler.
             self.as_jast($block);
-            my $des_meth := JAST::Method.new( :name('deserializeIdx'), :returns('Integer') );
+            my $des_meth := JAST::Method.new( :name('deserializeIdx'), :returns('Integer'), :static(0) );
             $des_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($block.cuid)) ));
             $des_meth.append(JAST::Instruction.new( :op('ireturn') ));
             $*JCLASS.add_method($des_meth);
@@ -1881,7 +1881,7 @@ class QAST::CompilerJAST {
                 QAST::Op.new( :op('null') )
             );
             self.as_jast($load_block);
-            my $load_meth := JAST::Method.new( :name('loadIdx'), :returns('Integer') );
+            my $load_meth := JAST::Method.new( :name('loadIdx'), :returns('Integer'), :static(0) );
             $load_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($load_block.cuid)) ));
             $load_meth.append(JAST::Instruction.new( :op('ireturn') ));
             $*JCLASS.add_method($load_meth);
@@ -1952,7 +1952,7 @@ class QAST::CompilerJAST {
         }
         
         # Overall deserialization QAST.
-        QAST::Stmt.new(
+        QAST::Stmts.new(
             QAST::Op.new(
                 :op('bind'),
                 QAST::Var.new( :name('cur_sc'), :scope('local'), :decl('var') ),

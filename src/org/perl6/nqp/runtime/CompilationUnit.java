@@ -70,6 +70,17 @@ public abstract class CompilationUnit {
         
         /* Get HLL configuration object. */
         hllConfig = tc.gc.getHLLConfigFor(this.hllName());
+        
+        /* Run any deserialization code. */
+        int dIdx = deserializeIdx();
+        if (dIdx >= 0)
+        	try {
+        		Ops.invoke(tc, codeRefs[dIdx], -1);
+        	}
+        	catch (Exception e)
+        	{
+        		throw new RuntimeException("Deserialization failed: " + e.getMessage());
+        	}
     }
     
     /**
@@ -111,4 +122,11 @@ public abstract class CompilationUnit {
      * Code generation emits this to supply the HLL name from QAST::CompUnit.
      */
     public abstract String hllName();
+    
+    /**
+     * Code generation overrides this if there's an SC to deserialize.
+     */
+    public int deserializeIdx() {
+    	return -1;
+    }
 }
