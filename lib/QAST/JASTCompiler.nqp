@@ -2,7 +2,7 @@ use JASTNodes;
 use QASTNode;
 
 # Should we try handling all the SC stuff?
-my $ENABLE_SC_COMP := 0;
+my $ENABLE_SC_COMP := 1;
 
 # Some common types we'll need.
 my $TYPE_TC   := 'Lorg/perl6/nqp/runtime/ThreadContext;';

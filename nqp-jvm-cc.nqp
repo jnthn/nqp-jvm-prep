@@ -7,6 +7,7 @@ sub MAIN(*@ARGS) {
     
     $nqpcomp.stages(< start parse past jast jbc jvm >);
     $nqpcomp.HOW.add_method($nqpcomp, 'jast', method ($qast, *%adverbs) {
+        $qast.compilation_mode(1);
         QAST::CompilerJAST.jast($qast);
     });
     $nqpcomp.HOW.add_method($nqpcomp, 'jbc', method ($jast, *%adverbs) {
