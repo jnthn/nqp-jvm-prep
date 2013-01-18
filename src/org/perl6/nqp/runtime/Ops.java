@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
 import org.perl6.nqp.sixmodel.reprs.VMHash;
 import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
@@ -1039,6 +1040,112 @@ public final class Ops {
             sb.append(String.format("%02X", b));
         }
         return sb.toString();
+    }
+    public static SixModelObject createsc(String handle, ThreadContext tc) {
+    	if (tc.gc.scs.containsKey(handle))
+    		throw new RuntimeException("SC with handle " + handle + "already exists");
+    	
+    	SerializationContext sc = new SerializationContext(handle);
+    	tc.gc.scs.put(handle, sc);
+    	
+    	SixModelObject SCRef = tc.gc.SCRef;
+    	SCRefInstance ref = (SCRefInstance)SCRef.st.REPR.allocate(tc, SCRef.st);
+    	ref.referencedSC = sc;
+    	tc.gc.scRefs.put(handle, ref);
+    	
+    	return ref;
+    }
+    public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj) {
+    	if (scRef instanceof SCRefInstance) {
+    		((SCRefInstance)scRef).referencedSC.root_objects.set((int)idx, obj);
+    		return obj;
+    	}
+    	else {
+    		throw new RuntimeException("scsetobj can only operate on an SCRef");
+    	}
+    }
+    public static SixModelObject scsetcode(SixModelObject scRef, long idx, SixModelObject obj) {
+    	if (scRef instanceof SCRefInstance) {
+    		if (obj instanceof CodeRef) {
+    			((SCRefInstance)scRef).referencedSC.root_codes.set((int)idx, (CodeRef)obj);
+    			return obj;
+    		}
+    		else {
+    			throw new RuntimeException("scsetcode can only store a CodeRef");
+    		}
+    	}
+    	else {
+    		throw new RuntimeException("scsetcode can only operate on an SCRef");
+    	}
+    }
+    public static SixModelObject scgetobj(SixModelObject scRef, long idx) {
+    	if (scRef instanceof SCRefInstance) {
+    		return ((SCRefInstance)scRef).referencedSC.root_objects.get((int)idx);
+    	}
+    	else {
+    		throw new RuntimeException("scgetobj can only operate on an SCRef");
+    	}
+    }
+    public static String scgethandle(SixModelObject scRef) {
+    	if (scRef instanceof SCRefInstance) {
+    		return ((SCRefInstance)scRef).referencedSC.handle;
+    	}
+    	else {
+    		throw new RuntimeException("scgethandle can only operate on an SCRef");
+    	}
+    }
+    public static long scgetobjidx(SixModelObject scRef, SixModelObject find) {
+    	if (scRef instanceof SCRefInstance) {
+    		 int idx = ((SCRefInstance)scRef).referencedSC.root_objects.indexOf(find);
+    		 if (idx < 0)
+    			 throw new RuntimeException("Object does not exist in this SC");
+    		 return idx;
+    	}
+    	else {
+    		throw new RuntimeException("scgetobjidx can only operate on an SCRef");
+    	}
+    }
+    public static String scsetdesc(SixModelObject scRef, String desc) {
+    	if (scRef instanceof SCRefInstance) {
+    		((SCRefInstance)scRef).referencedSC.description = desc;
+    		return desc;
+    	}
+    	else {
+    		throw new RuntimeException("scsetdesc can only operate on an SCRef");
+    	}
+    }
+    public static long scobjcount(SixModelObject scRef) {
+    	if (scRef instanceof SCRefInstance) {
+    		return ((SCRefInstance)scRef).referencedSC.root_objects.size();
+    	}
+    	else {
+    		throw new RuntimeException("scobjcount can only operate on an SCRef");
+    	}
+    }
+    public static SixModelObject setobjsc(SixModelObject obj, SixModelObject scRef) {
+    	if (scRef instanceof SCRefInstance) {
+    		obj.sc = ((SCRefInstance)scRef).referencedSC;
+    		return obj;
+    	}
+    	else {
+    		throw new RuntimeException("setobjsc requires an SCRef");
+    	}
+    }
+    public static SixModelObject getobjsc(SixModelObject obj, ThreadContext tc) {
+    	SerializationContext sc = obj.sc;
+    	if (!tc.gc.scRefs.containsKey(sc.handle)) {
+    		SixModelObject SCRef = tc.gc.SCRef;
+        	SCRefInstance ref = (SCRefInstance)SCRef.st.REPR.allocate(tc, SCRef.st);
+        	ref.referencedSC = sc;
+        	tc.gc.scRefs.put(sc.handle, ref);
+    	}
+    	return tc.gc.scRefs.get(sc.handle);
+    }
+    public static String serialize(SixModelObject scRef, SixModelObject sh) {
+    	throw new RuntimeException("Serialization NYI");
+    }
+    public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict) {
+    	throw new RuntimeException("Deserialization NYI");
     }
     public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
     	return tc.gc.scs.get(sc).root_objects.get((int)idx);

@@ -48,6 +48,11 @@ public class GlobalContext {
     public SixModelObject BOOTStr;
     
     /**
+     * SCRef type; a basic, method-less type with the SCRef REPR.
+     */
+    public SixModelObject SCRef;
+    
+    /**
      * The main, startup thread's ThreadContext.
      */
     public ThreadContext mainThread;
@@ -65,7 +70,7 @@ public class GlobalContext {
     /**
      * Serialization context wrapper object hash.
      */
-    public HashMap<String, SixModelObject> scWrappers;
+    public HashMap<String, SixModelObject> scRefs;
     
     /**
      * Initializes the runtime environment.
@@ -74,7 +79,7 @@ public class GlobalContext {
     {
         hllConfiguration = new HashMap<String, HLLConfig>();
         scs = new HashMap<String, SerializationContext>();
-        scWrappers = new HashMap<String, SixModelObject>();
+        scRefs = new HashMap<String, SixModelObject>();
         
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);

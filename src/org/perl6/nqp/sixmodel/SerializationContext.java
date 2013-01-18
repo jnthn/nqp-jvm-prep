@@ -28,4 +28,13 @@ public class SerializationContext {
      * that the object was originally from. */
     public ArrayList<Integer> rep_indexes;
     public ArrayList<SerializationContext> rep_scs;
+    
+	public SerializationContext(String handle) {
+		this.handle = handle;
+		this.root_objects = new ArrayList<SixModelObject>();
+		this.root_stables = new ArrayList<STable>();
+		this.root_codes = new ArrayList<CodeRef>();
+		this.rep_indexes = new ArrayList<Integer>();
+		this.rep_scs = new ArrayList<SerializationContext>();
+	}
 }
