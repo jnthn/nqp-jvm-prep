@@ -13,4 +13,8 @@ public class P6numInstance extends SixModelObject {
     public double get_num(ThreadContext tc) {
         return value;
     }
+
+    public String get_str(ThreadContext tc) {
+        return Double.toString(value);
+    }
 }
