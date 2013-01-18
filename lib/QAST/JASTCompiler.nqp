@@ -1217,6 +1217,16 @@ QAST::OperationsJAST.add_core_op('substr', -> $qastcomp, $op {
         !! QAST::Op.new( :op('substr3'), |@operands ));
 });
 
+# ord can be on a the first char in a string or at a particular char.
+QAST::OperationsJAST.map_classlib_core_op('ordfirst', $TYPE_OPS, 'ordfirst', [$RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('ordat',    $TYPE_OPS, 'ordat',    [$RT_STR, $RT_INT], $RT_INT);
+QAST::OperationsJAST.add_core_op('ord',  -> $qastcomp, $op {
+    my @operands := $op.list;
+    $qastcomp.as_jast(+@operands == 1
+        ?? QAST::Op.new( :op('ordfirst'), |@operands )
+        !! QAST::Op.new( :op('ordat'), |@operands ));
+});
+
 # serialization context opcodes
 QAST::OperationsJAST.map_classlib_core_op('sha1', $TYPE_OPS, 'sha1', [$RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('createsc', $TYPE_OPS, 'createsc', [$RT_STR], $RT_OBJ, :tc);

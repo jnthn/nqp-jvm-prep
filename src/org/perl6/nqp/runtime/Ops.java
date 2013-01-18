@@ -1085,6 +1085,14 @@ public final class Ops {
     	return val.substring((int)offset, (int)(offset + length));
     }
 
+    public static long ordfirst(String str) {
+        return str.codePointAt(0);
+    }
+
+    public static long ordat(String str, long offset) {
+        return str.codePointAt((int)offset);
+    }
+
     /* serialization context related opcodes */
     public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest md = MessageDigest.getInstance("SHA1");

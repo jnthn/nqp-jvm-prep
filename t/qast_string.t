@@ -1,6 +1,6 @@
 use helper;
 
-plan(11);
+plan(12);
 
 qast_test(
     -> {
@@ -268,3 +268,29 @@ qast_test(
     },
     "1:2.3:c\n",
     "sprintf");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ord'),
+                    QAST::SVal.new( :value("monkey") )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ord'),
+                    QAST::SVal.new( :value("monkey") ),
+                    QAST::IVal.new( :value(2) ),
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "109\n110\n",
+    "ord");
