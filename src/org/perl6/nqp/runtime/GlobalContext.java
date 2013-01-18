@@ -3,6 +3,7 @@ package org.perl6.nqp.runtime;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.KnowHOWBootstrapper;
+import org.perl6.nqp.sixmodel.SerializationContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
 public class GlobalContext {
