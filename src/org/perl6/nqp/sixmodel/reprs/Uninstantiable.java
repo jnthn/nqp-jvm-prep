@@ -18,4 +18,8 @@ public class Uninstantiable extends REPR {
 	public SixModelObject allocate(ThreadContext tc, STable st) {
 		throw new RuntimeException("You cannot create an instance of this type");
 	}
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		throw new RuntimeException("Cannot stub an Uninstantiable instance");
+	}
 }

@@ -340,4 +340,8 @@ public class P6Opaque extends REPR {
             return defineClass(name, this.bytes, 0, this.bytes.length);
         }
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		throw new RuntimeException("P6opaque deserialization NYI");
+	}
 }

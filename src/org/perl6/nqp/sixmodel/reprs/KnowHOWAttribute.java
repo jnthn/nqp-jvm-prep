@@ -20,4 +20,10 @@ public class KnowHOWAttribute extends REPR {
         obj.st = st;
         return obj;
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		KnowHOWAttributeInstance obj = new KnowHOWAttributeInstance();
+        obj.st = st;
+        return obj;
+	}
 }

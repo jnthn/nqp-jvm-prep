@@ -103,4 +103,10 @@ public class P6num extends REPR {
         c.addMethod(setMeth.getMethod());
         setIl.dispose();
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		P6numInstance obj = new P6numInstance();
+        obj.st = st;
+        return obj;
+	}
 }

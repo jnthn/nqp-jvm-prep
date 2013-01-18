@@ -68,6 +68,15 @@ public class SerializationReader {
 		// Split the input into the various segments.
 		checkAndDisectInput();
 		resolveDependencies();
+		
+		// Handle any reposessions.
+		if (reposTableEntries > 0)
+			throw new RuntimeException("Reposession of SC objects NYI");
+		
+		// Stub all of the STables and objects.
+		stubSTables();
+		stubObjects();
+		
 		throw new RuntimeException("Deserialization NYI");
 	}
 	
@@ -189,6 +198,61 @@ public class SerializationReader {
 	        }
 	        dependentSCs[i] = sc;
 	    }
+	}
+	
+	private void stubSTables() {
+		for (int i = 0; i < stTableEntries; i++) {
+			// Look up representation.
+			orig.position(stTableOffset + i * STABLES_TABLE_ENTRY_SIZE);
+			REPR repr = REPRRegistry.getByName(lookupString(orig.getInt()));
+			
+			// Create STable stub and add it to the root STable set.
+			STable st = new STable(repr, null);
+			st.sc = sc;
+			sc.root_stables.add(st);
+		}
+	}
+	
+	private void stubObjects() {
+		for (int i = 0; i < objTableEntries; i++) {
+			// Look up STable.
+			orig.position(objTableOffset + i * OBJECTS_TABLE_ENTRY_SIZE);
+			STable st = lookupSTable(orig.getInt(), orig.getInt());
+			
+			// Now go by object flags.
+			SixModelObject stubObj;
+			orig.position(orig.position() + 4);
+			int flags = orig.getInt();
+			if (flags == 0) {
+				// Type object.
+				stubObj = new TypeObject();
+				stubObj.st = st;
+			}
+			else {
+				// Concrete object; defer to the REPR.
+				stubObj = st.REPR.deserialize_stub(tc, st);
+			}
+			
+			// Place object in SC root set.
+			stubObj.sc = sc;
+			sc.root_objects.add(stubObj);
+		}
+	}
+
+
+	private STable lookupSTable(int scIdx, int idx) {
+	    SerializationContext sc = locateSC(scIdx);
+	    if (idx < 0 || idx >= sc.root_stables.size())
+	    	throw new RuntimeException("Invalid STable index (scIdx=" + scIdx + ",idx=" + idx + ")");
+		return sc.root_stables.get(idx);
+	}
+	
+	private SerializationContext locateSC(int scIdx) {
+	    if (scIdx == 0)
+	        return sc;
+	    if (scIdx < 1 || scIdx > dependentSCs.length)
+	        throw new RuntimeException("Invalid dependencies table index encountered (index " + scIdx + ")");
+	    return dependentSCs[scIdx - 1];
 	}
 	
 	private String lookupString(int idx) {

@@ -20,4 +20,8 @@ public class SCRef extends REPR {
         obj.st = st;
         return obj;
 	}
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		throw new RuntimeException("SCRef does not participate in serialization");
+	}
 }

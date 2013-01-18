@@ -102,4 +102,10 @@ public class P6str extends REPR {
         c.addMethod(setMeth.getMethod());
         setIl.dispose();
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		P6strInstance obj = new P6strInstance();
+        obj.st = st;
+        return obj;
+	}
 }

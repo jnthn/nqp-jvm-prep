@@ -102,4 +102,10 @@ public class P6int extends REPR {
         c.addMethod(setMeth.getMethod());
         setIl.dispose();
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		P6intInstance obj = new P6intInstance();
+        obj.st = st;
+        return obj;
+	}
 }

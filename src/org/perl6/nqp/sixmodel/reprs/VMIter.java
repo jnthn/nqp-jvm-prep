@@ -25,4 +25,8 @@ public class VMIter extends REPR {
     public StorageSpec get_value_storage_spec(ThreadContext tc, STable st) {
         return new StorageSpec();
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		throw new RuntimeException("VMIter does not participate in serialization");
+	}
 }

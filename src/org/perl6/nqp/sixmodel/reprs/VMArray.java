@@ -17,4 +17,10 @@ public class VMArray extends REPR {
         obj.st = st;
         return obj;
     }
+
+	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
+		SixModelObject obj = new VMArrayInstance();
+        obj.st = st;
+        return obj;
+	}
 }
