@@ -30,4 +30,9 @@ public class VMHash extends REPR {
         obj.storage = new HashMap<String, SixModelObject>();
         return obj;
 	}
+
+	public void deserialize_finish(ThreadContext tc, STable st,
+			SerializationReader reader, SixModelObject obj) {
+		throw new RuntimeException("VMHash deserialization NYI");
+	}
 }

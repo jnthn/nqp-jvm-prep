@@ -78,13 +78,14 @@ public abstract class REPR {
      * serialization writer. */
     // XXX void (*serialize) (ThreadContext, STable *st, void *data, SerializationWriter *writer);
     
-    /* Object deserialization. Happens in two steps. The first stub step
+    /**
+     *  Object deserialization. Happens in two steps. The first stub step
      * creates an object to be filled out later. Note that the STable may
      * not be fully available yet if it's in the current compilation unit.
      * The second step has the STable fully formed (though objects it
      * references may not be) and should do the rest of the work. */
     public abstract SixModelObject deserialize_stub(ThreadContext tc, STable st);
-    // XXX void (*deserialize) (ThreadContext, STable *st, void *data, SerializationReader *reader);
+    public abstract void deserialize_finish(ThreadContext tc, STable st, SerializationReader reader, SixModelObject obj);
     
     /**
      * REPR data serialization. Serializes the per-type representation data that

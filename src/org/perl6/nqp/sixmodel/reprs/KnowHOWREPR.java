@@ -24,8 +24,20 @@ public class KnowHOWREPR extends REPR {
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
 		KnowHOWREPRInstance obj = new KnowHOWREPRInstance();
         obj.st = st;
-        obj.attributes = new ArrayList<SixModelObject>();
-        obj.methods = new HashMap<String, SixModelObject>();
         return obj;
+	}
+
+	public void deserialize_finish(ThreadContext tc, STable st,
+			SerializationReader reader, SixModelObject obj) {
+		KnowHOWREPRInstance body = (KnowHOWREPRInstance)obj;
+	    body.name = reader.readStr();
+	    
+	    body.attributes = new ArrayList<SixModelObject>();
+	    SixModelObject attrs = reader.readRef();
+	    long elems = attrs.elems(tc);
+	    for (long i = 0; i < elems; i++)
+	    	body.attributes.add(attrs.at_pos_boxed(tc, i));
+	    
+	    body.methods = ((VMHashInstance)reader.readRef()).storage;
 	}
 }

@@ -23,4 +23,9 @@ public class VMArray extends REPR {
         obj.st = st;
         return obj;
 	}
+
+	public void deserialize_finish(ThreadContext tc, STable st,
+			SerializationReader reader, SixModelObject obj) {
+		throw new RuntimeException("VMArray deserialization NYI");
+	}
 }

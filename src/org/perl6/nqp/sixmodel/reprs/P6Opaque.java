@@ -344,4 +344,9 @@ public class P6Opaque extends REPR {
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
 		throw new RuntimeException("P6opaque deserialization NYI");
 	}
+
+	public void deserialize_finish(ThreadContext tc, STable st,
+			SerializationReader reader, SixModelObject obj) {
+		throw new RuntimeException("P6opaque deserialization NYI");
+	}
 }

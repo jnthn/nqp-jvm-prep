@@ -13,6 +13,7 @@ import org.apache.bcel.generic.Type;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
+import org.perl6.nqp.sixmodel.SerializationReader;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.StorageSpec;
 import org.perl6.nqp.sixmodel.TypeObject;
@@ -107,5 +108,10 @@ public class P6int extends REPR {
 		P6intInstance obj = new P6intInstance();
         obj.st = st;
         return obj;
+	}
+
+	public void deserialize_finish(ThreadContext tc, STable st,
+			SerializationReader reader, SixModelObject obj) {
+		((P6intInstance)obj).value = reader.readLong();
 	}
 }

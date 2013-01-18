@@ -2,9 +2,9 @@ package org.perl6.nqp.sixmodel;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
 import org.perl6.nqp.runtime.CodeRef;
 import org.perl6.nqp.runtime.ThreadContext;
+import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 
 public class SerializationReader {
 	/* The current version of the serialization format. */
@@ -18,6 +18,20 @@ public class SerializationReader {
 	private final int CLOSURES_TABLE_ENTRY_SIZE = 24;
 	private final int CONTEXTS_TABLE_ENTRY_SIZE = 16;
 	private final int REPOS_TABLE_ENTRY_SIZE    = 16;
+	
+	/* Possible reference types we can serialize. */
+	private final short REFVAR_NULL               = 1;
+	private final short REFVAR_OBJECT             = 2;
+	private final short REFVAR_VM_NULL            = 3;
+	private final short REFVAR_VM_INT             = 4;
+	private final short REFVAR_VM_NUM             = 5;
+	private final short REFVAR_VM_STR             = 6;
+	private final short REFVAR_VM_ARR_VAR         = 7;
+	private final short REFVAR_VM_ARR_STR         = 8;
+	private final short REFVAR_VM_ARR_INT         = 9;
+	private final short REFVAR_VM_HASH_STR_VAR    = 10;
+	private final short REFVAR_STATIC_CODEREF     = 11;
+	private final short REFVAR_CLONED_CODEREF     = 12;
 	
 	/* Starting state. */
 	private ThreadContext tc;
@@ -69,6 +83,12 @@ public class SerializationReader {
 		checkAndDisectInput();
 		resolveDependencies();
 		
+		// Put code refs in place.
+		for (int i = 0; i < cr.length; i++) {
+			cr[i].sc = sc;
+			sc.root_codes.add(cr[i]);
+		}
+		
 		// Handle any reposessions.
 		if (reposTableEntries > 0)
 			throw new RuntimeException("Reposession of SC objects NYI");
@@ -77,7 +97,19 @@ public class SerializationReader {
 		stubSTables();
 		stubObjects();
 		
-		throw new RuntimeException("Deserialization NYI");
+		// Do first step of deserializing any closures.
+		if (closureTableEntries > 0)
+			throw new RuntimeException("Closure deserialization NYI");
+		
+		// Second passes over STables and objects.
+		deserializeSTables();
+		deserializeObjects();
+		
+		// Finish up contexts and closures.
+		if (closureTableEntries > 0)
+			throw new RuntimeException("Closure deserialization NYI");
+		if (contextTableEntries > 0)
+			throw new RuntimeException("Context deserialization NYI");
 	}
 	
 	/* Checks the header looks sane and all of the places it points to make sense.
@@ -239,6 +271,131 @@ public class SerializationReader {
 		}
 	}
 
+	private void deserializeSTables() {
+		for (int i = 0; i < stTableEntries; i++) {
+			// Seek to the right position in the data chunk.
+			orig.position(stTableOffset + i * STABLES_TABLE_ENTRY_SIZE + 4);
+			orig.position(stDataOffset + orig.getInt());
+			
+			// Get the STable we need to deserialize into.
+			STable st = sc.root_stables.get(i); 
+			
+			// Read the HOW, WHAT and WHO.
+		    st.HOW = readObjRef();
+		    st.WHAT = readObjRef();
+		    st.WHO = readRef();
+		    
+		    /* Method cache and v-table. */
+		    st.MethodCache = ((VMHashInstance)readRef()).storage;
+		    st.VTable = new SixModelObject[(int)orig.getLong()];
+		    for (int j = 0; j < st.VTable.length; j++)
+		        st.VTable[j] = readRef();
+		    
+		    /* Type check cache. */
+		    st.TypeCheckCache = new SixModelObject[(int)orig.getLong()];
+		    for (int j = 0; j < st.TypeCheckCache.length; j++)
+		    	st.TypeCheckCache[j] = readRef();
+		    
+		    /* Mode flags. */
+		    st.ModeFlags = orig.getInt();
+		    
+		    /* Boolification spec. */
+		    if (orig.getLong() != 0) {
+		        st.BoolificationSpec = new BoolificationSpec();
+		        st.BoolificationSpec.Mode = (int)orig.getLong();
+		    	st.BoolificationSpec.Method = readRef();
+		    }
+
+		    /* Container spec. */
+		    if (orig.getLong() != 0) {
+		        st.ContainerSpec = new ContainerSpec();
+		        st.ContainerSpec.ClassHandle = readRef();
+		        st.ContainerSpec.AttrName = lookupString(orig.getInt());
+		        st.ContainerSpec.Hint = (int)orig.getLong();
+		        st.ContainerSpec.FetchMethod = readRef();
+		    }
+
+		    /* If the REPR has a function to deserialize representation data, call it. */
+		    st.REPR.deserialize_repr_data(tc, st, this);
+		}
+	}
+	
+	private void deserializeObjects() {
+		for (int i = 0; i < objTableEntries; i++) {
+			// Can skip if it's a type object.
+			SixModelObject obj = sc.root_objects.get(i);
+			if (obj instanceof TypeObject)
+				continue;
+			
+			// Seek reader to object data offset.
+			orig.position(objTableOffset + i * OBJECTS_TABLE_ENTRY_SIZE + 8);
+			orig.position(objDataOffset + orig.getInt());
+			
+			// Complete the object's deserialization.
+			obj.st.REPR.deserialize_finish(tc, obj.st, this, obj);
+		}
+	}
+	
+	public SixModelObject readRef() {
+		short discrim = orig.getShort();
+		int elems;
+		switch (discrim) {
+		case REFVAR_NULL:
+		case REFVAR_VM_NULL:
+			return null;
+		case REFVAR_OBJECT:
+			return readObjRef();
+		case REFVAR_VM_ARR_VAR:
+			SixModelObject BOOTArray = tc.gc.BOOTArray;
+			SixModelObject resArray = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
+			resArray.initialize(tc);
+			elems = orig.getInt();
+			for (int i = 0; i < elems; i++)
+				resArray.bind_pos_boxed(tc, i, readRef());
+			resArray.sc = sc;
+			return resArray;
+		case REFVAR_VM_HASH_STR_VAR:
+			SixModelObject BOOTHash = tc.gc.BOOTHash;
+			SixModelObject resHash = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+			resHash.initialize(tc);
+			elems = orig.getInt();
+			for (int i = 0; i < elems; i++) {
+				String key = lookupString(orig.getInt());
+				resHash.bind_key_boxed(tc, key, readRef());
+			}
+			resHash.sc = sc;
+			return resHash;
+		case REFVAR_STATIC_CODEREF:
+        case REFVAR_CLONED_CODEREF:
+        	SerializationContext sc = locateSC(orig.getInt());
+        	int idx = orig.getInt();
+    	    if (idx < 0 || idx >= sc.root_codes.size())
+    	    	throw new RuntimeException("Invalid SC code index " + idx);
+    	    return sc.root_codes.get(idx);
+		default:
+			throw new RuntimeException("Unimplemented case of read_ref");
+		}
+	}
+	
+	public SixModelObject readObjRef() {
+	    SerializationContext sc = locateSC(orig.getInt());
+	    int idx = orig.getInt();
+	    if (idx < 0 || idx >= sc.root_objects.size())
+	    	throw new RuntimeException("Invalid SC object index " + idx);
+	    return sc.root_objects.get(idx);
+	}
+	
+	public long readLong() {
+		return orig.getLong();
+	}
+	
+	public double readDouble() {
+		return orig.getDouble();
+	}
+	
+	public String readStr() {
+		return lookupString(orig.getInt());
+	}
 
 	private STable lookupSTable(int scIdx, int idx) {
 	    SerializationContext sc = locateSC(scIdx);
