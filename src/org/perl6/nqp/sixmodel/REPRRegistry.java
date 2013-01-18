@@ -39,5 +39,6 @@ public class REPRRegistry {
         addREPR("P6int", new P6int());
         addREPR("P6num", new P6num());
         addREPR("Uninstantiable", new Uninstantiable());
+        addREPR("SCRef", new SCRef());
     }
 }
