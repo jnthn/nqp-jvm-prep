@@ -30,6 +30,8 @@ public class KnowHOWAttribute extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("KnowHOWAttribute deserialization NYI");
+		KnowHOWAttributeInstance data = (KnowHOWAttributeInstance)obj;
+		data.name = reader.readStr();
+		data.type = tc.gc.KnowHOW; // Not serialized yet
 	}
 }
