@@ -310,6 +310,37 @@ QAST::OperationsJAST.add_core_op('list', -> $qastcomp, $op {
         $arr
     }
 });
+QAST::OperationsJAST.add_core_op('list_b', -> $qastcomp, $op {
+    # Just desugar to create the empty list.
+    my $arr := $qastcomp.as_jast(QAST::Op.new(
+        :op('create'),
+        QAST::Op.new( :op('bootarray') )
+    ));
+    if +$op.list {
+        my $il := JAST::InstructionList.new();
+        $il.append($arr.jast);
+        $*STACK.obtain($arr);
+
+        for $op.list {
+            nqp::die("list_b must have a list of blocks")
+                unless nqp::istype($_, QAST::Block);
+            $il.append(JAST::Instruction.new( :op('dup') ));
+            $il.append(JAST::Instruction.new( :op('aload_0') ));
+            $il.append(JAST::PushSVal.new( :value($_.cuid) ));
+            $il.append(JAST::Instruction.new( :op('invokevirtual'),
+                $TYPE_CU, 'lookupCodeRef', $TYPE_CR, $TYPE_STR ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push',
+                $TYPE_SMO, $TYPE_SMO, $TYPE_SMO, $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+        }
+        
+        result($il, $RT_OBJ);
+    }
+    else {
+        $arr
+    }
+});
 QAST::OperationsJAST.add_core_op('hash', -> $qastcomp, $op {
     # Just desugar to create the empty hash.
     my $hash := $qastcomp.as_jast(QAST::Op.new(
