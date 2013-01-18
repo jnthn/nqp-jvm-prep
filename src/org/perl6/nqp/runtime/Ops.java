@@ -1141,10 +1141,10 @@ public final class Ops {
     	}
     	return tc.gc.scRefs.get(sc.handle);
     }
-    public static String serialize(SixModelObject scRef, SixModelObject sh) {
+    public static String serialize(SixModelObject scRef, SixModelObject sh, ThreadContext tc) {
     	throw new RuntimeException("Serialization NYI");
     }
-    public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict) {
+    public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict, ThreadContext tc) {
     	throw new RuntimeException("Deserialization NYI");
     }
     public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
