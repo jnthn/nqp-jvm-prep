@@ -60,7 +60,16 @@ public class KnowHOWBootstrapper {
         
         /* Associate the created objects with the initial core serialization
          * context. */
-        /* XXX TODO */
+        SerializationContext sc = new SerializationContext("__6MODEL_CORE__");
+        tc.gc.scs.put("__6MODEL_CORE__", sc);
+        sc.root_objects.add(knowhow);
+        knowhow.sc = sc;
+        sc.root_objects.add(knowhow_how);
+        knowhow_how.sc = sc;
+        sc.root_stables.add(knowhow.st);
+        knowhow.st.sc = sc;
+        sc.root_stables.add(knowhow_how.st);
+        knowhow_how.st.sc = sc;
 
         /* Stash the created KnowHOW. */
         tc.gc.KnowHOW = knowhow;
@@ -89,6 +98,14 @@ public class KnowHOWBootstrapper {
         /* Set up method dispatch cache. */
         type_obj.st.MethodCache = meta_obj.methods;
         type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+        
+        /* Associate the created object with the intial core serialization
+         * context. */
+        SerializationContext sc =  tc.gc.scs.get("__6MODEL_CORE__");
+        sc.root_objects.add(type_obj);
+        type_obj.sc = sc;
+        sc.root_stables.add(type_obj.st);
+        type_obj.st.sc = sc;
         
         /* Stash the created type object. */
         tc.gc.KnowHOWAttribute = type_obj;
