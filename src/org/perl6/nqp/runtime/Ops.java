@@ -1276,6 +1276,15 @@ public final class Ops {
     }
     
     /* Relational. */
+    public static long cmp_i(long a, long b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     public static long iseq_i(long a, long b) {
     	return a == b ? 1 : 0;
     }
@@ -1295,6 +1304,15 @@ public final class Ops {
     	return a >= b ? 1 : 0;
     }
     
+    public static long cmp_n(double a, double b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     public static long iseq_n(double a, double b) {
     	return a == b ? 1 : 0;
     }
@@ -1314,6 +1332,9 @@ public final class Ops {
     	return a >= b ? 1 : 0;
     }
     
+    public static long cmp_s(String a, String b) {
+        return a.compareTo(b);
+    }
     public static long iseq_s(String a, String b) {
     	return a.equals(b) ? 1 : 0;
     }
