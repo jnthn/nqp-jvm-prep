@@ -1077,6 +1077,10 @@ public final class Ops {
         return String.format(format, args);
     }
 
+    public static long indexfrom(String string, String pattern, long fromIndex) {
+        return string.indexOf(pattern, (int)fromIndex);
+    }
+
     public static String substr2(String val, long offset) {
     	return val.substring((int)offset);
     }

@@ -1227,6 +1227,15 @@ QAST::OperationsJAST.add_core_op('ord',  -> $qastcomp, $op {
         !! QAST::Op.new( :op('ordat'), |@operands ));
 });
 
+# index may or may not take a starting position
+QAST::OperationsJAST.map_classlib_core_op('indexfrom', $TYPE_OPS, 'indexfrom', [$RT_STR, $RT_STR, $RT_INT], $RT_INT);
+QAST::OperationsJAST.add_core_op('index',  -> $qastcomp, $op {
+    my @operands := $op.list;
+    $qastcomp.as_jast(+@operands == 2
+        ?? QAST::Op.new( :op('indexfrom'), |@operands, QAST::IVal.new( :value(0)) )
+        !! QAST::Op.new( :op('indexfrom'), |@operands ));
+});
+
 # serialization context opcodes
 QAST::OperationsJAST.map_classlib_core_op('sha1', $TYPE_OPS, 'sha1', [$RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('createsc', $TYPE_OPS, 'createsc', [$RT_STR], $RT_OBJ, :tc);
