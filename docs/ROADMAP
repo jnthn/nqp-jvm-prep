@@ -13,8 +13,6 @@ QAST to JAST Compiler
 * String ops (for now, we'll just go with JVM strings to Make Something Work,
   but in the future we'll have to re-visit this and do NFG...)
 * xor
-* defor
-* lexotic
 
 6model
 * BoolificationSpec - method and bigint cases
@@ -27,9 +25,9 @@ Runtime
 * Implement various 6model related ops
 
 SCs
-* Design work for SC support
-* Deserialization implementation
-* QAST::WVal
+* P6opaque deserialization
+* Closure and context deserialization
+* Serialization
 
 Exceptions
 * Design work
