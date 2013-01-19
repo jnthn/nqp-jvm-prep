@@ -325,7 +325,7 @@ public class P6Opaque extends REPR {
         }
         catch (Exception e)
         {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
     
