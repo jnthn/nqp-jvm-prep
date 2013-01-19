@@ -49,17 +49,14 @@ public class SerializationReader {
 	private int stTableOffset;
 	private int stTableEntries;
 	private int stDataOffset;
-	private int stDataEnd;
 	private int objTableOffset;
 	private int objTableEntries;
 	private int objDataOffset;
-	private int objDataEnd;
 	private int closureTableOffset;
 	private int closureTableEntries;
 	private int contextTableOffset;
 	private int contextTableEntries;
 	private int contextDataOffset;
-	private int contextDataEnd;
 	private int reposTableOffset;
 	private int reposTableEntries;
 	
@@ -208,11 +205,6 @@ public class SerializationReader {
 	    prov_pos = reposTableOffset + reposTableEntries * REPOS_TABLE_ENTRY_SIZE;
 	    if (prov_pos > data_len)
 	    	throw new RuntimeException("Corruption detected (repossessions table overruns end of data)");
-	    
-	    /* Set reading limits for data chunks. */
-	    stDataEnd = objTableOffset;
-	    objDataEnd = closureTableOffset;
-	    contextDataEnd = reposTableOffset;
 	}
 	
 	private void resolveDependencies() {
