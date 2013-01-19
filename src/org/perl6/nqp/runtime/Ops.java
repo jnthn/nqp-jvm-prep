@@ -1081,6 +1081,14 @@ public final class Ops {
         return string.indexOf(pattern, (int)fromIndex);
     }
 
+    public static long rindexfromend(String string, String pattern) {
+        return string.lastIndexOf(pattern);
+    }
+
+    public static long rindexfrom(String string, String pattern, long fromIndex) {
+        return string.lastIndexOf(pattern, (int)fromIndex);
+    }
+
     public static String substr2(String val, long offset) {
     	return val.substring((int)offset);
     }
