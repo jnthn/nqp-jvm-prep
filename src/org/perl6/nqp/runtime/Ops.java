@@ -735,6 +735,10 @@ public final class Ops {
     public static SixModelObject newtype(SixModelObject how, String reprname, ThreadContext tc) {
     	return REPRRegistry.getByName(reprname).type_object_for(tc, how);
     }
+    public static SixModelObject composetype(SixModelObject obj, SixModelObject reprinfo, ThreadContext tc) {
+    	obj.st.REPR.compose(tc, obj.st, reprinfo);
+    	return obj;
+    }
     public static SixModelObject setmethcache(SixModelObject obj, SixModelObject meths, ThreadContext tc) {
     	SixModelObject iter = iter(meths, tc);
     	HashMap<String, SixModelObject> cache = new HashMap<String, SixModelObject>();
