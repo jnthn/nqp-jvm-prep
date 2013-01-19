@@ -29,6 +29,11 @@ public class StaticCodeInfo {
     public StaticCodeInfo outerStaticInfo;
     
     /**
+     * Most recent invocation, if any.
+     */
+    public CallFrame priorInvocation;
+    
+    /**
      * Maximum argument counts by argument type.
      */
     public short oMaxArgs;

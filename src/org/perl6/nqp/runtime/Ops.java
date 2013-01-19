@@ -600,7 +600,7 @@ public final class Ops {
         }
         
         // Set outer; if it's explicitly in the code ref, use that. If not,
-        // go hunting for one.
+        // go hunting for one. Fall back to outer's prior invocation.
         if (cr.outer != null) {
             cf.outer = cr.outer;
         }
@@ -615,6 +615,8 @@ public final class Ops {
                     }
                     checkFrame = checkFrame.caller;
                 }
+                if (cf.outer == null)
+                	cf.outer = wanted.priorInvocation;
                 if (cf.outer == null)
                     throw new Exception("Could not locate an outer for code reference " +
                         cr.staticInfo.uniqueId);
@@ -650,6 +652,7 @@ public final class Ops {
         }
         finally {
         	// Set curFrame back to caller.
+        	cr.staticInfo.priorInvocation = cf;
         	tc.curFrame = cf.caller;
         }
     }
