@@ -12,6 +12,11 @@ import org.perl6.nqp.sixmodel.*;
 public class P6Opaque extends REPR {
     private static long typeId = 0;
     
+    private class AttrInfo {
+    	public STable st;
+    	public boolean boxTarget;
+    }
+    
     public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
         STable st = new STable(this, HOW);
         st.REPRData = new P6OpaqueREPRData();
@@ -25,16 +30,7 @@ public class P6Opaque extends REPR {
     public void compose(ThreadContext tc, STable st, SixModelObject repr_info) {
         if (!(repr_info instanceof VMArrayInstance))
             throw new RuntimeException("P6opaque composition needs a VMArray");
-        
-        /* We'll generate a JVM type for the instance storage. */
-        String className = "__P6opaque__" + typeId++;
-        ClassGen c = new ClassGen(className,
-                "org.perl6.nqp.sixmodel.reprs.P6OpaqueBaseInstance",
-                "<generated>",
-                Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
-        ConstantPoolGen cp = c.getConstantPool();
-        InstructionFactory f = new InstructionFactory(c);
-        
+
         /* Go through MRO and find all classes with attributes and build up
          * mapping info hashes. Note, reverse order so indexes will match
          * those in parent types. */
@@ -42,7 +38,7 @@ public class P6Opaque extends REPR {
         boolean mi = false;
         List<SixModelObject> classHandles = new ArrayList<SixModelObject>();
         List<HashMap<String, Integer>> attrIndexes = new ArrayList<HashMap<String, Integer>>();
-        List<SixModelObject> attrHashes = new ArrayList<SixModelObject>();
+        List<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
         long mroLength = repr_info.elems(tc);
         for (long i = mroLength - 1; i >= 0; i--) {
             SixModelObject entry = repr_info.at_pos_boxed(tc, i);
@@ -59,7 +55,10 @@ public class P6Opaque extends REPR {
                     SixModelObject attrHash = attrs.at_pos_boxed(tc, j);
                     String attrName = attrHash.at_key_boxed(tc, "name").get_str(tc);
                     indexes.put(attrName, curAttr++);
-                    attrHashes.add(attrHash);
+                    AttrInfo info = new AttrInfo();
+                    info.st = attrHash.at_key_boxed(tc, "type").st;
+                    info.boxTarget = attrHash.exists_key(tc, "box_target") != 0;
+                    attrInfoList.add(info);
                 }
                 classHandles.add(type);
                 attrIndexes.add(indexes);
@@ -75,7 +74,21 @@ public class P6Opaque extends REPR {
         ((P6OpaqueREPRData)st.REPRData).nameToHintMap = attrIndexes.toArray(new HashMap[0]);
         ((P6OpaqueREPRData)st.REPRData).mi = mi;
         
-        /* bind_attribute_boxed */
+        /* Generate the JVM backing type. */
+        generateJVMType(tc, st, attrInfoList);
+    }
+    
+    private void generateJVMType(ThreadContext tc, STable st, List<AttrInfo> attrInfoList) {
+    	/* Create a unique name. */
+        String className = "__P6opaque__" + typeId++;
+        ClassGen c = new ClassGen(className,
+                "org.perl6.nqp.sixmodel.reprs.P6OpaqueBaseInstance",
+                "<generated>",
+                Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
+        ConstantPoolGen cp = c.getConstantPool();
+        InstructionFactory f = new InstructionFactory(c);
+    	
+    	/* bind_attribute_boxed */
         InstructionList bindBoxedIl = new InstructionList();
         MethodGen bindBoxedMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
                 new Type[] {
@@ -88,10 +101,10 @@ public class P6Opaque extends REPR {
                 "bind_attribute_boxed", className, bindBoxedIl, cp);
         bindBoxedIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         bindBoxedIl.append(InstructionConstants.L2I);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
-        int[] bindBoxedMatch = new int[attrHashes.size()];
-        InstructionHandle[] bindBoxedTargets = new InstructionHandle[attrHashes.size()];
+        int[] bindBoxedMatch = new int[attrInfoList.size()];
+        InstructionHandle[] bindBoxedTargets = new InstructionHandle[attrInfoList.size()];
         
         /* bind_attribute_native */
         InstructionList bindNativeIl = new InstructionList();
@@ -105,10 +118,10 @@ public class P6Opaque extends REPR {
                 "bind_attribute_native", className, bindNativeIl, cp);
         bindNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         bindNativeIl.append(InstructionConstants.L2I);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
-        int[] bindNativeMatch = new int[attrHashes.size()];
-        InstructionHandle[] bindNativeTargets = new InstructionHandle[attrHashes.size()];
+        int[] bindNativeMatch = new int[attrInfoList.size()];
+        InstructionHandle[] bindNativeTargets = new InstructionHandle[attrInfoList.size()];
         
         /* get_attribute_boxed */
         InstructionList getBoxedIl = new InstructionList();
@@ -123,10 +136,10 @@ public class P6Opaque extends REPR {
                 "get_attribute_boxed", className, getBoxedIl, cp);
         getBoxedIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         getBoxedIl.append(InstructionConstants.L2I);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
-        int[] getBoxedMatch = new int[attrHashes.size()];
-        InstructionHandle[] getBoxedTargets = new InstructionHandle[attrHashes.size()];
+        int[] getBoxedMatch = new int[attrInfoList.size()];
+        InstructionHandle[] getBoxedTargets = new InstructionHandle[attrInfoList.size()];
         
         /* get_attribute_native */
         InstructionList getNativeIl = new InstructionList();
@@ -141,19 +154,17 @@ public class P6Opaque extends REPR {
                 "get_attribute_native", className, getNativeIl, cp);
         getNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         getNativeIl.append(InstructionConstants.L2I);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
-        int[] getNativeMatch = new int[attrHashes.size()];
-        InstructionHandle[] getNativeTargets = new InstructionHandle[attrHashes.size()];
+        int[] getNativeMatch = new int[attrInfoList.size()];
+        InstructionHandle[] getNativeTargets = new InstructionHandle[attrInfoList.size()];
         
         /* Now add all of the required fields and fill out the methods. */
-        for (int i = 0; i < attrHashes.size(); i++) {
-            SixModelObject attr = attrHashes.get(i);
-            SixModelObject type = attr.at_key_boxed(tc, "type");
-            boolean box_target = attr.exists_key(tc, "box_target") > 0;
+        for (int i = 0; i < attrInfoList.size(); i++) {
+            AttrInfo attr = attrInfoList.get(i);
             
             /* Is it a reference type or not? */
-            StorageSpec ss = type.st.REPR.get_storage_spec(tc, type.st);
+            StorageSpec ss = attr.st.REPR.get_storage_spec(tc, attr.st);
             if (ss.inlineable == StorageSpec.REFERENCE) {
                 /* Add field. */
                 FieldGen fg = new FieldGen(Constants.ACC_PRIVATE,
@@ -189,16 +200,16 @@ public class P6Opaque extends REPR {
             else {
                 /* Generate field prefix and have target REPR install the field. */
                 String prefix = "field_" + i;
-                type.st.REPR.inlineStorage(tc, type.st, c, cp, prefix);
+                attr.st.REPR.inlineStorage(tc, attr.st, c, cp, prefix);
                 
                 /* Install bind/get instructions. */
-                Instruction[] bindInstructions = type.st.REPR.inlineBind(tc, type.st, c, cp, prefix);
+                Instruction[] bindInstructions = attr.st.REPR.inlineBind(tc, attr.st, c, cp, prefix);
                 bindNativeMatch[i] = i;
                 bindNativeIl.append(bindInstructions[0]);
                 bindNativeTargets[i] = bindNativeIl.getEnd();
                 for (int j = 1; j < bindInstructions.length; j++)
                     bindNativeIl.append(bindInstructions[j]);
-                Instruction[] getInstructions = type.st.REPR.inlineGet(tc, type.st, c, cp, prefix);
+                Instruction[] getInstructions = attr.st.REPR.inlineGet(tc, attr.st, c, cp, prefix);
                 getNativeMatch[i] = i;
                 getNativeIl.append(getInstructions[0]);
                 getNativeTargets[i] = getNativeIl.getEnd();
@@ -219,17 +230,17 @@ public class P6Opaque extends REPR {
             /* If this is a box/unbox target, make sure it gets the appropriate
              * methods.
              */
-            if (box_target) {
+            if (attr.boxTarget) {
                 if (ss.inlineable == StorageSpec.REFERENCE)
                     throw new RuntimeException("A box_target must not have a reference type attribute");
-                type.st.REPR.generateBoxingMethods(tc, type.st, c, cp, "field_" + i);
+                attr.st.REPR.generateBoxingMethods(tc, attr.st, c, cp, "field_" + i);
             }
         }
         
         /* Finish bind_boxed_attribute. */
         InstructionHandle bindBoxedTsPos = bindBoxedIl.getStart().getNext().getNext();
         bindBoxedIl.append(InstructionConstants.ALOAD_0);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindBoxedTsPos.setInstruction(
                     new TABLESWITCH(bindBoxedMatch, bindBoxedTargets, bindBoxedIl.getEnd()));
         bindBoxedIl.append(InstructionConstants.ALOAD_2);
@@ -238,7 +249,7 @@ public class P6Opaque extends REPR {
                 className, "resolveAttribute", Type.INT,
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindBoxedTsPos));
         else
             bindBoxedIl.append(InstructionConstants.RETURN);
@@ -249,7 +260,7 @@ public class P6Opaque extends REPR {
         /* Finish bind_native_attribute. */
         InstructionHandle bindNativeTsPos = bindNativeIl.getStart().getNext().getNext();
         bindNativeIl.append(InstructionConstants.ALOAD_0);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindNativeTsPos.setInstruction(
                     new TABLESWITCH(bindNativeMatch, bindNativeTargets, bindNativeIl.getEnd()));
         bindNativeIl.append(InstructionConstants.ALOAD_2);
@@ -258,7 +269,7 @@ public class P6Opaque extends REPR {
                 className, "resolveAttribute", Type.INT,
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             bindNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindNativeTsPos));
         else
             bindNativeIl.append(InstructionConstants.RETURN);
@@ -269,7 +280,7 @@ public class P6Opaque extends REPR {
         /* Finish get_boxed_attribute. */
         InstructionHandle getBoxedTsPos = getBoxedIl.getStart().getNext().getNext();
         getBoxedIl.append(InstructionConstants.ALOAD_0);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getBoxedTsPos.setInstruction(
                     new TABLESWITCH(getBoxedMatch, getBoxedTargets, getBoxedIl.getEnd()));
         getBoxedIl.append(InstructionConstants.ALOAD_2);
@@ -278,7 +289,7 @@ public class P6Opaque extends REPR {
                 className, "resolveAttribute", Type.INT,
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getBoxedTsPos));
         else {
             getBoxedIl.append(InstructionConstants.ACONST_NULL);
@@ -291,7 +302,7 @@ public class P6Opaque extends REPR {
         /* Finish get_native_attribute. */
         InstructionHandle getNativeTsPos = getNativeIl.getStart().getNext().getNext();
         getNativeIl.append(InstructionConstants.ALOAD_0);
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getNativeTsPos.setInstruction(
                     new TABLESWITCH(getNativeMatch, getNativeTargets, getNativeIl.getEnd()));
         getNativeIl.append(InstructionConstants.ALOAD_2);
@@ -300,7 +311,7 @@ public class P6Opaque extends REPR {
                 className, "resolveAttribute", Type.INT,
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
-        if (attrHashes.size() > 0)
+        if (attrInfoList.size() > 0)
             getNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getNativeTsPos));
         else {
             getNativeIl.append(InstructionConstants.RETURN);
@@ -339,6 +350,81 @@ public class P6Opaque extends REPR {
         public Class<?> findClass(String name) {
             return defineClass(name, this.bytes, 0, this.bytes.length);
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void deserialize_repr_data(ThreadContext tc, STable st, SerializationReader reader) {
+    	// Instantiate REPR data.
+    	P6OpaqueREPRData REPRData = new P6OpaqueREPRData();
+    	st.REPRData = REPRData;
+    	
+    	// Get attribute count.
+    	int numAttributes = (int)reader.readLong();
+    	
+    	// Get list of any flattened in STables.
+    	STable[] flattenedSTables = new STable[numAttributes];
+    	for (int i = 0; i < numAttributes; i++)
+    		if (reader.readLong() != 0)
+    			flattenedSTables[i] = reader.readSTableRef();
+
+    	// Read "is multiple inheritance" flag; can go straight into data.
+    	REPRData.mi = reader.readLong() != 0;
+        
+    	// Read any auto-viv values, if we have them.
+    	SixModelObject[] autovivValues = new SixModelObject[numAttributes];
+        if (reader.readLong() != 0) {
+            for (int i = 0; i < numAttributes; i++)
+                autovivValues[i] = reader.readRef();
+        }
+        
+        // Read unbox slot locations.
+        int unboxIntSlot = (int)reader.readLong();
+        int unboxNumSlot = (int)reader.readLong();
+        int unboxStrSlot = (int)reader.readLong();
+        
+        // Read unbox type map.
+        if (reader.readLong() != 0) {
+            // Don't actually support this yet.
+        	for (int i = 0; i < numAttributes; i++) {
+                reader.readLong();
+                reader.readLong();
+            }
+        }
+        
+        // Finally, read in the name to index mapping.
+        int numClasses = (int)reader.readLong();
+        REPRData.classHandles = new SixModelObject[numClasses];
+        REPRData.nameToHintMap = new HashMap[numClasses];
+        for (int i = 0; i < numClasses; i++) {
+        	REPRData.classHandles[i] = reader.readRef();
+        	SixModelObject nameToHintObject = reader.readRef();
+        	if (nameToHintObject == null) {
+        		/* Nothing to do. */
+        	}
+        	else if (nameToHintObject instanceof VMHashInstance) {
+            	HashMap<String, Integer> nameToHintMap = new HashMap<String, Integer>();
+            	HashMap<String, SixModelObject> origMap = ((VMHashInstance)nameToHintObject).storage;
+            	for (String key : origMap.keySet())
+            		nameToHintMap.put(key, (int)origMap.get(key).get_int(tc));
+            	REPRData.nameToHintMap[i] = nameToHintMap;  
+            }
+            else {
+            	throw new RuntimeException("Unexpected hint map representation in deserialize");
+            }
+        }
+        
+        // Finally, reassemble the Java backing type.
+        ArrayList<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
+        for (int i = 0; i < numAttributes; i++) {
+        	AttrInfo info = new AttrInfo();
+        	if (flattenedSTables[i] != null)
+        		info.st = flattenedSTables[i];
+        	else
+        		info.st = tc.gc.KnowHOW.st; // Any reference type will do
+        	info.boxTarget = i == unboxIntSlot || i == unboxNumSlot || i == unboxStrSlot;
+        	attrInfoList.add(info);
+        }
+        generateJVMType(tc, st, attrInfoList);
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
