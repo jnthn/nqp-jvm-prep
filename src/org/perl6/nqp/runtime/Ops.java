@@ -887,6 +887,15 @@ public final class Ops {
         hash.delete_key(tc, key);
         return hash;
     }
+
+    /* Terms */
+    public static long time_i() {
+        return (long) (System.currentTimeMillis() / 1000);
+    }
+
+    public static double time_n() {
+        return System.currentTimeMillis() / 1000.0;
+    }
     
     /* Aggregate operations. */
     public static long elems(SixModelObject agg, ThreadContext tc) {
