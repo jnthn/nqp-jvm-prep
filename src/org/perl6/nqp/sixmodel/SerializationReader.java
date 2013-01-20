@@ -289,7 +289,7 @@ public class SerializationReader {
 		    	st.TypeCheckCache[j] = readRef();
 		    
 		    /* Mode flags. */
-		    st.ModeFlags = orig.getInt();
+		    st.ModeFlags = (int)orig.getLong();
 		    
 		    /* Boolification spec. */
 		    if (orig.getLong() != 0) {
