@@ -2,6 +2,8 @@ package org.perl6.nqp.runtime;
 
 import java.util.HashMap;
 
+import org.perl6.nqp.sixmodel.SixModelObject;
+
 public class StaticCodeInfo {
     /**
      * The compilation unit where the code lives.
@@ -40,6 +42,11 @@ public class StaticCodeInfo {
     public short iMaxArgs;
     public short nMaxArgs;
     public short sMaxArgs;
+    
+    /**
+     * Static lexicals.
+     */
+    public SixModelObject[] oLexStatic;
     
     /**
      * Names of the lexicals we have of each of the base types.
@@ -121,5 +128,7 @@ public class StaticCodeInfo {
         this.iMaxArgs = iMaxArgs;
         this.nMaxArgs = nMaxArgs;
         this.sMaxArgs = sMaxArgs;
+        if (oLexicalNames != null)
+        	this.oLexStatic = new SixModelObject[oLexicalNames.length];
     }
 }

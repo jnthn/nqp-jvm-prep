@@ -625,7 +625,7 @@ public final class Ops {
         
         // Set up lexical storage.
         if (sci.oLexicalNames != null)
-            cf.oLex = new SixModelObject[sci.oLexicalNames.length];
+            cf.oLex = sci.oLexStatic.clone();
         if (sci.iLexicalNames != null)
             cf.iLex = new long[sci.iLexicalNames.length];
         if (sci.nLexicalNames != null)
