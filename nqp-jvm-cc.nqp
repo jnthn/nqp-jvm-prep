@@ -7,7 +7,6 @@ sub MAIN(*@ARGS) {
     
     $nqpcomp.stages(< start parse past jast jbc jvm >);
     $nqpcomp.HOW.add_method($nqpcomp, 'jast', method ($qast, *%adverbs) {
-        $qast.compilation_mode(1);
         QAST::CompilerJAST.jast($qast);
     });
     $nqpcomp.HOW.add_method($nqpcomp, 'jbc', method ($jast, *%adverbs) {
@@ -29,7 +28,7 @@ sub MAIN(*@ARGS) {
         }
     });
     
-    $nqpcomp.command_line(@ARGS, :encoding('utf8'), :transcode('ascii iso-8859-1'));
+    $nqpcomp.command_line(@ARGS, :precomp(1), :encoding('utf8'), :transcode('ascii iso-8859-1'));
 }
 
 # Set up various NQP-specific ops.
