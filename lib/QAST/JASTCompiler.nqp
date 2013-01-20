@@ -1881,9 +1881,9 @@ class QAST::CompilerJAST {
             }
             
             # Add post-deserialization tasks.
-            #for @post_des {
-            #    $block.push(QAST::Stmt.new($_));
-            #}
+            for @post_des {
+                $block.push(QAST::Stmt.new($_));
+            }
             
             # Compile to JAST and register this block as the deserialization
             # handler.
