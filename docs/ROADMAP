@@ -1,33 +1,18 @@
 NQP JVM Preparation Roadmap
 
-This provides an idea of the things that need to be worked on. Once all these
-are done, we'll have most of what is needed to start working on cross-compiling
-NQP to the JVM. (And yes, this means working for a quite a while with just QAST
-trees to test.) There are some dependencies between the various sections (like,
-some of the QAST things need runtime support).
+This provides an idea of the things that need to be worked on, very roughly
+sorted by priority. The overall goal is to get to a cross-compiled MOP, module
+loader and minimal setting, then start attempting the test suite. This will in
+turn exercise further things needing implementation, such as regex handling.
 
 QAST to JAST Compiler
 * Remaining positional ops (existspos, deletepos)
 * QAST::VarWithFallback
-* Named lexical lookup fallback
-* String ops (for now, we'll just go with JVM strings to Make Something Work,
-  but in the future we'll have to re-visit this and do NFG...)
+* Remaining string ops (of note, split and join)
 * xor
-
-6model
-* BoolificationSpec - method and bigint cases
-* ContainerSpec
-* Type check handling
-* Work something out for bigint REPR
-
-Runtime
-* Implement ops for lexical handling by name
-* Implement various 6model related ops
-
-SCs
-* P6opaque deserialization
-* Closure and context deserialization
-* Serialization
+* nqp::stat
+* HLL global stash (needs nqp:: op'ing some stuff in NQP)
+* Some kind of bytecode loading abstraction
 
 Exceptions
 * Design work
@@ -38,6 +23,17 @@ Exceptions
 Contexts
 * Contexts as first class things (REPR...)
 * QAST instructions for it
+
+6model
+* BoolificationSpec - method and bigint cases
+* ContainerSpec
+* Type check handling
+* Work something out for bigint REPR
+
+SCs
+* P6opaque deserialization
+* Closure and context deserialization
+* Serialization
 
 Parsing
 * NFA execution
@@ -60,4 +56,3 @@ Parsing
 * scan
 * subcapture
 * subrule
-
