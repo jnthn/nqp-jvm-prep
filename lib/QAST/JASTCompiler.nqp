@@ -1329,6 +1329,26 @@ QAST::OperationsJAST.map_classlib_core_op('defined', $TYPE_OPS, 'isconcrete', [$
 QAST::OperationsJAST.map_classlib_core_op('takeclosure', $TYPE_OPS, 'takeclosure', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getcodename', $TYPE_OPS, 'getcodename', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('setcodename', $TYPE_OPS, 'setcodename', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.add_core_op('setstaticlex', -> $qastcomp, $op {
+    if +@($op) != 3 {
+        nqp::die('setstaticlex requires three operands');
+    }
+    unless nqp::istype($op[0], QAST::Block) {
+        nqp::die('First operand to setstaticlex must be a QAST::Block');
+    }
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_0') ));
+    my $obj_res := $qastcomp.as_jast($op[2], :want($RT_OBJ));
+    $il.append($obj_res.jast);
+    $*STACK.obtain($obj_res);
+    my $name_res := $qastcomp.as_jast($op[1], :want($RT_STR));
+    $il.append($name_res.jast);
+    $*STACK.obtain($name_res);
+    $il.append(JAST::PushSVal.new( :value($op[0].cuid) ));
+    $il.append(JAST::Instruction.new( :op('invokevirtual'),
+        $TYPE_CU, 'setStaticLex', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_STR ));
+    result($il, $RT_OBJ)
+});
 
 # language/compiler ops
 QAST::OperationsJAST.map_classlib_core_op('sethllconfig', $TYPE_OPS, 'sethllconfig', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);

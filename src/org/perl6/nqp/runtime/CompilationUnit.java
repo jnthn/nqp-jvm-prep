@@ -2,6 +2,8 @@ package org.perl6.nqp.runtime;
 
 import java.util.*;
 
+import org.perl6.nqp.sixmodel.SixModelObject;
+
 /**
  * All compilation units inherit from this class. A compilation unit contains
  * code generated from a single QAST::CompUnit, with each QAST::Block turning
@@ -89,6 +91,18 @@ public abstract class CompilationUnit {
      */
     public CodeRef lookupCodeRef(String uniqueId) {
         return cuidToCodeRef.get(uniqueId);
+    }
+    
+    /**
+     * Installs a static lexical value.
+     */
+    public SixModelObject setStaticLex(SixModelObject value, String name, String uniqueId) {
+    	CodeRef cr = cuidToCodeRef.get(uniqueId);
+    	Integer idx = cr.staticInfo.oTryGetLexicalIdx(name);
+    	if (idx == null)
+    		throw new RuntimeException("Invalid lexical name '" + name + "' in static lexical installation");
+    	cr.staticInfo.oLexStatic[idx] = value;
+    	return value;
     }
 
     /**
