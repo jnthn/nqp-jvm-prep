@@ -337,6 +337,21 @@ public class SerializationReader {
 			return null;
 		case REFVAR_OBJECT:
 			return readObjRef();
+		case REFVAR_VM_INT:
+			SixModelObject BOOTInt = tc.gc.BOOTInt;
+			SixModelObject iResult = BOOTInt.st.REPR.allocate(tc, BOOTInt.st);
+			iResult.set_int(tc, orig.getLong());
+			return iResult;
+		case REFVAR_VM_NUM:
+			SixModelObject BOOTNum = tc.gc.BOOTNum;
+			SixModelObject nResult = BOOTNum.st.REPR.allocate(tc, BOOTNum.st);
+			nResult.set_num(tc, orig.getDouble());
+			return nResult;
+		case REFVAR_VM_STR:
+			SixModelObject BOOTStr = tc.gc.BOOTStr;
+			SixModelObject sResult = BOOTStr.st.REPR.allocate(tc, BOOTStr.st);
+			sResult.set_str(tc, lookupString(orig.getInt()));
+			return sResult;
 		case REFVAR_VM_ARR_VAR:
 			SixModelObject BOOTArray = tc.gc.BOOTArray;
 			SixModelObject resArray = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
@@ -375,6 +390,10 @@ public class SerializationReader {
 	    if (idx < 0 || idx >= sc.root_objects.size())
 	    	throw new RuntimeException("Invalid SC object index " + idx);
 	    return sc.root_objects.get(idx);
+	}
+	
+	public STable readSTableRef() {
+		return lookupSTable(orig.getInt(), orig.getInt());
 	}
 	
 	public long readLong() {
