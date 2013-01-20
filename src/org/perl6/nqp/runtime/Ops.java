@@ -92,6 +92,90 @@ public final class Ops {
         return v; 
     }
     
+    /* Lexical lookup by name. */
+    public static SixModelObject getlex(String name, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.oLex[found];
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static long getlex_i(String name, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.iTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.iLex[found];
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static double getlex_n(String name, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.nTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.nLex[found];
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static String getlex_s(String name, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.sTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.sLex[found];
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    
+    /* Lexical binding by name. */
+    public static SixModelObject bindlex(String name, SixModelObject value, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.oLex[found] = value;
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static long bindlex_i(String name, long value, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.iTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.iLex[found] = value;
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static double bindlex_n(String name, double value, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.nTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.nLex[found] = value;
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    public static String bindlex_s(String name, String value, ThreadContext tc) {
+    	CallFrame curFrame = tc.curFrame;
+    	while (curFrame != null) {
+    		Integer found = curFrame.codeRef.staticInfo.sTryGetLexicalIdx(name);
+    		if (found != null)
+    			return curFrame.sLex[found] = value;
+    		curFrame = curFrame.outer;
+    	}
+    	throw new RuntimeException("Lexical '" + name + "' not found");
+    }
+    
     /* Dynamic lexicals. */
     public static SixModelObject binddynlex(SixModelObject value, String name, ThreadContext tc) {
         CallFrame curFrame = tc.curFrame;

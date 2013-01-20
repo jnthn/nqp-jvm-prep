@@ -1361,6 +1361,16 @@ QAST::OperationsJAST.map_classlib_core_op('settypecache', $TYPE_OPS, 'settypecac
 # defined - overridden by HLL, but by default same as .DEFINITE.
 QAST::OperationsJAST.map_classlib_core_op('defined', $TYPE_OPS, 'isconcrete', [$RT_OBJ], $RT_INT, :tc);
 
+# lexical related opcodes
+QAST::OperationsJAST.map_classlib_core_op('getlex', $TYPE_OPS, 'getlex', [$RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getlex_i', $TYPE_OPS, 'getlex_i', [$RT_STR], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getlex_n', $TYPE_OPS, 'getlex_n', [$RT_STR], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getlex_s', $TYPE_OPS, 'getlex_s', [$RT_STR], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindlex', $TYPE_OPS, 'bindlex', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindlex_i', $TYPE_OPS, 'bindlex_i', [$RT_STR, $RT_INT], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindlex_n', $TYPE_OPS, 'bindlex_n', [$RT_STR, $RT_NUM], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindlex_s', $TYPE_OPS, 'bindlex_s', [$RT_STR, $RT_STR], $RT_STR, :tc);
+
 # code object related opcodes
 QAST::OperationsJAST.map_classlib_core_op('takeclosure', $TYPE_OPS, 'takeclosure', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getcodename', $TYPE_OPS, 'getcodename', [$RT_OBJ], $RT_STR, :tc);
@@ -2437,9 +2447,15 @@ class QAST::CompilerJAST {
             }
             
             # If we didn't find it anywhere, it musta been explicitly marked as
-            # lexical. Take the type from .returns.
+            # lexical. Take the type from .returns and rewrite to a more dynamic
+            # lookup.
             unless $local || $scopes {
                 $type := rttype_from_typeobj($node.returns);
+                my $char := $type == $RT_OBJ ?? '' !! '_' ~ typechar($type);
+                my $name_sval := QAST::SVal.new( :value($name) );
+                return self.as_jast($*BINDVAL
+                    ?? QAST::Op.new( :op("bindlex$char"), $name_sval, $*BINDVAL )
+                    !! QAST::Op.new( :op("getlex$char"), $name_sval ));
             }
             
             # Map type in a couple of ways we'll need.
@@ -2465,8 +2481,8 @@ class QAST::CompilerJAST {
                             "getlex_$c", $jtype, $TYPE_CF, 'Integer' ));
             }
             
-            # Otherwise it may we a known number of scopes out.
-            elsif $scopes {
+            # Otherwise it must be a known number of scopes out.
+            else {
                 $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
                 $il.append(JAST::PushIndex.new( :value($declarer.lexical_idx($name)) ));
                 $il.append(JAST::PushIndex.new( :value($scopes) ));
@@ -2475,11 +2491,6 @@ class QAST::CompilerJAST {
                             "bindlex_{$c}_si", $jtype, $jtype, $TYPE_CF, 'Integer', 'Integer' )
                     !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "getlex_{$c}_si", $jtype, $TYPE_CF, 'Integer', 'Integer' ));
-            }
-            
-            # Otherwise, named lookup.
-            else {
-                nqp::die("Lexical lookup by name NYI");
             }
 
             return result($il, $type);
