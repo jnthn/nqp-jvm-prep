@@ -13,4 +13,24 @@ public class P6intInstance extends SixModelObject {
     public long get_int(ThreadContext tc) {
         return value;
     }
+
+    public void set_num(ThreadContext tc, double value) {
+        this.value = (long) value;
+    }
+
+    public double get_num(ThreadContext tc) {
+        return value;
+    }
+
+    public void set_str(ThreadContext tc, String value) {
+        try {
+            this.value = Long.parseLong(value);
+        } catch(NumberFormatException e) {
+            this.value = 0;
+        }
+    }
+
+    public String get_str(ThreadContext tc) {
+        return Long.toString(value);
+    }
 }

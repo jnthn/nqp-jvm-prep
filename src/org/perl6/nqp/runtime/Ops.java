@@ -5,10 +5,15 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.reprs.P6intInstance;
+import org.perl6.nqp.sixmodel.reprs.P6numInstance;
+import org.perl6.nqp.sixmodel.reprs.P6strInstance;
 import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
 import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMArrayInstance;
 import org.perl6.nqp.sixmodel.reprs.VMHash;
 import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
@@ -887,6 +892,15 @@ public final class Ops {
         hash.delete_key(tc, key);
         return hash;
     }
+
+    /* Terms */
+    public static long time_i() {
+        return (long) (System.currentTimeMillis() / 1000);
+    }
+
+    public static double time_n() {
+        return System.currentTimeMillis() / 1000.0;
+    }
     
     /* Aggregate operations. */
     public static long elems(SixModelObject agg, ThreadContext tc) {
@@ -1027,12 +1041,84 @@ public final class Ops {
         return (new StringBuffer()).append((char) val).toString();
     }
     
+    public static String join(String delimiter, SixModelObject arr, ThreadContext tc) {
+        final StringBuilder sb = new StringBuilder();
+
+        final int numElems = (int) arr.elems(tc);
+        for (int i = 0; i < numElems; i++) {
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
+            sb.append( arr.at_pos_boxed(tc, i).get_str(tc) );
+        }
+
+        return sb.toString();
+    }
+
+    public static SixModelObject split(String delimiter, String string, ThreadContext tc) {
+        String[] parts = string.split(Pattern.quote(delimiter));
+
+        VMArrayInstance arr = new VMArrayInstance();
+
+        for(String part : parts) {
+            P6strInstance str = new P6strInstance();
+            str.set_str(tc, part);
+
+            arr.push_boxed(tc, str);
+        }
+
+        return arr;
+    }
+
+    public static String sprintf(String format, SixModelObject arr, ThreadContext tc) {
+        // This function just assumes that Java's printf format is compatible
+        // with NQP's printf format...
+
+        final int numElems = (int) arr.elems(tc);
+        Object[] args = new Object[numElems];
+
+        for (int i = 0; i < numElems; i++) {
+            SixModelObject obj = arr.at_pos_boxed(tc, i);
+            if (obj instanceof P6intInstance) {
+                args[i] = Long.valueOf(obj.get_int(tc));
+            } else if (obj instanceof P6numInstance) {
+                args[i] = Double.valueOf(obj.get_num(tc));
+            } else if (obj instanceof P6strInstance) {
+                args[i] = obj.get_str(tc);
+            } else {
+                throw new IllegalArgumentException("sprintf only accepts ints, nums, and strs, not " + obj.getClass());
+            }
+        }
+
+        return String.format(format, args);
+    }
+
+    public static long indexfrom(String string, String pattern, long fromIndex) {
+        return string.indexOf(pattern, (int)fromIndex);
+    }
+
+    public static long rindexfromend(String string, String pattern) {
+        return string.lastIndexOf(pattern);
+    }
+
+    public static long rindexfrom(String string, String pattern, long fromIndex) {
+        return string.lastIndexOf(pattern, (int)fromIndex);
+    }
+
     public static String substr2(String val, long offset) {
     	return val.substring((int)offset);
     }
     
     public static String substr3(String val, long offset, long length) {
     	return val.substring((int)offset, (int)(offset + length));
+    }
+
+    public static long ordfirst(String str) {
+        return str.codePointAt(0);
+    }
+
+    public static long ordat(String str, long offset) {
+        return str.codePointAt((int)offset);
     }
 
     /* serialization context related opcodes */
@@ -1206,6 +1292,15 @@ public final class Ops {
     }
     
     /* Relational. */
+    public static long cmp_i(long a, long b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     public static long iseq_i(long a, long b) {
     	return a == b ? 1 : 0;
     }
@@ -1225,6 +1320,15 @@ public final class Ops {
     	return a >= b ? 1 : 0;
     }
     
+    public static long cmp_n(double a, double b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     public static long iseq_n(double a, double b) {
     	return a == b ? 1 : 0;
     }
@@ -1244,6 +1348,9 @@ public final class Ops {
     	return a >= b ? 1 : 0;
     }
     
+    public static long cmp_s(String a, String b) {
+        return a.compareTo(b);
+    }
     public static long iseq_s(String a, String b) {
     	return a.equals(b) ? 1 : 0;
     }

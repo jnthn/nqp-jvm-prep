@@ -1,6 +1,6 @@
 use helper;
 
-plan(8);
+plan(14);
 
 qast_test(
     -> {
@@ -187,3 +187,166 @@ qast_test(
     },
     "laughter\nlol\n",
     "substr");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::NVal.new( :value(2.3) ),
+                    QAST::SVal.new( :value('c') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('join'),
+                    QAST::SVal.new( :value(":") ),
+                    QAST::Var.new( :name('x'), :scope('local') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1:2.3:c\n",
+    "join");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('join'),
+                    QAST::SVal.new( :value(' ') ),
+                    QAST::Op.new(
+                      :op('split'),
+                      QAST::SVal.new( :value('a+') ),
+                      QAST::SVal.new( :value('aaaaa+c') )
+                ))));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "aaaa c\n",
+    "split");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name('x'), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('list'),
+                    QAST::IVal.new( :value(1) ),
+                    QAST::NVal.new( :value(2.3) ),
+                    QAST::SVal.new( :value('c') )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('sprintf'),
+                    QAST::SVal.new( :value('%d:%.1f:%s') ),
+                    QAST::Var.new( :name('x'), :scope('local') )
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "1:2.3:c\n",
+    "sprintf");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ord'),
+                    QAST::SVal.new( :value("monkey") )
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('ord'),
+                    QAST::SVal.new( :value("monkey") ),
+                    QAST::IVal.new( :value(2) ),
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "109\n110\n",
+    "ord");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('index'),
+                    QAST::SVal.new( :value("monkeymonkeymonkey") ),
+                    QAST::SVal.new( :value("monkey") ),
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('index'),
+                    QAST::SVal.new( :value("monkeymonkeymonkey") ),
+                    QAST::SVal.new( :value("monkey") ),
+                    QAST::IVal.new( :value(1) ),
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "0\n6\n",
+    "index");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('rindex'),
+                    QAST::SVal.new( :value("monkeymonkeymonkey") ),
+                    QAST::SVal.new( :value("monkey") ),
+                )),
+            QAST::Op.new(
+                :op('say'),
+                QAST::Op.new(
+                    :op('rindex'),
+                    QAST::SVal.new( :value("monkeymonkeymonkey") ),
+                    QAST::SVal.new( :value("monkey") ),
+                    QAST::IVal.new( :value(11) ),
+                )));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "12\n6\n",
+    "rindex");
