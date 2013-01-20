@@ -1,6 +1,6 @@
 use helper;
 
-plan(7);
+plan(8);
 
 qast_test(
     -> {
@@ -241,3 +241,33 @@ qast_test(
     },
     "Burn After Reading\nThen Drink Whisky\n",
     "Dynamic lookup");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&x'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new( :op('call'), :name('&y') )
+                    )),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('&y'), :scope('lexical'), :decl('var') ),
+                    QAST::Block.new(
+                        QAST::Op.new(
+                            :op('say'),
+                            QAST::SVal.new( :value('Bear + Deer = Beer') )
+                        ))),
+                QAST::Op.new( :op('call'), :name('&x') )
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Bear + Deer = Beer\n",
+    "Forward-declaration calls");
