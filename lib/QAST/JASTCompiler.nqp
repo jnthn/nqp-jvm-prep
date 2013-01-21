@@ -1155,6 +1155,9 @@ QAST::OperationsJAST.map_classlib_core_op('positional_bind', $TYPE_OPS, 'bindpos
 QAST::OperationsJAST.map_classlib_core_op('associative_get', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('associative_bind', $TYPE_OPS, 'bindkey', [$RT_OBJ, $RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 
+# I/O opcodes
+QAST::OperationsJAST.map_classlib_core_op('stat', $TYPE_OPS, 'stat', [$RT_STR, $RT_INT], $RT_INT);
+
 # terms
 QAST::OperationsJAST.map_classlib_core_op('time_i', $TYPE_OPS, 'time_i', [], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('time_n', $TYPE_OPS, 'time_n', [], $RT_NUM);
