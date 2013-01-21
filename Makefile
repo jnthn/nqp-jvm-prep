@@ -21,7 +21,7 @@ helper.pbc: t/helper.nqp QASTJASTCompiler.pbc
 
 bin: $(JAVAS)
 	perl -MExtUtils::Command -e mkpath bin
-	javac -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
+	javac -source 1.7 -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
 
 test: all
 	prove --exec=nqp t/*.t
