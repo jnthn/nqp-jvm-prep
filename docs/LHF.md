@@ -7,9 +7,6 @@ to Ops. existspos is implementable in terms of elems and <. Note that if the val
 passed in is negative, it should add the element count to it. Next, add an op
 for deletepos, which could be done in terms of splice.
 
-## nqp::stat
-Look into how the nqp::stat operation works in NQP on Parrot. Implement it.
-
 ## Port xor
 The code-gen for QAST::Op type xor needs porting. Potentially a bit fiddly, but
 should be mostly transliteration.
