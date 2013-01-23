@@ -13,11 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.*;
-import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
-import org.perl6.nqp.sixmodel.reprs.VMArray;
-import org.perl6.nqp.sixmodel.reprs.VMHash;
-import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
-import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
+import org.perl6.nqp.sixmodel.reprs.*;
 
 /**
  * Contains complex operations that are more involved that the simple ops that the
@@ -375,6 +371,44 @@ public final class Ops {
             curFrame = curFrame.caller;
         }
         return null;
+    }
+    
+    /* Context introspection. */
+    public static SixModelObject ctx(ThreadContext tc) {
+    	SixModelObject ContextRef = tc.gc.ContextRef;
+    	SixModelObject wrap = ContextRef.st.REPR.allocate(tc, ContextRef.st);
+    	((ContextRefInstance)wrap).context = tc.curFrame;
+    	return wrap;
+    }
+    public static SixModelObject ctxouter(SixModelObject ctx, ThreadContext tc) {
+    	if (ctx instanceof ContextRefInstance) {
+    		CallFrame outer = ((ContextRefInstance)ctx).context.outer;
+    		if (outer == null)
+    			return null;
+    		
+    		SixModelObject ContextRef = tc.gc.ContextRef;
+        	SixModelObject wrap = ContextRef.st.REPR.allocate(tc, ContextRef.st);
+        	((ContextRefInstance)wrap).context = outer;
+        	return wrap;
+    	}
+    	else {
+    		throw new RuntimeException("ctxouter requires an operand with REPR ContextRef");
+    	}
+    }
+    public static SixModelObject ctxcaller(SixModelObject ctx, ThreadContext tc) {
+    	if (ctx instanceof ContextRefInstance) {
+    		CallFrame caller = ((ContextRefInstance)ctx).context.caller;
+    		if (caller == null)
+    			return null;
+    		
+    		SixModelObject ContextRef = tc.gc.ContextRef;
+        	SixModelObject wrap = ContextRef.st.REPR.allocate(tc, ContextRef.st);
+        	((ContextRefInstance)wrap).context = caller;
+        	return wrap;
+    	}
+    	else {
+    		throw new RuntimeException("ctxcaller requires an operand with REPR ContextRef");
+    	}
     }
     
     /* Argument setting. */
