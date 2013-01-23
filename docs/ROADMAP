@@ -10,8 +10,7 @@ QAST to JAST Compiler
 * QAST::VarWithFallback
 * Remaining string ops (of note, split and join)
 * xor
-* nqp::stat
-* HLL global stash (needs nqp:: op'ing some stuff in NQP)
+* HLL global stash
 * Some kind of bytecode loading abstraction
 
 Exceptions
@@ -20,9 +19,9 @@ Exceptions
 * QAST::Op handle
 * Various other exception related instructions
 
-Contexts
-* Contexts as first class things (REPR...)
-* QAST instructions for it
+Context Introspection
+* Tests for what's implemented so far
+* A way to introspect lexpads
 
 6model
 * BoolificationSpec - method and bigint cases
