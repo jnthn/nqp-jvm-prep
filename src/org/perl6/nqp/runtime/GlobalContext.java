@@ -68,6 +68,11 @@ public class GlobalContext {
     private HashMap<String, HLLConfig> hllConfiguration;
     
     /**
+     * Compiler registry.
+     */
+    public HashMap<String, SixModelObject> CompilerRegistry;
+    
+    /**
      * Serialization context lookup hash.
      */
     public HashMap<String, SerializationContext> scs;
@@ -85,6 +90,7 @@ public class GlobalContext {
         hllConfiguration = new HashMap<String, HLLConfig>();
         scs = new HashMap<String, SerializationContext>();
         scRefs = new HashMap<String, SixModelObject>();
+        CompilerRegistry = new HashMap<String, SixModelObject>();
         
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);

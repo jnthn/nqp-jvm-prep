@@ -1684,6 +1684,13 @@ public final class Ops {
             config.slurpyHashType = configHash.at_key_boxed(tc, "slurpy_hash");
         return configHash;
     }
+    public static SixModelObject getcomp(String name, ThreadContext tc) {
+    	return tc.gc.CompilerRegistry.get(name);
+    }
+    public static SixModelObject bindcomp(String name, SixModelObject comp, ThreadContext tc) {
+    	tc.gc.CompilerRegistry.put(name, comp);
+    	return comp;
+    }
     
     /* Coercions. */
     public static long coerce_s2i(String in) {
