@@ -410,6 +410,13 @@ public final class Ops {
     		throw new RuntimeException("ctxcaller requires an operand with REPR ContextRef");
     	}
     }
+    public static SixModelObject curcode(ThreadContext tc) {
+    	return tc.curFrame.codeRef;
+    }
+    public static SixModelObject callercode(ThreadContext tc) {
+    	CallFrame caller = tc.curFrame.caller;
+    	return caller == null ? null : caller.codeRef;
+    }
     
     /* Argument setting. */
     public static void arg(long v, long[] args, int i) { args[i] = v; }
