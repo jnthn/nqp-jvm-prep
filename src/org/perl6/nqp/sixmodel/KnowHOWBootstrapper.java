@@ -17,6 +17,7 @@ public class KnowHOWBootstrapper {
         tc.gc.BOOTNum = bootType(tc, "BOOTNum", "P6num");
         tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
         tc.gc.SCRef = bootType(tc, "SCRef", "SCRef");
+        tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
         Ops.setboolspec(tc.gc.BOOTIter, BoolificationSpec.MODE_ITER, null, tc);
     }
 

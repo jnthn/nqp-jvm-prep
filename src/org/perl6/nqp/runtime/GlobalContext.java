@@ -53,6 +53,11 @@ public class GlobalContext {
     public SixModelObject SCRef;
     
     /**
+     * ContextRef type; a basic, method-less type with the ContextRef REPR.
+     */
+    public SixModelObject ContextRef;
+    
+    /**
      * The main, startup thread's ThreadContext.
      */
     public ThreadContext mainThread;
