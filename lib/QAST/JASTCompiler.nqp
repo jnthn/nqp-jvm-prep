@@ -2358,6 +2358,30 @@ class QAST::CompilerJAST {
         self.compile_var($node)
     }
     
+    multi method as_jast(QAST::VarWithFallback $node, :$want) {
+        my $var_res := self.compile_var($node);
+        if $*BINDVAL || $var_res.type != $RT_OBJ {
+            $var_res
+        }
+        else {
+            my $il := JAST::InstructionList.new();
+            $il.append($var_res.jast);
+            $*STACK.obtain($var_res);
+            
+            my $lbl := JAST::Label.new(:name($node.unique('fallback')));
+            $il.append(JAST::Instruction.new( :op('dup') ));
+            $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
+            
+            my $fallback_res := self.as_jast($node.fallback, :want($RT_OBJ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+            $il.append($fallback_res.jast);
+            $*STACK.obtain($fallback_res);
+            $il.append($lbl);
+            
+            result($il, $RT_OBJ);
+        }
+    }
+    
     method compile_var($node) {
         my $scope := $node.scope;
         my $decl  := $node.decl;
