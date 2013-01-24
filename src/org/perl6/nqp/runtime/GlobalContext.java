@@ -68,9 +68,14 @@ public class GlobalContext {
     private HashMap<String, HLLConfig> hllConfiguration;
     
     /**
+     * HLL global symbols.
+     */
+    public HashMap<String, HashMap<String, SixModelObject>> hllSyms;
+    
+    /**
      * Compiler registry.
      */
-    public HashMap<String, SixModelObject> CompilerRegistry;
+    public HashMap<String, SixModelObject> compilerRegistry;
     
     /**
      * Serialization context lookup hash.
@@ -90,7 +95,8 @@ public class GlobalContext {
         hllConfiguration = new HashMap<String, HLLConfig>();
         scs = new HashMap<String, SerializationContext>();
         scRefs = new HashMap<String, SixModelObject>();
-        CompilerRegistry = new HashMap<String, SixModelObject>();
+        compilerRegistry = new HashMap<String, SixModelObject>();
+        hllSyms = new HashMap<String, HashMap<String, SixModelObject>>();
         
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);

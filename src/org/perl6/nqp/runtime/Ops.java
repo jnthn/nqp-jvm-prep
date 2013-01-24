@@ -1685,11 +1685,26 @@ public final class Ops {
         return configHash;
     }
     public static SixModelObject getcomp(String name, ThreadContext tc) {
-    	return tc.gc.CompilerRegistry.get(name);
+    	return tc.gc.compilerRegistry.get(name);
     }
     public static SixModelObject bindcomp(String name, SixModelObject comp, ThreadContext tc) {
-    	tc.gc.CompilerRegistry.put(name, comp);
+    	tc.gc.compilerRegistry.put(name, comp);
     	return comp;
+    }
+    public static SixModelObject getcurhllsym(String name, ThreadContext tc) {
+    	String hllName = tc.curFrame.codeRef.staticInfo.compUnit.hllName();
+    	HashMap<String, SixModelObject> hllSyms = tc.gc.hllSyms.get(hllName);
+    	return hllSyms == null ? null : hllSyms.get(name);
+    }
+    public static SixModelObject bindcurhllsym(String name, SixModelObject value, ThreadContext tc) {
+    	String hllName = tc.curFrame.codeRef.staticInfo.compUnit.hllName();
+    	HashMap<String, SixModelObject> hllSyms = tc.gc.hllSyms.get(hllName);
+    	if (hllSyms == null) {
+    		hllSyms = new HashMap<String, SixModelObject>();
+    		tc.gc.hllSyms.put(hllName, hllSyms);
+    	}
+    	hllSyms.put(name, value);
+    	return value;
     }
     
     /* Coercions. */
