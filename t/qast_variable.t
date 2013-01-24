@@ -1,6 +1,6 @@
 use helper;
 
-plan(8);
+plan(9);
 
 qast_test(
     -> {
@@ -271,3 +271,44 @@ qast_test(
     },
     "Bear + Deer = Beer\n",
     "Forward-declaration calls");
+
+qast_test(
+    -> {
+        my $block := QAST::Block.new(
+            QAST::Stmts.new(
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('a'), :scope('local'), :decl('var') ),
+                    QAST::SVal.new( :value('Zmrzlina') )
+                ),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name('b'), :scope('local'), :decl('var') ),
+                    QAST::Op.new( :op('null') )
+                ),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unbox_s'),
+                        QAST::VarWithFallback.new(
+                            :name('a'), :scope('local'),
+                            :fallback(QAST::SVal.new( :value('Chcem pivo') ))
+                        ))),
+                QAST::Op.new(
+                    :op('say'),
+                    QAST::Op.new(
+                        :op('unbox_s'),
+                        QAST::VarWithFallback.new(
+                            :name('b'), :scope('local'),
+                            :fallback(QAST::SVal.new( :value('Chcem pivo') ))
+                        )))
+            ));
+        QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )))
+    },
+    "Zmrzlina\nChcem pivo\n",
+    "QAST::VarWithFallback works");
