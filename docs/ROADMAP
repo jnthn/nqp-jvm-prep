@@ -7,10 +7,8 @@ turn exercise further things needing implementation, such as regex handling.
 
 QAST to JAST Compiler
 * Remaining positional ops (existspos, deletepos)
-* QAST::VarWithFallback
 * Remaining string ops (of note, split and join)
 * xor
-* HLL global stash
 * Some kind of bytecode loading abstraction
 
 Exceptions
