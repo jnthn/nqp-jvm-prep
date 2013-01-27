@@ -1,4 +1,4 @@
 *.class
+*.dump
 *.pbc
 *.pir
-QAST2JASTOutput.dump
