@@ -25,7 +25,7 @@ bin: $(JAVAS)
 	perl -MExtUtils::Command -e mkpath bin
 	javac -source 1.7 -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
 
-nqplibs: nqp-mo.class ModuleLoader.class
+nqplibs: nqp-mo.class ModuleLoader.class NQPCORE.setting.class
 
 nqp-mo.class: crosscomp nqp-src/nqp-mo.pm
 	nqp --setting=NULL --target=pir --output=nqp-mo.pir --stable-sc nqp-src/nqp-mo.pm
@@ -34,6 +34,11 @@ nqp-mo.class: crosscomp nqp-src/nqp-mo.pm
 
 ModuleLoader.class: crosscomp nqp-src/ModuleLoader.pm
 	nqp nqp-jvm-cc.nqp --setting=NULL --target=classfile --output=ModuleLoader.class nqp-src/ModuleLoader.pm
+
+NQPCORE.setting.class: crosscomp nqp-src/NQPCORE.setting
+	nqp --setting=NULL --target=pir --output=NQPCOREJVM.setting.pir --stable-sc nqp-src/NQPCORE.setting
+	parrot -o NQPCOREJVM.setting.pbc NQPCOREJVM.setting.pir
+	nqp nqp-jvm-cc.nqp --setting=NULL --target=classfile --output=NQPCOREJVM.setting.class nqp-src/NQPCORE.setting
 
 test: all
 	prove --exec=nqp t/*.t
