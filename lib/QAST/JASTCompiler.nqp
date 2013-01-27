@@ -830,19 +830,6 @@ QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
     result($il, $RT_OBJ);
 });
 
-QAST::OperationsJAST.add_core_op('say', -> $qastcomp, $node {
-    if +@($node) != 1 {
-        nqp::die("Operation 'say' expects 1 operand");
-    }
-    my $il := JAST::InstructionList.new();
-    my $njast := $qastcomp.as_jast($node[0]);
-    my $jtype := jtype($njast.type);
-    $il.append($njast.jast);
-    $*STACK.obtain($njast);
-    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'say', $jtype, $jtype ));
-    result($il, $njast.type)
-});
-
 # Calling
 sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # Process the arguments, computing each of them. Note we don't worry about
@@ -1164,6 +1151,8 @@ QAST::OperationsJAST.map_classlib_core_op('associative_get', $TYPE_OPS, 'atkey',
 QAST::OperationsJAST.map_classlib_core_op('associative_bind', $TYPE_OPS, 'bindkey', [$RT_OBJ, $RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 
 # I/O opcodes
+QAST::OperationsJAST.map_classlib_core_op('print', $TYPE_OPS, 'print', [$RT_STR], $RT_STR);
+QAST::OperationsJAST.map_classlib_core_op('say', $TYPE_OPS, 'say', [$RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('stat', $TYPE_OPS, 'stat', [$RT_STR, $RT_INT], $RT_INT);
 
 # terms

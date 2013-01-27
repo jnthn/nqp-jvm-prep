@@ -20,21 +20,17 @@ import org.perl6.nqp.sixmodel.reprs.*;
  * JVM makes available.
  */
 public final class Ops {
-    /* Various forms of say. */
-    public static long say(long v) {
-        System.out.println(v);
-        return v;
-    }
-    public static double say(double v) {
-        System.out.println(v);
-        return v;
-    }
-    public static String say(String v) {
-        System.out.println(v);
-        return v;
-    }
-
     /* I/O opcodes */
+	public static String print(String v) {
+        System.out.print(v);
+        return v;
+    }
+	
+	public static String say(String v) {
+        System.out.println(v);
+        return v;
+    }
+	
     public static final int STAT_EXISTS             =  0;
     public static final int STAT_FILESIZE           =  1;
     public static final int STAT_ISDIR              =  2;
