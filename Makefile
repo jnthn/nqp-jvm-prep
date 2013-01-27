@@ -43,5 +43,8 @@ NQPCORE.setting.class: crosscomp nqp-src/NQPCORE.setting
 test: all
 	prove --exec=nqp t/jast/*.t t/qast/*.t
 
+nqptest: all
+	prove --exec="nqp nqp-jvm-cc.nqp" t/nqp/*.t
+
 clean:
 	perl -MExtUtils::Command -e rm_rf bin *.pir *.pbc *.class *.dump
