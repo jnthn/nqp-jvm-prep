@@ -31,8 +31,15 @@ use nqp-mo;
 #my class NQPMu {
 #}
 
-sub say($x) {
-    nqp::say(nqp::unbox_s($x))
+sub print(*@args) {
+    for @args {
+        nqp::print($_);
+    }
+    1;
+}
+
+sub say(*@args) {
+    print(|@args, "\n");
 }
 
 # From src\core\YOUAREHERE.pm
