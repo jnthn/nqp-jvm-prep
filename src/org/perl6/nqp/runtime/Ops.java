@@ -1267,7 +1267,7 @@ public final class Ops {
     }
     public static long istrue(SixModelObject obj, ThreadContext tc) {
         BoolificationSpec bs = obj.st.BoolificationSpec;
-        switch (bs == null ? -1 : bs.Mode) {
+        switch (bs == null ? BoolificationSpec.MODE_NOT_TYPE_OBJECT : bs.Mode) {
         case BoolificationSpec.MODE_UNBOX_INT:
             return obj instanceof TypeObject || obj.get_int(tc) == 0 ? 0 : 1;
         case BoolificationSpec.MODE_UNBOX_NUM:
@@ -1284,7 +1284,7 @@ public final class Ops {
         case BoolificationSpec.MODE_ITER:
             return ((VMIterInstance)obj).boolify() ? 1 : 0;
         default:
-            throw new RuntimeException("Unable to boolify this object");
+            throw new RuntimeException("Invalid boolification spec mode used");
         }
     }
     public static long isfalse(SixModelObject obj, ThreadContext tc) {
