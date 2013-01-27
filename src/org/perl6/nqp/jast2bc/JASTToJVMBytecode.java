@@ -183,7 +183,9 @@ public class JASTToJVMBytecode {
                 }
                 else if (curLine.startsWith(".push_sc ")) {
                     String value = curLine.substring(".push_sc ".length());
-                    // XXX Decode...
+                    value = value.replace("\\n", "\n");
+                    value = value.replace("\\r", "\r");
+                    value = value.replace("\\t", "\t");
                     il.append(new PUSH(cp, value));
                 }
                 else if (curLine.startsWith(".push_cc ")) {
