@@ -1795,19 +1795,27 @@ class QAST::CompilerJAST {
         has @!used_o;
         
         method fresh_i() {
-            nqp::push(@!used_i, $*BLOCK_TA.fresh_i())
+            my $al := $*BLOCK_TA.fresh_i();
+            nqp::push(@!used_i, $al);
+            $al
         }
         
         method fresh_n() {
-            nqp::push(@!used_n, $*BLOCK_TA.fresh_n())
+            my $al := $*BLOCK_TA.fresh_n();
+            nqp::push(@!used_n, $al);
+            $al
         }
         
         method fresh_s() {
-            nqp::push(@!used_s, $*BLOCK_TA.fresh_s())
+            my $al := $*BLOCK_TA.fresh_s();
+            nqp::push(@!used_s, $al);
+            $al
         }
         
         method fresh_o() {
-            nqp::push(@!used_o, $*BLOCK_TA.fresh_o())
+            my $al := $*BLOCK_TA.fresh_o();
+            nqp::push(@!used_o, $al);
+            $al
         }
         
         method release() {
