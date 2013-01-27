@@ -1783,6 +1783,6 @@ public final class Ops {
         return Long.toString(in);
     }
     public static String coerce_n2s(double in) {
-        return Double.toString(in);
+        return in == (long)in ? Long.toString((long)in) : Double.toString(in);
     }
 }
