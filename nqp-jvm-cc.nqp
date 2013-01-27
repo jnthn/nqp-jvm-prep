@@ -44,7 +44,9 @@ sub MAIN(*@ARGS) {
         }
     });
     
-    $nqpcomp.command_line(@ARGS, :precomp(1), :stable-sc(1), :encoding('utf8'), :transcode('ascii iso-8859-1'));
+    $nqpcomp.command_line(@ARGS, :precomp(1), :stable-sc(1),
+        :no-regex-lib(1), :setting('NQPCOREJVM'),
+        :encoding('utf8'), :transcode('ascii iso-8859-1'));
 }
 
 # Set up various NQP-specific ops.
