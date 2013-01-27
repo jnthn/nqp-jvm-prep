@@ -3,28 +3,44 @@ use JASTNodes;
 use helper;
 
 sub MAIN(*@ARGS) {
+    # Add --javaclass command line option for specifying the name of the Java class
+    # to generate.
     my $nqpcomp := pir::compreg__Ps('nqp');
+    my @clo := $nqpcomp.commandline_options();
+    @clo.push('javaclass=s');
     
-    $nqpcomp.stages(< start parse past jast jbc jvm >);
-    $nqpcomp.HOW.add_method($nqpcomp, 'jast', method ($qast, *%adverbs) {
-        QAST::CompilerJAST.jast($qast);
+    $nqpcomp.stages(< start classname parse past jast classfile jvm >);
+    $nqpcomp.HOW.add_method($nqpcomp, 'classname', method ($source, *%adverbs) {
+        unless %*COMPILING<%?OPTIONS><javaclass> {
+            %*COMPILING<%?OPTIONS><javaclass> := nqp::sha1(nqp::sha1($source) ~ nqp::time_n());
+        }
+        $source
     });
-    $nqpcomp.HOW.add_method($nqpcomp, 'jbc', method ($jast, *%adverbs) {
+    $nqpcomp.HOW.add_method($nqpcomp, 'jast', method ($qast, *%adverbs) {
+        QAST::CompilerJAST.jast($qast, :classname(%*COMPILING<%?OPTIONS><javaclass>));
+    });
+    $nqpcomp.HOW.add_method($nqpcomp, 'classfile', method ($jast, *%adverbs) {
+        my $name := %*COMPILING<%?OPTIONS><javaclass>;
         my $dump := $jast.dump();
-        spurt('QAST2JASTOutput.dump', $dump);
+        spurt($name ~ '.dump', $dump);
         my $cps := is_windows() ?? ";" !! ":";
         run('java',
             '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
             'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
-            'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
-        'QAST2JASTOutput'
+            $name ~ '.dump', $name ~ '.class');
+        
+        my $fh := open($name ~ '.class', :r, :bin);
+        my $class := $fh.readall();
+        $fh.close();
+        $class
     });
     $nqpcomp.HOW.add_method($nqpcomp, 'jvm', method ($class, *%adverbs) {
+        my $name := %*COMPILING<%?OPTIONS><javaclass>;
         -> {
             my $cps := is_windows() ?? ";" !! ":";
             run('java',
                 '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
-                'QAST2JASTOutput');
+                $name);
         }
     });
     

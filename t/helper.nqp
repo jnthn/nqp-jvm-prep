@@ -36,7 +36,7 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') is export {
 }
 
 sub qast_test($qast_maker, $expected, $desc = '') is export {
-    my $jast := QAST::CompilerJAST.jast($qast_maker());
+    my $jast := QAST::CompilerJAST.jast($qast_maker(), :classname('QAST2JASTOutput'));
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
     my $cps := is_windows() ?? ";" !! ":";

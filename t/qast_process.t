@@ -16,8 +16,8 @@ plan(2);
             :main(QAST::Op.new(
                 :op('call'),
                 QAST::BVal.new( :value($block) )
-            )))
-        );
+            ))),
+        :classname('QAST2JASTOutput'));
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
     my $cps := is_windows() ?? ";" !! ":";
@@ -58,8 +58,8 @@ plan(2);
                 :main(QAST::Op.new(
                     :op('call'),
                     QAST::BVal.new( :value($block) )
-                )))
-            );
+                ))),
+                :classname('QAST2JASTOutput'));
         my $dump := $jast.dump();
         spurt('QAST2JASTOutput.dump', $dump);
         my $cps := is_windows() ?? ";" !! ":";

@@ -1814,7 +1814,7 @@ class QAST::CompilerJAST {
         }
     }
     
-    method jast($source, *%adverbs) {
+    method jast($source, :$classname!, *%adverbs) {
         # Wrap $source in a QAST::Block if it's not already a viable root node.
         $source := QAST::Block.new($source)
             unless nqp::istype($source, QAST::CompUnit) || nqp::istype($source, QAST::Block);
@@ -1822,7 +1822,7 @@ class QAST::CompilerJAST {
         # Set up a JAST::Class that will hold all the blocks (which become Java
         # methods) that we shall compile.
         my $*JCLASS := JAST::Class.new(
-            :name('QAST2JASTOutput'), # XXX Need unique names
+            :name($classname),
             :super('org.perl6.nqp.runtime.CompilationUnit')
         );
         
