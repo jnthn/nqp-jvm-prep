@@ -59,7 +59,7 @@ qast_test(
                 QAST::BVal.new( :value($block) )
             )))
     },
-    "1024.0\n",
+    "1024\n",
     "pow_n works");
 
 qast_test(
@@ -97,7 +97,7 @@ qast_test(
                 QAST::BVal.new( :value($block) )
             )))
     },
-    "16.0\n",
+    "16\n",
     "sqrt_n works");
 
 qast_test(
