@@ -141,11 +141,11 @@ $ops.add_hll_op('nqp', 'postdec', -> $qastcomp, $op {
 });
 
 $ops.add_hll_op('nqp', 'numify', -> $qastcomp, $op {
-    nqp::die("nqp numify op NYI");
+    $qastcomp.as_jast($op, :want($RT_NUM))
 });
 
 $ops.add_hll_op('nqp', 'stringify', -> $qastcomp, $op {
-    nqp::die("nqp stringify op NYI");
+    $qastcomp.as_jast($op, :want($RT_STR))
 });
 
 $ops.add_hll_op('nqp', 'falsey', -> $qastcomp, $op {
@@ -180,4 +180,28 @@ $ops.add_hll_op('nqp', 'falsey', -> $qastcomp, $op {
     }
 
     $qastcomp.result($il, $RT_INT)
+});
+
+# NQP object unbox, which also must somewhat handle coercion.
+QAST::OperationsJAST.add_hll_unbox('nqp', $RT_INT, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'smart_numify', 'Double', $TYPE_SMO, $TYPE_TC ));
+    $il.append(JAST::Instruction.new( :op('d2l') ));
+    $il
+});
+QAST::OperationsJAST.add_hll_unbox('nqp', $RT_NUM, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'smart_numify', 'Double', $TYPE_SMO, $TYPE_TC ));
+    $il
+});
+QAST::OperationsJAST.add_hll_unbox('nqp', $RT_STR, -> $qastcomp {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'smart_stringify', $TYPE_STR, $TYPE_SMO, $TYPE_TC ));
+    $il
 });

@@ -1294,6 +1294,42 @@ public final class Ops {
         return str.equals("") || str.equals("0") ? 0 : 1;
     }
     
+    /* Smart coercions. */
+    public static String smart_stringify(SixModelObject obj, ThreadContext tc) {
+    	// If it's a type object, empty string.
+    	if (obj instanceof TypeObject)
+    		return "";
+
+    	// See if it can unbox to a primitive we can stringify.
+    	StorageSpec ss = obj.st.REPR.get_storage_spec(tc, obj.st);
+    	if ((ss.can_box & StorageSpec.CAN_BOX_STR) != 0)
+    		return obj.get_str(tc);
+    	if ((ss.can_box & StorageSpec.CAN_BOX_INT) != 0)
+    		return coerce_i2s(obj.get_int(tc));
+    	if ((ss.can_box & StorageSpec.CAN_BOX_NUM) != 0)
+    		return coerce_n2s(obj.get_num(tc));
+    	
+    	// If anything else, we can't do it.
+    	throw new RuntimeException("Cannot stringify this");
+    }
+    public static double smart_numify(SixModelObject obj, ThreadContext tc) {
+    	// If it's a type object, empty string.
+    	if (obj instanceof TypeObject)
+    		return 0.0;
+
+    	// See if it can unbox to a primitive we can numify.
+    	StorageSpec ss = obj.st.REPR.get_storage_spec(tc, obj.st);
+    	if ((ss.can_box & StorageSpec.CAN_BOX_INT) != 0)
+    		return (double)obj.get_int(tc);
+    	if ((ss.can_box & StorageSpec.CAN_BOX_NUM) != 0)
+    		return obj.get_num(tc);
+    	if ((ss.can_box & StorageSpec.CAN_BOX_STR) != 0)
+    		return coerce_s2n(obj.get_str(tc));
+    	
+    	// If anything else, we can't do it.
+    	throw new RuntimeException("Cannot numify this");
+    }
+    
     /* Math operations. */
     public static double sec_n(double val) {
         return 1 / Math.cos(val);
