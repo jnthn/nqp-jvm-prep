@@ -28,7 +28,8 @@ sub MAIN(*@ARGS) {
             '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
             'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
             $name ~ '.dump', $name ~ '.class');
-        
+        unlink($name ~ '.dump');
+
         my $fh := open($name ~ '.class', :r, :bin);
         my $class := $fh.readall();
         $fh.close();
@@ -41,6 +42,7 @@ sub MAIN(*@ARGS) {
             run('java',
                 '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
                 $name);
+            unlink($name ~ '.class');
         }
     });
     
