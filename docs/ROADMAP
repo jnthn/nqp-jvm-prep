@@ -9,7 +9,6 @@ QAST to JAST Compiler
 * Remaining positional ops (existspos, deletepos)
 * Remaining string ops (of note, split and join)
 * xor
-* Some kind of bytecode loading abstraction
 
 Exceptions
 * Design work
@@ -19,7 +18,7 @@ Exceptions
 
 Context Introspection
 * Tests for what's implemented so far
-* A way to introspect lexpads
+* Finish up lexpad fiddling
 
 6model
 * BoolificationSpec - method and bigint cases
@@ -42,7 +41,7 @@ Parsing
 * anchor
 * cclass
 * concat
-* cong
+* conj
 * conjseq
 * dba
 * enumcharlist
