@@ -14,7 +14,6 @@ public class LibraryLoader {
 			return;
 		
 		try {
-			System.err.println("Loading " + filename);
 			// Read in class data.
 			File file = new File(filename);
 			byte[] bytes = new byte[(int)file.length()];
@@ -27,7 +26,6 @@ public class LibraryLoader {
 			CompilationUnit cu = (CompilationUnit)c.newInstance();
 			cu.initializeCompilationUnit(tc);
 			cu.runLoadIfAvailable(tc);
-			System.err.println("Done " + filename);
 			
 			// Note that we already loaded it.
 			loaded.add(filename);
