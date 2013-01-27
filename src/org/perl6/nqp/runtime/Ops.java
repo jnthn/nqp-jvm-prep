@@ -1640,6 +1640,14 @@ public final class Ops {
             throw new RuntimeException("setcodename can only be used with a CodeRef");
         }
     }
+    public static SixModelObject forceouterctx(SixModelObject code, SixModelObject ctx, ThreadContext tc) {
+    	if (!(code instanceof CodeRef))
+    		throw new RuntimeException("forceouterctx first operand must be a CodeRef");
+    	if (!(ctx instanceof ContextRefInstance))
+    		throw new RuntimeException("forceouterctx second operand must be a ContextRef");
+    	((CodeRef)code).outer = ((ContextRefInstance)ctx).context;
+    	return code;
+    }
 
     /* process related opcodes */
     public static long exit(final long status) {

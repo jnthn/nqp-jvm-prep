@@ -1406,6 +1406,7 @@ QAST::OperationsJAST.add_core_op('setstaticlex', -> $qastcomp, $op {
         $TYPE_CU, 'setStaticLex', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_STR ));
     result($il, $RT_OBJ)
 });
+QAST::OperationsJAST.map_classlib_core_op('forceouterctx', $TYPE_OPS, 'forceouterctx', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 
 # language/compiler ops
 QAST::OperationsJAST.map_classlib_core_op('getcomp', $TYPE_OPS, 'getcomp', [$RT_STR], $RT_OBJ, :tc);
