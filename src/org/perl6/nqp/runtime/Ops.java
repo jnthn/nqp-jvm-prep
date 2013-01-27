@@ -410,6 +410,16 @@ public final class Ops {
     		throw new RuntimeException("ctxcaller requires an operand with REPR ContextRef");
     	}
     }
+    public static SixModelObject ctxlexpad(SixModelObject ctx, ThreadContext tc) {
+    	if (ctx instanceof ContextRefInstance) {
+    		// The context serves happily enough as the lexpad also (provides
+    		// the associative bit of the REPR API, mapped to the lexpad).
+    		return ctx;
+    	}
+    	else {
+    		throw new RuntimeException("ctxlexpad requires an operand with REPR ContextRef");
+    	}
+    }
     public static SixModelObject curcode(ThreadContext tc) {
     	return tc.curFrame.codeRef;
     }
