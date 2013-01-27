@@ -893,7 +893,7 @@ public final class Ops {
         CallFrame cf = new CallFrame();
         cf.tc = tc;
         cf.codeRef = cr;
-        if (tc.curFrame != null) {
+        if (callsiteIndex >= 0) {
             cf.caller = tc.curFrame;
             cf.callSite = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
         }
@@ -1705,6 +1705,10 @@ public final class Ops {
     	}
     	hllSyms.put(name, value);
     	return value;
+    }
+    public static String loadbytecode(String filename, ThreadContext tc) {
+    	new LibraryLoader().load(tc, filename);
+    	return filename;
     }
     
     /* Coercions. */

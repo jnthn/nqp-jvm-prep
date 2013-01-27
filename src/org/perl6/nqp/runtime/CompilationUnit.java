@@ -87,6 +87,21 @@ public abstract class CompilationUnit {
     }
     
     /**
+     * Runs code in the on-load hook, if one is available.
+     */
+    public void runLoadIfAvailable(ThreadContext tc) {
+    	int lIdx = loadIdx();
+        if (lIdx >= 0)
+        	try {
+        		Ops.invoke(tc, codeRefs[lIdx], -1);
+        	}
+        	catch (Exception e)
+        	{
+        		throw new RuntimeException(e);
+        	}
+    }
+    
+    /**
      * Turns a compilation unit unique ID into the matching code-ref.
      */
     public CodeRef lookupCodeRef(String uniqueId) {
@@ -142,6 +157,13 @@ public abstract class CompilationUnit {
      * Code generation overrides this if there's an SC to deserialize.
      */
     public int deserializeIdx() {
+    	return -1;
+    }
+    
+    /**
+     * Code generation overrides this if there's an SC to deserialize.
+     */
+    public int loadIdx() {
     	return -1;
     }
 }
