@@ -908,7 +908,8 @@ public final class Ops {
             cf.callSite = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
         }
         else {
-            cf.callSite = emptyCallSite;
+        	cf.caller = tc.curFrame;
+        	cf.callSite = emptyCallSite;
         }
         
         // Set outer; if it's explicitly in the code ref, use that. If not,
