@@ -1293,6 +1293,9 @@ public final class Ops {
     public static long istrue_s(String str) {
         return str.equals("") || str.equals("0") ? 0 : 1;
     }
+    public static long isfalse_s(String str) {
+        return str.equals("") || str.equals("0") ? 1 : 0;
+    }
     
     /* Smart coercions. */
     public static String smart_stringify(SixModelObject obj, ThreadContext tc) {
