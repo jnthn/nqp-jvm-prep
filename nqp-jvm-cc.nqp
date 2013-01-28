@@ -141,11 +141,11 @@ $ops.add_hll_op('nqp', 'postdec', -> $qastcomp, $op {
 });
 
 $ops.add_hll_op('nqp', 'numify', -> $qastcomp, $op {
-    $qastcomp.as_jast($op, :want($RT_NUM))
+    $qastcomp.as_jast($op[0], :want($RT_NUM))
 });
 
 $ops.add_hll_op('nqp', 'stringify', -> $qastcomp, $op {
-    $qastcomp.as_jast($op, :want($RT_STR))
+    $qastcomp.as_jast($op[0], :want($RT_STR))
 });
 
 $ops.add_hll_op('nqp', 'falsey', -> $qastcomp, $op {
