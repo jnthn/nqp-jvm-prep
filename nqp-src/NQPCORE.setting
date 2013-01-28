@@ -9,17 +9,17 @@ use nqp-mo;
 # set of mappings the setting has should just be taken as the default
 # for any program using it. OTOH, there's not a good way to factor
 # this just yet.)
-#my module EXPORTHOW {
-#    ($?PACKAGE.WHO)<module>       := NQPModuleHOW;
-#    ($?PACKAGE.WHO)<class>        := NQPClassHOW;
-#    ($?PACKAGE.WHO)<class-attr>   := NQPAttribute;
-#    ($?PACKAGE.WHO)<grammar>      := NQPClassHOW;
-#    ($?PACKAGE.WHO)<grammar-attr> := NQPAttribute;
-#    ($?PACKAGE.WHO)<role>         := NQPParametricRoleHOW;
-#    ($?PACKAGE.WHO)<role-attr>    := NQPAttribute;
-#    ($?PACKAGE.WHO)<native>       := NQPNativeHOW;
-#}
-#
+my module EXPORTHOW {
+    ($?PACKAGE.WHO)<module>       := NQPModuleHOW;
+    ($?PACKAGE.WHO)<class>        := NQPClassHOW;
+    ($?PACKAGE.WHO)<class-attr>   := NQPAttribute;
+    ($?PACKAGE.WHO)<grammar>      := NQPClassHOW;
+    ($?PACKAGE.WHO)<grammar-attr> := NQPAttribute;
+    ($?PACKAGE.WHO)<role>         := NQPParametricRoleHOW;
+    ($?PACKAGE.WHO)<role-attr>    := NQPAttribute;
+    ($?PACKAGE.WHO)<native>       := NQPNativeHOW;
+}
+
 #my native int is repr('P6int') { }
 #
 #my native num is repr('P6num') { }
@@ -28,8 +28,7 @@ use nqp-mo;
 
 # From src\core\NQPRoutine.pm
 
-# XXX Should be my class
-my knowhow NQPMu {
+my class NQPMu {
 }
 
 sub print(*@args) {
