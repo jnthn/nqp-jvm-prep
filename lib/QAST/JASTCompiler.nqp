@@ -1169,6 +1169,7 @@ QAST::OperationsJAST.map_jvm_core_op('mul_n', 'dmul', [$RT_NUM, $RT_NUM], $RT_NU
 QAST::OperationsJAST.map_jvm_core_op('div_i', 'ldiv', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_jvm_core_op('div_n', 'ddiv', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('mod_i', 'lrem', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_jvm_core_op('mod_n', 'drem', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('neg_i', 'lneg', [$RT_INT], $RT_INT);
 QAST::OperationsJAST.map_jvm_core_op('neg_n', 'dneg', [$RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_classlib_core_op('pow_n', $TYPE_MATH, 'pow', [$RT_NUM, $RT_NUM], $RT_NUM);
