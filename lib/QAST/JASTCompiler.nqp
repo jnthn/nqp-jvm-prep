@@ -2299,10 +2299,8 @@ class QAST::CompilerJAST {
         my int $i := 0;
         my int $n := +@stmts;
         my $all_void := $*WANT == $RT_VOID;
-        # XXX Need to support this.
-        if nqp::defined($resultchild) {
-            nqp::die("No support for resultchild yet");
-        }
+        my $res_temp;
+        my $res_type;
         unless nqp::defined($resultchild) {
             $resultchild := $n - 1;
         }
@@ -2320,12 +2318,20 @@ class QAST::CompilerJAST {
             $il.append($last_res.jast)
                 unless $void && nqp::istype($_, QAST::Var);
             $*STACK.obtain($last_res);
-            if $resultchild == $i {
-                # XXX
+            if $resultchild == $i && $resultchild != $n - 1 {
+                $res_type := $last_res.type;
+                $res_temp := fresh($res_type);
+                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res_temp ));
             }
             $i := $i + 1;
         }
-        result($il, $last_res.type)
+        if $res_temp {
+            $il.append(JAST::Instruction.new( :op(load_ins($res_type)), $res_temp ));
+            result($il, $res_type)
+        }
+        else {
+            result($il, $last_res.type)
+        }
     }
     
     multi method as_jast(QAST::Op $node, :$want) {
