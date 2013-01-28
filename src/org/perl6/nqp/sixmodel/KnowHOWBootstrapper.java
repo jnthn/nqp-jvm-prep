@@ -10,6 +10,7 @@ public class KnowHOWBootstrapper {
         knowhowUnit.initializeCompilationUnit(tc);
         bootstrapKnowHOW(tc, knowhowUnit);
         bootstrapKnowHOWAttribute(tc, knowhowUnit);
+        
         tc.gc.BOOTArray = bootType(tc, "BOOTArray", "VMArray");
         tc.gc.BOOTHash = bootType(tc, "BOOTHash", "VMHash");
         tc.gc.BOOTIter = bootType(tc, "BOOTIter", "VMIter");
@@ -18,7 +19,11 @@ public class KnowHOWBootstrapper {
         tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
         tc.gc.SCRef = bootType(tc, "SCRef", "SCRef");
         tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
+        
         Ops.setboolspec(tc.gc.BOOTIter, BoolificationSpec.MODE_ITER, null, tc);
+        Ops.setboolspec(tc.gc.BOOTInt, BoolificationSpec.MODE_UNBOX_INT, null, tc);
+        Ops.setboolspec(tc.gc.BOOTNum, BoolificationSpec.MODE_UNBOX_NUM, null, tc);
+        Ops.setboolspec(tc.gc.BOOTStr, BoolificationSpec.MODE_UNBOX_STR_NOT_EMPTY_OR_ZERO, null, tc);
     }
 
     private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
