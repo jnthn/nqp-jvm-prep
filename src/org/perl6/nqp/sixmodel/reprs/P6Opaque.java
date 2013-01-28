@@ -428,11 +428,26 @@ public class P6Opaque extends REPR {
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
-		throw new RuntimeException("P6opaque deserialization NYI");
+		P6OpaqueDelegateInstance stub = new P6OpaqueDelegateInstance();
+		stub.st = st;
+		return stub;
 	}
 
 	public void deserialize_finish(ThreadContext tc, STable st,
-			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("P6opaque deserialization NYI");
+			SerializationReader reader, SixModelObject stub) {
+		try {
+			// Create instance that we'll deserialize into.
+            P6OpaqueBaseInstance obj = (P6OpaqueBaseInstance)((P6OpaqueREPRData)st.REPRData).jvmClass.newInstance();
+            obj.st = st;
+            
+            // Install it as the stub's delegate.
+            ((P6OpaqueDelegateInstance)stub).delegate = obj;
+            
+            
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }	
 	}
 }
