@@ -28,8 +28,9 @@ use nqp-mo;
 
 # From src\core\NQPRoutine.pm
 
-#my class NQPMu {
-#}
+# XXX Should be my class
+my knowhow NQPMu {
+}
 
 sub print(*@args) {
     for @args {
