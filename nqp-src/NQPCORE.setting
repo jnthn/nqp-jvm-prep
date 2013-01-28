@@ -29,6 +29,23 @@ my module EXPORTHOW {
 # From src\core\NQPRoutine.pm
 
 my class NQPMu {
+    method CREATE() {
+        nqp::create(self)
+    }
+
+    method bless(NQPMu:U $self: *%attributes) {
+        my $instance := self.CREATE();
+        $instance.BUILDALL(|%attributes);
+        $instance
+    }
+    
+    method BUILDALL(NQPMu:D $self: *%attrinit) {
+        # XXX TODO
+    }
+
+    method new(*%attributes) {
+        self.bless(|%attributes);
+    }
 }
 
 sub print(*@args) {
