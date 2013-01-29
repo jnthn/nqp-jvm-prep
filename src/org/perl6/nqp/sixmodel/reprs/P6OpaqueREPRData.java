@@ -22,6 +22,11 @@ public class P6OpaqueREPRData {
     public HashMap<String, Integer>[] nameToHintMap;
     
     /**
+     * Auto-viv container types.
+     */
+    public SixModelObject[] autoVivContainers;
+    
+    /**
      * Is the type multiply inheriting?
      */
     public boolean mi;

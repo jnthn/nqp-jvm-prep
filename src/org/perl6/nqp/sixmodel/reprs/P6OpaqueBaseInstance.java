@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.TypeObject;
 
 public class P6OpaqueBaseInstance extends SixModelObject {
     // If this is not null, all operations are delegate to it. Used when we
@@ -19,6 +20,14 @@ public class P6OpaqueBaseInstance extends SixModelObject {
         }
         throw new RuntimeException("No such attribute '" + name + "' for this object");
     }
+	
+	public final SixModelObject autoViv(int slot) {
+		P6OpaqueREPRData rd = (P6OpaqueREPRData)this.st.REPRData;
+		SixModelObject av = rd.autoVivContainers[slot];
+		if (av instanceof TypeObject)
+			return av;
+		throw new RuntimeException("Cloning auto-viv container NYI");
+	}
     
     public void badNative() {
         throw new RuntimeException("Cannot access a reference attribute as a native attribute");

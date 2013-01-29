@@ -15,6 +15,7 @@ public class P6Opaque extends REPR {
     private class AttrInfo {
     	public STable st;
     	public boolean boxTarget;
+    	public boolean hasAutoVivContainer;
     }
     
     public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
@@ -38,6 +39,7 @@ public class P6Opaque extends REPR {
         boolean mi = false;
         List<SixModelObject> classHandles = new ArrayList<SixModelObject>();
         List<HashMap<String, Integer>> attrIndexes = new ArrayList<HashMap<String, Integer>>();
+        List<SixModelObject> autoVivs = new ArrayList<SixModelObject>();
         List<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
         long mroLength = repr_info.elems(tc);
         for (long i = mroLength - 1; i >= 0; i--) {
@@ -58,6 +60,10 @@ public class P6Opaque extends REPR {
                     AttrInfo info = new AttrInfo();
                     info.st = attrHash.at_key_boxed(tc, "type").st;
                     info.boxTarget = attrHash.exists_key(tc, "box_target") != 0;
+                    SixModelObject autoViv = attrHash.at_key_boxed(tc, "auto_viv_container");
+                    autoVivs.add(autoViv);
+                    if (autoViv != null)
+                    	info.hasAutoVivContainer = true;
                     attrInfoList.add(info);
                 }
                 classHandles.add(type);
@@ -72,6 +78,7 @@ public class P6Opaque extends REPR {
         /* Populate some REPR data. */
         ((P6OpaqueREPRData)st.REPRData).classHandles = classHandles.toArray(new SixModelObject[0]);
         ((P6OpaqueREPRData)st.REPRData).nameToHintMap = attrIndexes.toArray(new HashMap[0]);
+        ((P6OpaqueREPRData)st.REPRData).autoVivContainers = autoVivs.toArray(new SixModelObject[0]);
         ((P6OpaqueREPRData)st.REPRData).mi = mi;
         
         /* Generate the JVM backing type. */
@@ -185,7 +192,20 @@ public class P6Opaque extends REPR {
                 getBoxedIl.append(InstructionConstants.ALOAD_0);
                 getBoxedTargets[i] = getBoxedIl.getEnd();
                 getBoxedIl.append(f.createFieldAccess(className, fg.getName(), fg.getType(), Constants.GETFIELD));
-                getBoxedIl.append(InstructionConstants.ARETURN);
+                if (attr.hasAutoVivContainer) {
+                	BranchInstruction bi = InstructionFactory.createBranchInstruction((short)0xc7, null);
+                	getBoxedIl.append(InstructionConstants.DUP);
+                	getBoxedIl.append(bi);
+                	getBoxedIl.append(InstructionConstants.POP);
+                	getBoxedIl.append(InstructionConstants.ALOAD_0);
+                	getBoxedIl.append(f.createConstant(i));
+                	getBoxedIl.append(f.createInvoke(className, "autoViv", fg.getType(), new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+                	getBoxedIl.append(InstructionConstants.ARETURN);
+                	bi.setTarget(getBoxedIl.getEnd());
+                }
+                else {
+                	getBoxedIl.append(InstructionConstants.ARETURN);
+                }
                 
                 /* Native variants should just throw. */
                 bindNativeMatch[i] = i;
@@ -371,10 +391,10 @@ public class P6Opaque extends REPR {
     	REPRData.mi = reader.readLong() != 0;
         
     	// Read any auto-viv values, if we have them.
-    	SixModelObject[] autovivValues = new SixModelObject[numAttributes];
+    	REPRData.autoVivContainers = new SixModelObject[numAttributes];
         if (reader.readLong() != 0) {
             for (int i = 0; i < numAttributes; i++)
-                autovivValues[i] = reader.readRef();
+            	REPRData.autoVivContainers[i] = reader.readRef();
         }
         
         // Read unbox slot locations.
@@ -422,6 +442,7 @@ public class P6Opaque extends REPR {
         	else
         		info.st = tc.gc.KnowHOW.st; // Any reference type will do
         	info.boxTarget = i == unboxIntSlot || i == unboxNumSlot || i == unboxStrSlot;
+        	info.hasAutoVivContainer = REPRData.autoVivContainers[i] != null;
         	attrInfoList.add(info);
         }
         generateJVMType(tc, st, attrInfoList);
