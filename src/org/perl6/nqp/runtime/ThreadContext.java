@@ -40,7 +40,13 @@ public class ThreadContext {
     public static final int NATIVE_STR = 3;
     public static final int NATIVE_JVM_OBJ = 4;
     
+    /**
+     * The current lexotic we're throwing.
+     */
+    public LexoticException theLexotic;
+    
     public ThreadContext(GlobalContext gc) {
         this.gc = gc;
+        this.theLexotic = new LexoticException();
     }
 }

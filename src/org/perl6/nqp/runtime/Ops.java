@@ -869,23 +869,29 @@ public final class Ops {
     public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
         // If it's lexotic, throw the exception right off.
     	if (invokee instanceof Lexotic) {
-    		long target = ((Lexotic)invokee).target;
+    		LexoticException throwee = tc.theLexotic;
+    		throwee.target = ((Lexotic)invokee).target;
     		CallSiteDescriptor csd = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
     		switch (csd.argFlags[0]) {
     		case CallSiteDescriptor.ARG_OBJ:
-    			throw new LexoticException(target, tc.curFrame.oArg[0]);
+    			throwee.payload = tc.curFrame.oArg[0];
+    			break;
     		case CallSiteDescriptor.ARG_INT:
-    			throw new LexoticException(target, box_i(tc.curFrame.iArg[0],
-    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc));
+    			throwee.payload = box_i(tc.curFrame.iArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
+    			break;
     		case CallSiteDescriptor.ARG_NUM:
-    			throw new LexoticException(target, box_n(tc.curFrame.nArg[0],
-    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc));
+    			throwee.payload = box_n(tc.curFrame.nArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
+    			break;
     		case CallSiteDescriptor.ARG_STR:
-    			throw new LexoticException(target, box_s(tc.curFrame.sArg[0],
-    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc));
+    			throwee.payload = box_s(tc.curFrame.sArg[0],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
+    			break;
     		default:
     			throw new RuntimeException("Invalid lexotic invocation argument");
     		}
+    		throw throwee;
     	}
         
     	// Otherwise, get the code ref.
