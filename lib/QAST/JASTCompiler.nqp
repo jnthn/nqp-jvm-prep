@@ -856,7 +856,7 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
         $il.append($arg_res.jast);
         nqp::push(@arg_results, $arg_res);
         my int $type := $arg_res.type;
-        if $i == 0 && $inv_temp {
+        if $i == $first && $inv_temp {
             if $type == $RT_OBJ {
                 $il.append(JAST::Instruction.new( :op('dup') ));
                 $il.append(JAST::Instruction.new( :op('astore'), $inv_temp ));
@@ -975,6 +975,21 @@ QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
         nqp::die("A 'callmethod' node must have at least one child");
     }
     
+    # Handle indirect naming.
+    my $name_tmp;
+    if $node.name eq '' {
+        if +@($node) == 1 {
+            nqp::die("Method call must either supply a name or have a child node that evaluates to the name");
+        }
+        my $inv := $node.shift();
+        $name_tmp := $*TA.fresh_s();
+        my $name_res := $qastcomp.as_jast($node.shift(), :want($RT_STR));
+        $il.append($name_res.jast);
+        $*STACK.obtain($name_res);
+        $il.append(JAST::Instruction.new( :op('astore'), $name_tmp ));
+        $node.unshift($inv);
+    }
+    
     # Process arguments, stashing the invocant.
     my $inv_temp := $*TA.fresh_o();
     my $cs_idx := process_args($qastcomp, $node, $il, 0, :$inv_temp);
@@ -983,7 +998,12 @@ QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
     $il.append(JAST::Instruction.new( :op('aload_1') ));
     $il.append(JAST::Instruction.new( :op('dup') ));
     $il.append(JAST::Instruction.new( :op('aload'), $inv_temp ));
-    $il.append(JAST::PushSVal.new( :value($node.name) ));
+    if $name_tmp {
+        $il.append(JAST::Instruction.new( :op('aload'), $name_tmp ));
+    }
+    else {
+        $il.append(JAST::PushSVal.new( :value($node.name) ));
+    }
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'findmethod', $TYPE_SMO, $TYPE_TC, $TYPE_SMO, $TYPE_STR ));
 
     # Emit call.
