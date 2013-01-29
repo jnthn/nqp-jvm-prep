@@ -159,7 +159,7 @@ $ops.add_hll_op('nqp', 'falsey', -> $qastcomp, $op {
     if $res.type == $RT_OBJ {
         $il.append(JAST::Instruction.new( :op('aload_1') ));
         $il.append(JAST::Instruction.new( :op('invokestatic'),
-            $TYPE_OPS, 'istrue', 'Long', $TYPE_SMO, $TYPE_TC ));
+            $TYPE_OPS, 'isfalse', 'Long', $TYPE_SMO, $TYPE_TC ));
     }
     elsif $res.type == $RT_STR {
         $il.append(JAST::Instruction.new( :op('invokestatic'),
