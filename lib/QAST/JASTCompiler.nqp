@@ -1893,7 +1893,7 @@ class QAST::CompilerJAST {
         if nqp::defined($want) {
             $*WANT := %WANTMAP{$want} // $want;
             if nqp::istype($node, QAST::Want) {
-                self.coerce(self.as_jast(want($node, $*WANT)))
+                self.coerce(self.as_jast(want($node, $*WANT)), $*WANT)
             }
             else {
                 self.coerce({*}, $*WANT)
