@@ -832,6 +832,15 @@ QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
 
 # Calling
 sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
+    # Make sure we do positionals before nameds.
+    my @pos;
+    my @named;
+    for @($node) {
+        nqp::push(($_.named ?? @named !! @pos), $_);
+    }
+    my @order := @pos;
+    for @named { nqp::push(@order, $_) }
+    
     # Process the arguments, computing each of them. Note we don't worry about
     # putting them into the buffers just yet (that'll happen in the next step).
     my @arg_results;
@@ -842,8 +851,8 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     my int $n_args := 0;
     my int $s_args := 0;
     my int $i := $first;
-    while $i < +@($node) {
-        my $arg_res := $qastcomp.as_jast($node[$i]);
+    while $i < +@order {
+        my $arg_res := $qastcomp.as_jast(@order[$i]);
         $il.append($arg_res.jast);
         nqp::push(@arg_results, $arg_res);
         my int $type := $arg_res.type;
@@ -872,10 +881,10 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
             nqp::die("Invalid argument type");
         }
         my int $flags := 0;
-        if $node[$i].flat {
-            $flags := $node[$i].named ?? 24 !! 16;
+        if @order[$i].flat {
+            $flags := @order[$i].named ?? 24 !! 16;
         }
-        elsif $node[$i].named -> $name {
+        elsif @order[$i].named -> $name {
             $flags := 8;
             nqp::push(@argnames, $name);
         }
