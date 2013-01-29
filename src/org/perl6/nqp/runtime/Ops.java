@@ -1079,6 +1079,10 @@ public final class Ops {
     	obj.st.TypeCheckCache = cache;
     	return obj;
     }
+    public static long isinvokable(SixModelObject obj, ThreadContext tc) {
+    	// TODO: Update when invocation protocol done.
+    	return obj instanceof CodeRef ? 1 : 0;
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {
