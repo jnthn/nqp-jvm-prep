@@ -1338,6 +1338,8 @@ public final class Ops {
     		return obj.get_num(tc);
     	if ((ss.can_box & StorageSpec.CAN_BOX_STR) != 0)
     		return coerce_s2n(obj.get_str(tc));
+    	if (obj instanceof VMArrayInstance || obj instanceof VMHashInstance)
+    		return obj.elems(tc);
     	
     	// If anything else, we can't do it.
     	throw new RuntimeException("Cannot numify this");
