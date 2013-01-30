@@ -27,6 +27,11 @@ public class P6OpaqueREPRData {
     public SixModelObject[] autoVivContainers;
     
     /**
+     * Flattened STables for attributes (null if reference attribute).
+     */
+    public STable[] flattenedSTables;
+    
+    /**
      * Is the type multiply inheriting?
      */
     public boolean mi;

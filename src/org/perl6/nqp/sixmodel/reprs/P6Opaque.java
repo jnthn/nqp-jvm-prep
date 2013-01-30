@@ -40,6 +40,7 @@ public class P6Opaque extends REPR {
         List<SixModelObject> classHandles = new ArrayList<SixModelObject>();
         List<HashMap<String, Integer>> attrIndexes = new ArrayList<HashMap<String, Integer>>();
         List<SixModelObject> autoVivs = new ArrayList<SixModelObject>();
+        List<STable> flattenedSTables = new ArrayList<STable>();
         List<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
         long mroLength = repr_info.elems(tc);
         for (long i = mroLength - 1; i >= 0; i--) {
@@ -59,6 +60,10 @@ public class P6Opaque extends REPR {
                     indexes.put(attrName, curAttr++);
                     AttrInfo info = new AttrInfo();
                     info.st = attrHash.at_key_boxed(tc, "type").st;
+                    if (st.REPR.get_storage_spec(tc, st).inlineable == StorageSpec.INLINED)
+                    	flattenedSTables.add(st);
+                    else
+                    	flattenedSTables.add(null);
                     info.boxTarget = attrHash.exists_key(tc, "box_target") != 0;
                     SixModelObject autoViv = attrHash.at_key_boxed(tc, "auto_viv_container");
                     autoVivs.add(autoViv);
@@ -79,6 +84,7 @@ public class P6Opaque extends REPR {
         ((P6OpaqueREPRData)st.REPRData).classHandles = classHandles.toArray(new SixModelObject[0]);
         ((P6OpaqueREPRData)st.REPRData).nameToHintMap = attrIndexes.toArray(new HashMap[0]);
         ((P6OpaqueREPRData)st.REPRData).autoVivContainers = autoVivs.toArray(new SixModelObject[0]);
+        ((P6OpaqueREPRData)st.REPRData).flattenedSTables = flattenedSTables.toArray(new STable[0]);
         ((P6OpaqueREPRData)st.REPRData).mi = mi;
         
         /* Generate the JVM backing type. */
@@ -174,7 +180,7 @@ public class P6Opaque extends REPR {
             StorageSpec ss = attr.st.REPR.get_storage_spec(tc, attr.st);
             if (ss.inlineable == StorageSpec.REFERENCE) {
                 /* Add field. */
-                FieldGen fg = new FieldGen(Constants.ACC_PRIVATE,
+                FieldGen fg = new FieldGen(Constants.ACC_PUBLIC,
                         Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
                         "field_" + i, cp);
                 c.addField(fg.getField());
@@ -386,6 +392,7 @@ public class P6Opaque extends REPR {
     	for (int i = 0; i < numAttributes; i++)
     		if (reader.readLong() != 0)
     			flattenedSTables[i] = reader.readSTableRef();
+    	REPRData.flattenedSTables = flattenedSTables;
 
     	// Read "is multiple inheritance" flag; can go straight into data.
     	REPRData.mi = reader.readLong() != 0;
@@ -464,7 +471,16 @@ public class P6Opaque extends REPR {
             // Install it as the stub's delegate.
             ((P6OpaqueDelegateInstance)stub).delegate = obj;
             
-            
+            // Now deserialize all the fields.
+            STable[] flattenedSTables = ((P6OpaqueREPRData)st.REPRData).flattenedSTables;
+            for (int i = 0; i < flattenedSTables.length; i++) {
+            	if (flattenedSTables[i] == null) {
+            		obj.getClass().getField("field_" + i).set(obj, reader.readRef());
+            	}
+            	else {
+            		throw new RuntimeException("Cannot deserialize non-reference attributes in P6opaque yet");
+            	}
+            }
         }
         catch (Exception e)
         {
