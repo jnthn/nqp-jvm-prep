@@ -278,7 +278,9 @@ public class SerializationReader {
 		    st.WHO = readRef();
 		    
 		    /* Method cache and v-table. */
-		    st.MethodCache = ((VMHashInstance)readRef()).storage;
+		    SixModelObject methodCache = readRef();
+		    if (methodCache != null)
+		    	st.MethodCache = ((VMHashInstance)methodCache).storage;
 		    st.VTable = new SixModelObject[(int)orig.getLong()];
 		    for (int j = 0; j < st.VTable.length; j++)
 		        st.VTable[j] = readRef();
