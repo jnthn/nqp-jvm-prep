@@ -1429,11 +1429,18 @@ public final class Ops {
     }
 
     public static String substr2(String val, long offset) {
+    	if (offset >= val.length())
+    		return "";
     	return val.substring((int)offset);
     }
     
     public static String substr3(String val, long offset, long length) {
-    	return val.substring((int)offset, (int)(offset + length));
+    	if (offset >= val.length())
+    		return "";
+    	int end = (int)(offset + length);
+    	if (end >= val.length())
+    		end = val.length() - 1;
+    	return val.substring((int)offset, end);
     }
 
     public static long ordfirst(String str) {
