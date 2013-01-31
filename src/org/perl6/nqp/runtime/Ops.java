@@ -432,7 +432,9 @@ public final class Ops {
     
     /* Invocation arity check. */
     public static void checkarity(CallFrame cf, int required, int accepted) {
-        if (cf.callSite.hasFlattening)
+        if (cf.caller != null)
+        	cf.proc_oArg = cf.caller.oArg;
+    	if (cf.callSite.hasFlattening)
             cf.callSite.explodeFlattening(cf);
         int positionals = cf.callSite.numPositionals;
         if (positionals < required || positionals > accepted && accepted != -1)
@@ -445,7 +447,7 @@ public final class Ops {
         CallSiteDescriptor cs = cf.callSite;
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.caller.oArg[cs.argIdx[idx]];
+            return cf.proc_oArg[cs.argIdx[idx]];
         case CallSiteDescriptor.ARG_INT:
             return box_i(cf.caller.iArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
         case CallSiteDescriptor.ARG_NUM:
@@ -466,7 +468,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_STR:
             return coerce_s2i(cf.caller.sArg[cs.argIdx[idx]]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.caller.oArg[cs.argIdx[idx]].get_int(cf.tc);
+            return cf.proc_oArg[cs.argIdx[idx]].get_int(cf.tc);
         default:
             throw new RuntimeException("Error in argument processing");
         }
@@ -481,7 +483,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_STR:
             return coerce_s2n(cf.caller.sArg[cs.argIdx[idx]]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.caller.oArg[cs.argIdx[idx]].get_num(cf.tc);
+            return cf.proc_oArg[cs.argIdx[idx]].get_num(cf.tc);
         default:
             throw new RuntimeException("Error in argument processing");
         }
@@ -496,7 +498,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_NUM:
             return coerce_n2s(cf.caller.nArg[cs.argIdx[idx]]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.caller.oArg[cs.argIdx[idx]].get_str(cf.tc);
+            return cf.proc_oArg[cs.argIdx[idx]].get_str(cf.tc);
         default:
             throw new RuntimeException("Error in argument processing");
         }
@@ -562,7 +564,7 @@ public final class Ops {
         for (int i = fromIdx; i < cs.numPositionals; i++) {
             switch (cs.argFlags[i]) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.push_boxed(tc, cf.caller.oArg[cs.argIdx[i]]);
+                result.push_boxed(tc, cf.proc_oArg[cs.argIdx[i]]);
                 break;
             case CallSiteDescriptor.ARG_INT:
                 result.push_boxed(tc, box_i(cf.caller.iArg[cs.argIdx[i]], hllConfig.intBoxType, tc));
@@ -588,7 +590,7 @@ public final class Ops {
         if (lookup != null) {
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3];
+                return cf.proc_oArg[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
                 return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
@@ -616,7 +618,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return coerce_s2i(cf.caller.sArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_int(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -638,7 +640,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return coerce_s2n(cf.caller.sArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_num(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -660,7 +662,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_NUM:
                 return coerce_n2s(cf.caller.nArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_str(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -679,7 +681,7 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3];
+                return cf.proc_oArg[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
                 return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
@@ -710,7 +712,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return coerce_s2i(cf.caller.sArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_int(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -735,7 +737,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return coerce_s2n(cf.caller.sArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_num(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -760,7 +762,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_NUM:
                 return coerce_n2s(cf.caller.nArg[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.caller.oArg[lookup >> 3].get_str(cf.tc);
+                return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
             default:
                 throw new RuntimeException("Error in argument processing");
             }
@@ -788,7 +790,7 @@ public final class Ops {
             Integer lookup = cf.workingNameMap.get(name);
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.bind_key_boxed(tc, name, cf.caller.oArg[lookup >> 3]);
+                result.bind_key_boxed(tc, name, cf.proc_oArg[lookup >> 3]);
                 break;
             case CallSiteDescriptor.ARG_INT:
                 result.bind_key_boxed(tc, name, box_i(cf.caller.iArg[lookup >> 3], hllConfig.intBoxType, tc));

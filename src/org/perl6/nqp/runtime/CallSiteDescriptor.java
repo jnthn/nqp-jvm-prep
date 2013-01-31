@@ -157,9 +157,9 @@ public class CallSiteDescriptor {
             newNamesArr[i] = newNames.get(i);
         cf.callSite = new CallSiteDescriptor(newFlagsArr, newNamesArr);
         
-        if (cf.caller.oArg.length < newObjArgs.size())
-            cf.caller.oArg = new SixModelObject[newObjArgs.size()];
+        if (cf.proc_oArg.length < newObjArgs.size())
+            cf.proc_oArg = new SixModelObject[newObjArgs.size()];
         for (int i = 0; i < newObjArgs.size(); i++)
-            cf.caller.oArg[i] = newObjArgs.get(i);
+            cf.proc_oArg[i] = newObjArgs.get(i);
     }
 }

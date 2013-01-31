@@ -58,6 +58,12 @@ public class CallFrame {
     public String[] sArg;
     
     /**
+     * The oArg we're currently processing (have to hold on to this since
+     * it may change due to flattening).
+     */
+    public SixModelObject[] proc_oArg;
+    
+    /**
      * Return value storage. Note that all the basic types are available and
      * the returning function picks the one it has.
      */
