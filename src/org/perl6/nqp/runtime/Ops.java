@@ -1396,6 +1396,20 @@ public final class Ops {
         return (new StringBuffer()).append((char) val).toString();
     }
     
+    public static String join(String delimiter, SixModelObject arr, ThreadContext tc) {
+        final StringBuilder sb = new StringBuilder();
+
+        final int numElems = (int) arr.elems(tc);
+        for (int i = 0; i < numElems; i++) {
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
+            sb.append(arr.at_pos_boxed(tc, i).get_str(tc));
+        }
+
+        return sb.toString();
+    }
+    
     public static long indexfrom(String string, String pattern, long fromIndex) {
         return string.indexOf(pattern, (int)fromIndex);
     }
