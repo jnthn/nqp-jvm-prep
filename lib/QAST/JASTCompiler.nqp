@@ -341,6 +341,9 @@ QAST::OperationsJAST.add_core_op('list_b', -> $qastcomp, $op {
         $arr
     }
 });
+QAST::OperationsJAST.add_core_op('qlist', -> $qastcomp, $op {
+    $qastcomp.as_jast(QAST::Op.new( :op('list'), |@($op) ))
+});
 QAST::OperationsJAST.add_core_op('hash', -> $qastcomp, $op {
     # Just desugar to create the empty hash.
     my $hash := $qastcomp.as_jast(QAST::Op.new(
