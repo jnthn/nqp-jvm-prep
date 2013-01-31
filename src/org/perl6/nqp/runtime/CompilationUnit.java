@@ -2,6 +2,7 @@ package org.perl6.nqp.runtime;
 
 import java.util.*;
 
+import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
@@ -56,10 +57,14 @@ public abstract class CompilationUnit {
      * Does initialization work for the compilation unit.
      */
     public void initializeCompilationUnit(ThreadContext tc) {
-        /* Place code references into a lookup table by unique ID. */
-        codeRefs = getCodeRefs();
-        for (CodeRef c : codeRefs)
-            cuidToCodeRef.put(c.staticInfo.uniqueId, c);
+        /* Place code references into a lookup table by unique ID. Also
+         * make sure each code ref has the appropriate STable. */
+        STable BOOTCodeSTable = tc.gc.BOOTCode == null ? null : tc.gc.BOOTCode.st;
+    	codeRefs = getCodeRefs();
+        for (CodeRef c : codeRefs) {
+            c.st = BOOTCodeSTable;
+        	cuidToCodeRef.put(c.staticInfo.uniqueId, c);
+        }
         
         /* Wire up outer relationships. */
         int[] outerMap = getOuterMap();

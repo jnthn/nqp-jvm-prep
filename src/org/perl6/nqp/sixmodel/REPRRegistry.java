@@ -41,5 +41,6 @@ public class REPRRegistry {
         addREPR("Uninstantiable", new Uninstantiable());
         addREPR("SCRef", new SCRef());
         addREPR("ContextRef", new ContextRef());
+        addREPR("CodeRef", new CodeRefREPR());
     }
 }

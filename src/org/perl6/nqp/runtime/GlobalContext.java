@@ -48,6 +48,11 @@ public class GlobalContext {
     public SixModelObject BOOTStr;
     
     /**
+     * BOOTCode type; a basic, method-less type with the CodeRef REPR.
+     */
+    public SixModelObject BOOTCode;
+    
+    /**
      * SCRef type; a basic, method-less type with the SCRef REPR.
      */
     public SixModelObject SCRef;

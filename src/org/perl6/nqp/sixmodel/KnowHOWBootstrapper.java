@@ -17,6 +17,7 @@ public class KnowHOWBootstrapper {
         tc.gc.BOOTInt = bootType(tc, "BOOTInt", "P6int");
         tc.gc.BOOTNum = bootType(tc, "BOOTNum", "P6num");
         tc.gc.BOOTStr = bootType(tc, "BOOTStr", "P6str");
+        tc.gc.BOOTCode = bootType(tc, "BOOTCode", "CodeRef");
         tc.gc.SCRef = bootType(tc, "SCRef", "SCRef");
         tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
         
