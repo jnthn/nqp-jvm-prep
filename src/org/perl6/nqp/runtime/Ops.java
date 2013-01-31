@@ -1679,7 +1679,8 @@ public final class Ops {
     }
     
     public static long cmp_s(String a, String b) {
-        return a.compareTo(b);
+        int result = a.compareTo(b);
+        return result < 0 ? -1 : result > 0 ?  1 : 0;
     }
     public static long iseq_s(String a, String b) {
     	return a.equals(b) ? 1 : 0;
