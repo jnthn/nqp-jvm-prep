@@ -20,11 +20,11 @@ my module EXPORTHOW {
     ($?PACKAGE.WHO)<native>       := NQPNativeHOW;
 }
 
-#my native int is repr('P6int') { }
-#
-#my native num is repr('P6num') { }
-#
-#my native str is repr('P6str') { }
+my native int is repr('P6int') { }
+
+my native num is repr('P6num') { }
+
+my native str is repr('P6str') { }
 
 # From src\core\NQPRoutine.pm
 
