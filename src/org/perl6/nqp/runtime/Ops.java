@@ -1163,6 +1163,9 @@ public final class Ops {
             throw new RuntimeException("Attribute '" + name + "' is not a native str");
         return value;
     }
+    public static long attrinited(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
+        return obj.is_attribute_initialized(tc, ch, name, STable.NO_HINT);
+    }
     
     /* Positional operations. */
     public static SixModelObject atpos(SixModelObject arr, long idx, ThreadContext tc) {
