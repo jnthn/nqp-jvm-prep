@@ -1323,6 +1323,9 @@ QAST::OperationsJAST.map_classlib_core_op('cmp_s',  $TYPE_OPS, 'cmp_s',  [$RT_ST
 QAST::OperationsJAST.map_classlib_core_op('iseq_s', $TYPE_OPS, 'iseq_s', [$RT_STR, $RT_STR], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('isne_s', $TYPE_OPS, 'isne_s', [$RT_STR, $RT_STR], $RT_INT);
 
+# boolean opcodes
+QAST::OperationsJAST.map_classlib_core_op('not_i', $TYPE_OPS, 'not_i', [$RT_INT], $RT_INT);
+
 # aggregate opcodes
 QAST::OperationsJAST.map_classlib_core_op('atpos', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('atkey', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
