@@ -2,7 +2,10 @@ package org.perl6.nqp.sixmodel;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import org.perl6.nqp.runtime.CallFrame;
 import org.perl6.nqp.runtime.CodeRef;
+import org.perl6.nqp.runtime.StaticCodeInfo;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 
@@ -38,6 +41,7 @@ public class SerializationReader {
 	private SerializationContext sc;
 	private String[] sh;
 	private CodeRef[] cr;
+	private CallFrame[] contexts;
 	private ByteBuffer orig;
 	
 	/* The version of the serialization format we're currently reading. */
@@ -95,18 +99,16 @@ public class SerializationReader {
 		stubObjects();
 		
 		// Do first step of deserializing any closures.
-		if (closureTableEntries > 0)
-			throw new RuntimeException("Closure deserialization NYI");
+		deserializeClosures();
 		
 		// Second passes over STables and objects.
 		deserializeSTables();
 		deserializeObjects();
 		
 		// Finish up contexts and closures.
-		if (closureTableEntries > 0)
-			throw new RuntimeException("Closure deserialization NYI");
-		if (contextTableEntries > 0)
-			throw new RuntimeException("Context deserialization NYI");
+		deserializeContexts();
+		attachClosureOuters(cr.length);
+		attachContextOuters();
 	}
 	
 	/* Checks the header looks sane and all of the places it points to make sense.
@@ -262,6 +264,25 @@ public class SerializationReader {
 			sc.root_objects.add(stubObj);
 		}
 	}
+	
+	private void deserializeClosures() {
+		for (int i = 0; i < closureTableEntries; i++) {
+			/* Seek to the closure's table row. */
+			orig.position(closureTableOffset + i * CLOSURES_TABLE_ENTRY_SIZE);
+			
+			/* Resolve the reference to the static code object. */
+			CodeRef staticCode = readCodeRef();
+			
+			/* Clone it and add it to this SC's code refs list. */
+			CodeRef closure = (CodeRef)staticCode.clone(tc);
+			closure.sc = sc;
+			sc.root_codes.add(closure);
+			
+			/* See if there's a code object we need to attach. */
+			if (orig.getInt() != 0)
+				closure.codeObject = readObjRef();
+		}
+	}
 
 	private void deserializeSTables() {
 		for (int i = 0; i < stTableEntries; i++) {
@@ -330,6 +351,72 @@ public class SerializationReader {
 		}
 	}
 	
+	private void deserializeContexts() {
+		contexts = new CallFrame[contextTableEntries];
+		for (int i = 0; i < contextTableEntries; i++) {
+			/* Seek to the context's table row. */
+			orig.position(contextTableOffset + i * CONTEXTS_TABLE_ENTRY_SIZE);
+			
+			/* Resolve the reference to the static code object this context is for. */
+		    CodeRef staticCode = readCodeRef();
+		    
+		    /* Create a context and set it up. */
+		    CallFrame ctx = new CallFrame();
+		    ctx.tc = tc;
+		    ctx.codeRef = staticCode;
+		    StaticCodeInfo sci = staticCode.staticInfo;
+		    if (sci.oLexicalNames != null)
+	            ctx.oLex = sci.oLexStatic.clone();
+	        if (sci.iLexicalNames != null)
+	            ctx.iLex = new long[sci.iLexicalNames.length];
+	        if (sci.nLexicalNames != null)
+	            ctx.nLex = new double[sci.nLexicalNames.length];
+	        if (sci.sLexicalNames != null)
+	            ctx.sLex = new String[sci.sLexicalNames.length];
+	        
+		    /* Set context data read position, and set current read buffer to the correct thing. */
+	        orig.position(contextDataOffset + orig.getInt());
+		    
+	        /* Deserialize lexicals. */
+	        long syms = orig.getLong();
+	        for (long j = 0; j < syms; j++) {
+		        String sym = readStr();
+		        Integer idx;
+		        if ((idx = sci.oTryGetLexicalIdx(sym)) != null)
+		        	ctx.oLex[idx] = readRef();
+		        else if ((idx = sci.iTryGetLexicalIdx(sym)) != null)
+		        	ctx.iLex[idx] = orig.getLong();
+		        else if ((idx = sci.nTryGetLexicalIdx(sym)) != null)
+		        	ctx.nLex[idx] = orig.getDouble();
+		        else if ((idx = sci.sTryGetLexicalIdx(sym)) != null)
+		        	ctx.sLex[idx] = readStr();
+		        else
+		        	throw new RuntimeException("Failed to deserialize lexical " + sym);
+	        }
+	        
+		    /* Put context in place. */
+		    contexts[i] = ctx;
+		}
+	}
+	
+	private void attachClosureOuters(int closureBaseIdx) {
+		for (int i = 0; i < closureTableEntries; i++) {
+			orig.position(closureTableOffset + i * CLOSURES_TABLE_ENTRY_SIZE + 8);
+			int idx = orig.getInt();
+			if (idx > 0)
+				sc.root_codes.get(closureBaseIdx + i).outer = contexts[idx - 1];
+	    }
+	}
+	
+	private void attachContextOuters() {
+		for (int i = 0; i < contextTableEntries; i++) {
+			orig.position(contextTableOffset + i * CONTEXTS_TABLE_ENTRY_SIZE + 12);
+			int idx = orig.getInt();
+			if (idx > 0)
+				contexts[i].outer = contexts[idx - 1];
+		}
+	}
+	
 	public SixModelObject readRef() {
 		short discrim = orig.getShort();
 		int elems;
@@ -376,11 +463,7 @@ public class SerializationReader {
 			return resHash;
 		case REFVAR_STATIC_CODEREF:
         case REFVAR_CLONED_CODEREF:
-        	SerializationContext sc = locateSC(orig.getInt());
-        	int idx = orig.getInt();
-    	    if (idx < 0 || idx >= sc.root_codes.size())
-    	    	throw new RuntimeException("Invalid SC code index " + idx);
-    	    return sc.root_codes.get(idx);
+        	return readCodeRef();
 		default:
 			throw new RuntimeException("Unimplemented case of read_ref");
 		}
@@ -396,6 +479,14 @@ public class SerializationReader {
 	
 	public STable readSTableRef() {
 		return lookupSTable(orig.getInt(), orig.getInt());
+	}
+	
+	public CodeRef readCodeRef() {
+		SerializationContext sc = locateSC(orig.getInt());
+    	int idx = orig.getInt();
+	    if (idx < 0 || idx >= sc.root_codes.size())
+	    	throw new RuntimeException("Invalid SC code index " + idx);
+	    return sc.root_codes.get(idx);
 	}
 	
 	public long readLong() {
