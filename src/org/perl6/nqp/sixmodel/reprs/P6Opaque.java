@@ -369,6 +369,28 @@ public class P6Opaque extends REPR {
         }
     }
     
+    public void change_type(ThreadContext tc, SixModelObject obj, SixModelObject newType) {
+    	// Ensure target type is also P6opaque-based.
+    	if (!(newType.st.REPR instanceof P6Opaque))
+    		throw new RuntimeException("P6opaque can only rebless to another P6opaque-based type");
+    	
+    	// Ensure that the MROs overlap properly.
+    	P6OpaqueREPRData ourREPRData = (P6OpaqueREPRData)obj.st.REPRData;
+    	P6OpaqueREPRData targetREPRData = (P6OpaqueREPRData)newType.st.REPRData;
+    	if (ourREPRData.classHandles.length > targetREPRData.classHandles.length)
+    		throw new RuntimeException("Incompatible MROs in P6opaque rebless");
+    	for (int i = 0; i < ourREPRData.classHandles.length; i++) {
+    		if (ourREPRData.classHandles[i] != targetREPRData.classHandles[i])
+    			throw new RuntimeException("Incompatible MROs in P6opaque rebless");
+    	}
+    	
+    	// If there's a different number of attributes, need to set up delegate.
+    	// TODO
+    	
+    	// Switch STable over to the new type.
+    	obj.st = newType.st;
+    }
+    
     private class ByteClassLoader extends ClassLoader {
         private byte[] bytes;
         
@@ -423,10 +445,10 @@ public class P6Opaque extends REPR {
         
         // Finally, read in the name to index mapping.
         int numClasses = (int)reader.readLong();
-        REPRData.classHandles = new SixModelObject[numClasses];
-        REPRData.nameToHintMap = new HashMap[numClasses];
+        ArrayList<SixModelObject> classHandles = new ArrayList<SixModelObject>();
+        ArrayList<HashMap<String, Integer>> nameToHintMaps = new ArrayList<HashMap<String, Integer>>(); 
         for (int i = 0; i < numClasses; i++) {
-        	REPRData.classHandles[i] = reader.readRef();
+        	SixModelObject classHandle = reader.readRef();
         	SixModelObject nameToHintObject = reader.readRef();
         	if (nameToHintObject == null) {
         		/* Nothing to do. */
@@ -434,14 +456,19 @@ public class P6Opaque extends REPR {
         	else if (nameToHintObject instanceof VMHashInstance) {
             	HashMap<String, Integer> nameToHintMap = new HashMap<String, Integer>();
             	HashMap<String, SixModelObject> origMap = ((VMHashInstance)nameToHintObject).storage;
-            	for (String key : origMap.keySet())
-            		nameToHintMap.put(key, (int)origMap.get(key).get_int(tc));
-            	REPRData.nameToHintMap[i] = nameToHintMap;  
+            	if (origMap.size() > 0) {
+            		for (String key : origMap.keySet())
+            			nameToHintMap.put(key, (int)origMap.get(key).get_int(tc));
+            		classHandles.add(classHandle);
+            		nameToHintMaps.add(nameToHintMap);
+            	}
             }
             else {
             	throw new RuntimeException("Unexpected hint map representation in deserialize");
             }
         }
+        REPRData.classHandles = classHandles.toArray(new SixModelObject[0]);
+        REPRData.nameToHintMap = nameToHintMaps.toArray(new HashMap[0]);
         
         // Finally, reassemble the Java backing type.
         ArrayList<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
