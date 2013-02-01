@@ -40,41 +40,41 @@ my knowhow NQPRoutine {
     method is_dispatcher() {
         nqp::defined($!dispatchees)
     }
-#    method derive_dispatcher() {
-#        # Clone the underlying VM code ref.
-#        my $do  := nqp::clone($!do);
-#        
-#        # Clone and attach the code object.
-#        my $der := nqp::clone(self);
-#        nqp::bindattr($der, NQPRoutine, '$!do', $do);
-#        nqp::bindattr($der, NQPRoutine, '$!dispatchees', nqp::clone($!dispatchees));
-#        nqp::setcodeobj($do, $der);
-#        
-#        # If needed, arrange for a fixup of the cloned code-ref.
+    method derive_dispatcher() {
+        # Clone the underlying VM code ref.
+        my $do  := nqp::clone($!do);
+        
+        # Clone and attach the code object.
+        my $der := nqp::clone(self);
+        nqp::bindattr($der, NQPRoutine, '$!do', $do);
+        nqp::bindattr($der, NQPRoutine, '$!dispatchees', nqp::clone($!dispatchees));
+        nqp::setcodeobj($do, $der);
+        
+        # If needed, arrange for a fixup of the cloned code-ref.
 #        my $clone_callback := pir::getprop__PPs($!do, 'CLONE_CALLBACK');
 #        if nqp::defined($clone_callback) {
 #            $clone_callback($!do, $do, $der);
 #        }
-#        
-#        $der
-#    }
-#    method clone() {
-#        # Clone the underlying VM code ref.
-#        my $do  := nqp::clone($!do);
-#        
-#        # Clone and attach the code object.
-#        my $der := nqp::clone(self);
-#        nqp::bindattr($der, NQPRoutine, '$!do', $do);
-#        nqp::setcodeobj($do, $der);
-#        
-#        # If needed, arrange for a fixup of the cloned code-ref.
+        
+        $der
+    }
+    method clone() {
+        # Clone the underlying VM code ref.
+        my $do  := nqp::clone($!do);
+        
+        # Clone and attach the code object.
+        my $der := nqp::clone(self);
+        nqp::bindattr($der, NQPRoutine, '$!do', $do);
+        nqp::setcodeobj($do, $der);
+        
+        # If needed, arrange for a fixup of the cloned code-ref.
 #        my $clone_callback := pir::getprop__PPs($!do, 'CLONE_CALLBACK');
 #        if nqp::defined($clone_callback) {
 #            $clone_callback($!do, $do, $der);
 #        }
-#        
-#        $der
-#    }
+        
+        $der
+    }
     method !set_name($name) {
         nqp::setcodename($!do, $name);
     }
