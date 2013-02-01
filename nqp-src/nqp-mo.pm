@@ -1389,9 +1389,9 @@ knowhow NQPClassHOW {
         
         # If the original object was concrete, change its type by calling a
         # low level op. Otherwise, we just return the new type object
-#        nqp::isconcrete($obj) ??
-#            nqp::rebless($obj, $new_type) !!
-#            $new_type
+        nqp::isconcrete($obj) ??
+            nqp::rebless($obj, $new_type) !!
+            $new_type
     }
     
     ##
