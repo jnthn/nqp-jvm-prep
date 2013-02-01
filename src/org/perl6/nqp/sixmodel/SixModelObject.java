@@ -10,7 +10,7 @@ import org.perl6.nqp.runtime.ThreadContext;
  * a better fit and stands a better chance of performing well with the
  * way the JVM does things.
  */
-public abstract class SixModelObject {
+public abstract class SixModelObject implements Cloneable {
     /**
      * The STable of the object.
      */
