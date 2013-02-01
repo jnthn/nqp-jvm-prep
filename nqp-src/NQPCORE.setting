@@ -28,6 +28,72 @@ my native str is repr('P6str') { }
 
 # From src\core\NQPRoutine.pm
 
+my knowhow NQPRoutine {
+    has $!do;
+    has $!signature;
+    has $!dispatchees;
+    has $!dispatch_cache;
+    method add_dispatchee($code) {
+        $!dispatch_cache := nqp::null();
+        nqp::push($!dispatchees, $code);
+    }
+    method is_dispatcher() {
+        nqp::defined($!dispatchees)
+    }
+#    method derive_dispatcher() {
+#        # Clone the underlying VM code ref.
+#        my $do  := nqp::clone($!do);
+#        
+#        # Clone and attach the code object.
+#        my $der := nqp::clone(self);
+#        nqp::bindattr($der, NQPRoutine, '$!do', $do);
+#        nqp::bindattr($der, NQPRoutine, '$!dispatchees', nqp::clone($!dispatchees));
+#        nqp::setcodeobj($do, $der);
+#        
+#        # If needed, arrange for a fixup of the cloned code-ref.
+#        my $clone_callback := pir::getprop__PPs($!do, 'CLONE_CALLBACK');
+#        if nqp::defined($clone_callback) {
+#            $clone_callback($!do, $do, $der);
+#        }
+#        
+#        $der
+#    }
+#    method clone() {
+#        # Clone the underlying VM code ref.
+#        my $do  := nqp::clone($!do);
+#        
+#        # Clone and attach the code object.
+#        my $der := nqp::clone(self);
+#        nqp::bindattr($der, NQPRoutine, '$!do', $do);
+#        nqp::setcodeobj($do, $der);
+#        
+#        # If needed, arrange for a fixup of the cloned code-ref.
+#        my $clone_callback := pir::getprop__PPs($!do, 'CLONE_CALLBACK');
+#        if nqp::defined($clone_callback) {
+#            $clone_callback($!do, $do, $der);
+#        }
+#        
+#        $der
+#    }
+    method !set_name($name) {
+        nqp::setcodename($!do, $name);
+    }
+    method name() {
+        nqp::getcodename($!do)
+    }
+}
+nqp::setinvokespec(NQPRoutine, NQPRoutine, '$!do', nqp::null);
+nqp::setboolspec(NQPRoutine, 5, nqp::null());
+#pir::stable_publish_vtable_handler_mapping__vPP(NQPRoutine,
+#    nqp::hash('get_string', nqp::list(NQPRoutine, '$!do')));
+
+my knowhow NQPSignature {
+    has $!types;
+    has $!definednesses;
+}
+
+# From src\core\NQPMu.pm
+
 my class NQPMu {
     method CREATE() {
         nqp::create(self)
