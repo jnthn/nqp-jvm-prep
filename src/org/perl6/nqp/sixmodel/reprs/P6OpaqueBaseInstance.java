@@ -1,4 +1,5 @@
 package org.perl6.nqp.sixmodel.reprs;
+import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.TypeObject;
 
@@ -27,6 +28,14 @@ public class P6OpaqueBaseInstance extends SixModelObject {
 		if (av instanceof TypeObject)
 			return av;
 		throw new RuntimeException("Cloning auto-viv container NYI");
+	}
+	
+	public SixModelObject clone(ThreadContext tc) {
+		try {
+			return (SixModelObject)this.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
 	}
     
     public void badNative() {
