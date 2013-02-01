@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -94,6 +95,27 @@ public class P6Opaque extends REPR {
         generateJVMType(tc, st, attrInfoList);
     }
     
+    /* Adds delegation, needed for mixin support. */
+    private void addDelegation(InstructionList il, InstructionFactory f, String methodName,
+    		Type retType, Type[] argTypes, boolean hasValue) {
+        Type smoType = Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;");
+    	il.append(InstructionConstants.THIS);
+        il.append(f.createFieldAccess(P6OpaqueBaseInstance.class.getName(), "delegate", smoType, Constants.GETFIELD));
+        il.append(InstructionConstants.DUP);
+        BranchInstruction bi = InstructionFactory.createBranchInstruction((short)0xc6, null);
+        il.append(bi);
+        il.append(InstructionConstants.ALOAD_1); // tc
+        il.append(InstructionConstants.ALOAD_2); // class_handle
+        il.append(InstructionFactory.createLoad(Type.STRING, 3)); // name
+        il.append(InstructionFactory.createLoad(Type.LONG, 4)); // hint
+        if (hasValue)
+        	il.append(InstructionFactory.createLoad(smoType, 6)); // value
+        il.append(f.createInvoke(SixModelObject.class.getName(), methodName, retType, argTypes, Constants.INVOKEVIRTUAL));
+        il.append(retType == Type.VOID ? InstructionConstants.RETURN : InstructionConstants.ARETURN);
+        il.append(InstructionConstants.POP);
+        bi.setTarget(il.getEnd());
+    }
+    
     private void generateJVMType(ThreadContext tc, STable st, List<AttrInfo> attrInfoList) {
     	/* Create a unique name. */
         String className = "__P6opaque__" + typeId++;
@@ -103,57 +125,61 @@ public class P6Opaque extends REPR {
                 Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
         ConstantPoolGen cp = c.getConstantPool();
         InstructionFactory f = new InstructionFactory(c);
+        Type tcType = Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;");
+        Type smoType = Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;");
     	
     	/* bind_attribute_boxed */
         InstructionList bindBoxedIl = new InstructionList();
         MethodGen bindBoxedMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
-                new Type[] {
-                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
-                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
-                    Type.STRING, Type.LONG,
-                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;")
-                },
+                new Type[] { tcType, smoType, Type.STRING, Type.LONG, smoType },
                 new String[] { "tc" , "class_handle", "name", "hint", "value" },
                 "bind_attribute_boxed", className, bindBoxedIl, cp);
+        InstructionHandle bindBoxedBIHandle = null;
+        addDelegation(bindBoxedIl, f, "bind_attribute_boxed", Type.VOID,
+        		new Type[] { tcType, smoType, Type.STRING, Type.LONG, smoType }, true);
         bindBoxedIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         bindBoxedIl.append(InstructionConstants.L2I);
-        if (attrInfoList.size() > 0)
-            bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        if (attrInfoList.size() > 0) {
+            bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null));
+            bindBoxedBIHandle = bindBoxedIl.getEnd();
+        }
         int[] bindBoxedMatch = new int[attrInfoList.size()];
         InstructionHandle[] bindBoxedTargets = new InstructionHandle[attrInfoList.size()];
         
         /* bind_attribute_native */
         InstructionList bindNativeIl = new InstructionList();
         MethodGen bindNativeMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
-                new Type[] {
-                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
-                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
-                    Type.STRING, Type.LONG
-                },
+                new Type[] { tcType, smoType, Type.STRING, Type.LONG },
                 new String[] { "tc" , "class_handle", "name", "hint" },
                 "bind_attribute_native", className, bindNativeIl, cp);
+        InstructionHandle bindNativeBIHandle = null;
+        addDelegation(bindNativeIl, f, "bind_attribute_native", Type.VOID,
+        		new Type[] { tcType, smoType, Type.STRING, Type.LONG }, false);
         bindNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         bindNativeIl.append(InstructionConstants.L2I);
-        if (attrInfoList.size() > 0)
-            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        if (attrInfoList.size() > 0) {
+            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null));
+            bindNativeBIHandle = bindNativeIl.getEnd();
+        }
         int[] bindNativeMatch = new int[attrInfoList.size()];
         InstructionHandle[] bindNativeTargets = new InstructionHandle[attrInfoList.size()];
         
         /* get_attribute_boxed */
         InstructionList getBoxedIl = new InstructionList();
         MethodGen getBoxedMeth = new MethodGen(Constants.ACC_PUBLIC, 
-                Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
-                new Type[] {
-                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
-                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
-                    Type.STRING, Type.LONG
-                },
+                smoType,
+                new Type[] { tcType, smoType, Type.STRING, Type.LONG },
                 new String[] { "tc" , "class_handle", "name", "hint" },
                 "get_attribute_boxed", className, getBoxedIl, cp);
+        InstructionHandle getBoxedBIHandle = null;
+        addDelegation(getBoxedIl, f, "get_attribute_boxed", smoType,
+        		new Type[] { tcType, smoType, Type.STRING, Type.LONG }, false);
         getBoxedIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         getBoxedIl.append(InstructionConstants.L2I);
-        if (attrInfoList.size() > 0)
-            getBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        if (attrInfoList.size() > 0) {
+            getBoxedIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null));
+            getBoxedBIHandle = getBoxedIl.getEnd();
+        }
         int[] getBoxedMatch = new int[attrInfoList.size()];
         InstructionHandle[] getBoxedTargets = new InstructionHandle[attrInfoList.size()];
         
@@ -161,17 +187,18 @@ public class P6Opaque extends REPR {
         InstructionList getNativeIl = new InstructionList();
         MethodGen getNativeMeth = new MethodGen(Constants.ACC_PUBLIC, 
                 Type.VOID,
-                new Type[] {
-                    Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"),
-                    Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"),
-                    Type.STRING, Type.LONG
-                },
+                new Type[] { tcType, smoType, Type.STRING, Type.LONG },
                 new String[] { "tc" , "class_handle", "name", "hint" },
                 "get_attribute_native", className, getNativeIl, cp);
+        InstructionHandle getNativeBIHandle = null;
+        addDelegation(getNativeIl, f, "get_attribute_native", Type.VOID,
+        		new Type[] { tcType, smoType, Type.STRING, Type.LONG }, false);
         getNativeIl.append(InstructionFactory.createLoad(Type.LONG, 4));
         getNativeIl.append(InstructionConstants.L2I);
-        if (attrInfoList.size() > 0)
-            getNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
+        if (attrInfoList.size() > 0) {
+            getNativeIl.append(InstructionFactory.createBranchInstruction((short)0xa7, null));
+            getNativeBIHandle = getNativeIl.getEnd();
+        }
         int[] getNativeMatch = new int[attrInfoList.size()];
         InstructionHandle[] getNativeTargets = new InstructionHandle[attrInfoList.size()];
         
@@ -267,10 +294,9 @@ public class P6Opaque extends REPR {
         }
         
         /* Finish bind_boxed_attribute. */
-        InstructionHandle bindBoxedTsPos = bindBoxedIl.getStart().getNext().getNext();
         bindBoxedIl.append(InstructionConstants.ALOAD_0);
         if (attrInfoList.size() > 0)
-            bindBoxedTsPos.setInstruction(
+            bindBoxedBIHandle.setInstruction(
                     new TABLESWITCH(bindBoxedMatch, bindBoxedTargets, bindBoxedIl.getEnd()));
         bindBoxedIl.append(InstructionConstants.ALOAD_2);
         bindBoxedIl.append(InstructionFactory.createLoad(Type.STRING, 3));
@@ -279,7 +305,7 @@ public class P6Opaque extends REPR {
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
         if (attrInfoList.size() > 0)
-            bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindBoxedTsPos));
+            bindBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindBoxedBIHandle));
         else
             bindBoxedIl.append(InstructionConstants.RETURN);
         bindBoxedMeth.setMaxStack();
@@ -287,10 +313,9 @@ public class P6Opaque extends REPR {
         bindBoxedIl.dispose();
         
         /* Finish bind_native_attribute. */
-        InstructionHandle bindNativeTsPos = bindNativeIl.getStart().getNext().getNext();
         bindNativeIl.append(InstructionConstants.ALOAD_0);
         if (attrInfoList.size() > 0)
-            bindNativeTsPos.setInstruction(
+            bindNativeBIHandle.setInstruction(
                     new TABLESWITCH(bindNativeMatch, bindNativeTargets, bindNativeIl.getEnd()));
         bindNativeIl.append(InstructionConstants.ALOAD_2);
         bindNativeIl.append(InstructionFactory.createLoad(Type.STRING, 3));
@@ -299,7 +324,7 @@ public class P6Opaque extends REPR {
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
         if (attrInfoList.size() > 0)
-            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindNativeTsPos));
+            bindNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, bindNativeBIHandle));
         else
             bindNativeIl.append(InstructionConstants.RETURN);
         bindNativeMeth.setMaxStack();
@@ -307,10 +332,9 @@ public class P6Opaque extends REPR {
         bindNativeIl.dispose();
         
         /* Finish get_boxed_attribute. */
-        InstructionHandle getBoxedTsPos = getBoxedIl.getStart().getNext().getNext();
         getBoxedIl.append(InstructionConstants.ALOAD_0);
         if (attrInfoList.size() > 0)
-            getBoxedTsPos.setInstruction(
+            getBoxedBIHandle.setInstruction(
                     new TABLESWITCH(getBoxedMatch, getBoxedTargets, getBoxedIl.getEnd()));
         getBoxedIl.append(InstructionConstants.ALOAD_2);
         getBoxedIl.append(InstructionFactory.createLoad(Type.STRING, 3));
@@ -319,7 +343,7 @@ public class P6Opaque extends REPR {
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
         if (attrInfoList.size() > 0)
-            getBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getBoxedTsPos));
+            getBoxedIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getBoxedBIHandle));
         else {
             getBoxedIl.append(InstructionConstants.ACONST_NULL);
             getBoxedIl.append(InstructionConstants.ARETURN);
@@ -329,10 +353,9 @@ public class P6Opaque extends REPR {
         getBoxedIl.dispose();
         
         /* Finish get_native_attribute. */
-        InstructionHandle getNativeTsPos = getNativeIl.getStart().getNext().getNext();
         getNativeIl.append(InstructionConstants.ALOAD_0);
         if (attrInfoList.size() > 0)
-            getNativeTsPos.setInstruction(
+        	getNativeBIHandle.setInstruction(
                     new TABLESWITCH(getNativeMatch, getNativeTargets, getNativeIl.getEnd()));
         getNativeIl.append(InstructionConstants.ALOAD_2);
         getNativeIl.append(InstructionFactory.createLoad(Type.STRING, 3));
@@ -341,7 +364,7 @@ public class P6Opaque extends REPR {
                 new Type[] { Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;"), Type.STRING },
                 Constants.INVOKEVIRTUAL));
         if (attrInfoList.size() > 0)
-            getNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getNativeTsPos));
+            getNativeIl.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, getNativeBIHandle));
         else {
             getNativeIl.append(InstructionConstants.RETURN);
         }
@@ -385,7 +408,24 @@ public class P6Opaque extends REPR {
     	}
     	
     	// If there's a different number of attributes, need to set up delegate.
-    	// TODO
+    	// Note the condition below works because we don't make an entry in the
+    	// class handles list for a type with no attributes.
+    	if (ourREPRData.classHandles.length != targetREPRData.classHandles.length) {
+    		// Create delegate.
+    		SixModelObject delegate = newType.st.REPR.allocate(tc, newType.st);
+    		
+    		// Copy over current attribute values.
+    		Field[] fromFields = obj.getClass().getFields();
+    		Field[] toFields = delegate.getClass().getFields();
+    		try {
+    			for (int i = 3; i < fromFields.length; i++)
+        			toFields[i].set(delegate, fromFields[i].get(obj));
+    		}
+    		catch (IllegalAccessException e) { throw new RuntimeException(e); }
+
+    		// Install.
+    		((P6OpaqueBaseInstance)obj).delegate = delegate;
+    	}
     	
     	// Switch STable over to the new type.
     	obj.st = newType.st;
