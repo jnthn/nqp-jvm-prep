@@ -897,9 +897,19 @@ public final class Ops {
     	}
         
     	// Otherwise, get the code ref.
-    	if (!(invokee instanceof CodeRef))
-            throw new Exception("Can only invoke direct CodeRefs so far");
-        CodeRef cr = (CodeRef)invokee;
+    	CodeRef cr;
+    	if (invokee instanceof CodeRef) {
+    		cr = (CodeRef)invokee;
+    	}
+    	else {
+    		InvocationSpec is = invokee.st.InvocationSpec;
+    		if (is == null)
+    			throw new Exception("Can not invoke this object");
+    		if (is.ClassHandle != null)
+    			cr = (CodeRef)invokee.get_attribute_boxed(tc, is.ClassHandle, is.AttrName, is.Hint);
+    		else
+    			cr = (CodeRef)is.InvocationHandler;
+    	}
         StaticCodeInfo sci = cr.staticInfo;
         
         // Create a new call frame and set caller and callsite.
