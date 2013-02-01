@@ -1413,6 +1413,8 @@ QAST::OperationsJAST.map_classlib_core_op('bindlex_s', $TYPE_OPS, 'bindlex_s', [
 
 # code object related opcodes
 QAST::OperationsJAST.map_classlib_core_op('takeclosure', $TYPE_OPS, 'takeclosure', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getcodeobj', $TYPE_OPS, 'getcodeobj', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('setcodeobj', $TYPE_OPS, 'setcodeobj', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getcodename', $TYPE_OPS, 'getcodename', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('setcodename', $TYPE_OPS, 'setcodename', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
 QAST::OperationsJAST.add_core_op('setstaticlex', -> $qastcomp, $op {
