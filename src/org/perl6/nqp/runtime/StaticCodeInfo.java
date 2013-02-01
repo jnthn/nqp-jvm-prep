@@ -36,11 +36,6 @@ public class StaticCodeInfo {
     public CallFrame priorInvocation;
     
     /**
-     * High level code object, if any.
-     */
-    public SixModelObject codeObject;
-    
-    /**
      * Maximum argument counts by argument type.
      */
     public short oMaxArgs;

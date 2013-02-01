@@ -17,6 +17,11 @@ public class CodeRef extends SixModelObject {
     public CallFrame outer;
     
     /**
+     * High level code object, if any.
+     */
+    public SixModelObject codeObject;
+    
+    /**
      * Sets up the code-ref data structure.
      */
     public CodeRef(CompilationUnit compUnit, int idx, String name, String uniqueId,

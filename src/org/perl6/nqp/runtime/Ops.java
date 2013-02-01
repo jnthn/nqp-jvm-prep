@@ -1726,13 +1726,13 @@ public final class Ops {
     }
     public static SixModelObject getcodeobj(SixModelObject code, ThreadContext tc) {
     	if (code instanceof CodeRef)
-            return ((CodeRef)code).staticInfo.codeObject;
+            return ((CodeRef)code).codeObject;
         else
             throw new RuntimeException("getcodeobj can only be used with a CodeRef");
     }
     public static SixModelObject setcodeobj(SixModelObject code, SixModelObject obj, ThreadContext tc) {
     	if (code instanceof CodeRef) {
-            ((CodeRef)code).staticInfo.codeObject = obj;
+            ((CodeRef)code).codeObject = obj;
             return code;
     	}
         else {
