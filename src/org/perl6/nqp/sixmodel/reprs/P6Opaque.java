@@ -57,9 +57,12 @@ public class P6Opaque extends REPR {
                 for (long j = 0; j < numAttrs; j++) {
                     SixModelObject attrHash = attrs.at_pos_boxed(tc, j);
                     String attrName = attrHash.at_key_boxed(tc, "name").get_str(tc);
+                    SixModelObject attrType = attrHash.at_key_boxed(tc, "type");
+                    if (attrType == null)
+                    	attrType = tc.gc.KnowHOW;
                     indexes.put(attrName, curAttr++);
                     AttrInfo info = new AttrInfo();
-                    info.st = attrHash.at_key_boxed(tc, "type").st;
+                    info.st = attrType.st;
                     if (st.REPR.get_storage_spec(tc, st).inlineable == StorageSpec.INLINED)
                     	flattenedSTables.add(st);
                     else
