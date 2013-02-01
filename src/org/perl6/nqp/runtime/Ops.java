@@ -1008,6 +1008,10 @@ public final class Ops {
         o.st.WHO = who;
         return o;
     }
+    public static SixModelObject rebless(SixModelObject obj, SixModelObject newType, ThreadContext tc) {
+        obj.st.REPR.change_type(tc, obj, newType);
+        return obj;
+    }
     public static SixModelObject create(SixModelObject obj, ThreadContext tc) {
         SixModelObject res = obj.st.REPR.allocate(tc, obj.st);
         res.initialize(tc);
