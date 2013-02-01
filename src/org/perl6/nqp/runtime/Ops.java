@@ -1081,9 +1081,18 @@ public final class Ops {
     	obj.st.TypeCheckCache = cache;
     	return obj;
     }
+    public static SixModelObject setinvokespec(SixModelObject obj, SixModelObject ch,
+    		String name, SixModelObject invocationHandler, ThreadContext tc) {
+    	InvocationSpec is = new InvocationSpec();
+    	is.ClassHandle = ch;
+    	is.AttrName = name;
+    	is.Hint = STable.NO_HINT;
+    	is.InvocationHandler = invocationHandler;
+    	obj.st.InvocationSpec = is;
+    	return obj;
+    }
     public static long isinvokable(SixModelObject obj, ThreadContext tc) {
-    	// TODO: Update when invocation protocol done.
-    	return obj instanceof CodeRef ? 1 : 0;
+    	return obj instanceof CodeRef || obj.st.InvocationSpec != null ? 1 : 0;
     }
     
     /* Box/unbox operations. */

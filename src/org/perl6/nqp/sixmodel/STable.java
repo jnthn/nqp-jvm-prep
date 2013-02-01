@@ -96,6 +96,12 @@ public class STable {
     public ContainerSpec ContainerSpec;
     
     /**
+     * If this is invokable, then this contains information needed to
+     * figure out how to invoke it. If not, it'll be null.
+     */
+    public InvocationSpec InvocationSpec;
+    
+    /**
      * Information - if any - about how we can turn something of this type
      * into a boolean.
      */
