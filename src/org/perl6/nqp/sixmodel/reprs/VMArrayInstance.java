@@ -122,11 +122,13 @@ public class VMArrayInstance extends SixModelObject {
             int i;
     
             /* grow the array */
+            int origElems = elems;
             set_size_internal(tc, elems + n);
     
             /* move elements and set start */
-            memmove(slots, n, 0, elems);
+            memmove(slots, n, 0, origElems);
             start = n;
+            elems = origElems;
             
             /* clear out beginning elements */
             for (i = 0; i < n; i++)
