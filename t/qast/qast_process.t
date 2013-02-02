@@ -21,7 +21,7 @@ plan(2);
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
     run('java',
-        '-cp * ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
+        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
     run('java',
