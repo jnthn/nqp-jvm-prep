@@ -20,15 +20,16 @@ plan(2);
         :classname('QAST2JASTOutput'));
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
-    my $cps := is_windows() ?? ";" !! ":";
     run('java',
-        '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
     run('java',
-        '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
         'QAST2JASTOutput');
-    my $output := pir::spawnw__Is('java -cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar QAST2JASTOutput');
+    my $output := pir::spawnw__Is('java -cp ' ~
+        pathlist('.', 'bin',  '3rdparty/bcel/bcel-5.2.jar') ~
+        ' QAST2JASTOutput');
     my $exit   := pir::shr__Iii($output, 8);
 
     if $exit == $expected-exit {
@@ -62,14 +63,13 @@ plan(2);
                 :classname('QAST2JASTOutput'));
         my $dump := $jast.dump();
         spurt('QAST2JASTOutput.dump', $dump);
-        my $cps := is_windows() ?? ";" !! ":";
         run('java',
-            '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+            '-cp ' ~pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
             'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
             'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
         my $before := pir::time__N;
         run('java',
-            '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+            '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
             'QAST2JASTOutput');
         my $after := pir::time__N;
         my $slept := $after - $before;
