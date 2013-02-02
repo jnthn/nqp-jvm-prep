@@ -81,7 +81,15 @@ sub is_windows() is export {
     pir::interpinfo__Si(30) eq "MSWin32";
 }
 
+sub is_cygcross() is export {
+    pir::interpinfo__Si(30) eq 'cygwin' &&
+        nqp::existskey(pir::new__Ps('Env'), 'CYGCROSS');
+}
+
 sub pathlist(*@paths) is export {
-    my $cps := is_windows() ?? ';' !! ':';
+    my $cps :=
+        is_windows() ?? ';' !!
+        is_cygcross() ?? '\;' !! ':';
+
     nqp::join($cps, @paths);
 }
