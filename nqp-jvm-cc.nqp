@@ -23,9 +23,8 @@ sub MAIN(*@ARGS) {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         my $dump := $jast.dump();
         spurt($name ~ '.dump', $dump);
-        my $cps := is_windows() ?? ";" !! ":";
         run('java',
-            '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+            '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
             'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
             $name ~ '.dump', $name ~ '.class');
         unlink($name ~ '.dump');
@@ -38,9 +37,8 @@ sub MAIN(*@ARGS) {
     $nqpcomp.HOW.add_method($nqpcomp, 'jvm', method ($class, *%adverbs) {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         -> {
-            my $cps := is_windows() ?? ";" !! ":";
             run('java',
-                '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+                '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
                 $name);
             unlink($name ~ '.class');
         }

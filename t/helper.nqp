@@ -6,9 +6,8 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') is export {
     my $c := JAST::Class.new(:name('JASTTest'), :super('java.lang.Object'));
     $jast_maker($c);
     spurt('jastdump.temp', $c.dump());
-    my $cps := is_windows() ?? ";" !! ":";
     run('java',
-        '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'jastdump.temp', 'JASTTest.class');
     # Compile the test program.
@@ -39,13 +38,12 @@ sub qast_test($qast_maker, $expected, $desc = '') is export {
     my $jast := QAST::CompilerJAST.jast($qast_maker(), :classname('QAST2JASTOutput'));
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
-    my $cps := is_windows() ?? ";" !! ":";
     run('java',
-        '-cp bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
     run('java',
-        '-cp .' ~ $cps ~ 'bin' ~ $cps ~ '3rdparty/bcel/bcel-5.2.jar',
+        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
         'QAST2JASTOutput',
         '> QAST2JASTOutput.output');
     my $output := subst(slurp('QAST2JASTOutput.output'), /\r\n/, "\n", :global);
@@ -81,4 +79,9 @@ sub unlink($file) is export {
 
 sub is_windows() is export {
     pir::interpinfo__Si(30) eq "MSWin32";
+}
+
+sub pathlist(*@paths) is export {
+    my $cps := is_windows() ?? ';' !! ':';
+    nqp::join($cps, @paths);
 }
