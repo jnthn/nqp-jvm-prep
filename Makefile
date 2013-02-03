@@ -31,7 +31,7 @@ bin: $(JAVAS)
 	$(PERL) -MExtUtils::Command -e mkpath bin
 	$(JAVAC) -source 1.7 -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
 
-nqplibs: nqp-mo.class ModuleLoader.class NQPCORE.setting.class
+nqplibs: nqp-mo.class ModuleLoader.class NQPCOREJVM.setting.class
 
 nqp-mo.class: crosscomp nqp-src/nqp-mo.pm
 	$(NQP) --setting=NULL --target=pir --output=nqp-mo.pir --stable-sc nqp-src/nqp-mo.pm
@@ -41,7 +41,7 @@ nqp-mo.class: crosscomp nqp-src/nqp-mo.pm
 ModuleLoader.class: crosscomp nqp-src/ModuleLoader.pm
 	$(NQP) nqp-jvm-cc.nqp --setting=NULL --target=classfile --output=ModuleLoader.class nqp-src/ModuleLoader.pm
 
-NQPCORE.setting.class: crosscomp nqp-src/NQPCORE.setting
+NQPCOREJVM.setting.class: crosscomp nqp-src/NQPCORE.setting
 	$(NQP) --setting=NULL --target=pir --output=NQPCOREJVM.setting.pir --stable-sc nqp-src/NQPCORE.setting
 	$(PARROT) -o NQPCOREJVM.setting.pbc NQPCOREJVM.setting.pir
 	$(NQP) nqp-jvm-cc.nqp --setting=NULL --target=classfile --output=NQPCOREJVM.setting.class nqp-src/NQPCORE.setting
