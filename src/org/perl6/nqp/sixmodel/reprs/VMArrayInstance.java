@@ -34,6 +34,14 @@ public class VMArrayInstance extends SixModelObject {
         return 0;
     }
 
+    public void delete_pos(ThreadContext tc, long key) {
+        if (key < 0) key = 0;
+        for (int i = (int)key; i < this.elems - 1; i++) {
+            this.slots[i] = this.slots[i+1];
+        }
+        this.elems--;
+    }
+
     private void set_size_internal(ThreadContext tc, long n) {
         long elems = this.elems;
         long start = this.start;
