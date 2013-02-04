@@ -112,6 +112,9 @@ public abstract class SixModelObject implements Cloneable {
     public long exists_key(ThreadContext tc, String key) {
         throw new RuntimeException("This representation does not implement exists_key");
     }
+    public long exists_pos(ThreadContext tc, long key) {
+        throw new RuntimeException("This representation does not implement exists_key");
+    }
     public void delete_key(ThreadContext tc, String key) {
         throw new RuntimeException("This representation does not implement delete_key");
     }
