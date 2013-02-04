@@ -1254,6 +1254,10 @@ public final class Ops {
     public static long existspos(SixModelObject agg, long key, ThreadContext tc) {
         return agg.exists_pos(tc, key);
     }
+    public static SixModelObject deletepos(SixModelObject agg, long key, ThreadContext tc) {
+        agg.delete_pos(tc, key);
+        return agg;
+    }
     public static long islist(SixModelObject obj, ThreadContext tc) {
         return obj.st.REPR instanceof VMArray ? 1 : 0;
     }
