@@ -1251,6 +1251,9 @@ public final class Ops {
     public static long elems(SixModelObject agg, ThreadContext tc) {
         return agg.elems(tc);
     }
+    public static long existspos(SixModelObject agg, long key, ThreadContext tc) {
+        return agg.exists_pos(tc, key);
+    }
     public static long islist(SixModelObject obj, ThreadContext tc) {
         return obj.st.REPR instanceof VMArray ? 1 : 0;
     }
