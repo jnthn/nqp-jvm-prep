@@ -24,6 +24,16 @@ public class VMArrayInstance extends SixModelObject {
         return slots[start + (int)index];
     }
 
+    public long exists_pos(ThreadContext tc, long key) {
+        if (key < 0) {
+            key += this.elems;
+        }
+        if (key >= 0 && key < this.elems) {
+            return (this.slots[(int)key] != null) ? 1 : 0;
+        }
+        return 0;
+    }
+
     private void set_size_internal(ThreadContext tc, long n) {
         long elems = this.elems;
         long start = this.start;
