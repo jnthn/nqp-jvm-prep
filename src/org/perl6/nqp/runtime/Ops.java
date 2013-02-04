@@ -1466,8 +1466,8 @@ public final class Ops {
     	if (offset >= val.length())
     		return "";
     	int end = (int)(offset + length);
-    	if (end >= val.length())
-    		end = val.length() - 1;
+    	if (end > val.length())
+    		end = val.length();
     	return val.substring((int)offset, end);
     }
 
