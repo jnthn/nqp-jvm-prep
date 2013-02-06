@@ -2,7 +2,7 @@
 
 # Test nqp::op pseudo-functions.
 
-plan(101);
+plan(103);
 
 
 ok( nqp::add_i(5,2) == 7, 'nqp::add_i');
@@ -18,6 +18,8 @@ ok( nqp::div_n(5,2) == 2.5e0, 'nqp::div_n');
 ok( nqp::chars('hello') == 5, 'nqp::chars');
 ok( nqp::concat('hello ', 'world') eq 'hello world', 'nqp::concat');
 ok( nqp::join(' ', ('abc', 'def', 'ghi')) eq 'abc def ghi', 'nqp::join');
+ok( nqp::elems(nqp::split(' ', 'Mary had a little lamb')) == 5, 'nqp::split');
+ok( nqp::elems(nqp::split('\\s', 'Mary had a little lamb')) == 1, 'nqp::split');
 ok( nqp::index('rakudo', 'do') == 4, 'nqp::index found');
 ok( nqp::index('rakudo', 'dont') == -1, 'nqp::index not found');
 ok( nqp::chr(120) eq 'x', 'nqp::chr');

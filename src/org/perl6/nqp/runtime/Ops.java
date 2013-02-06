@@ -10,6 +10,7 @@ import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.*;
@@ -1445,6 +1446,23 @@ public final class Ops {
         }
 
         return sb.toString();
+    }
+    
+    public static SixModelObject split(String delimiter, String string, ThreadContext tc) {
+    	String[] items = string.split(Pattern.quote(delimiter));
+
+        HLLConfig hllConfig = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig;
+        SixModelObject arrayType = hllConfig.slurpyArrayType;
+        SixModelObject array = arrayType.st.REPR.allocate(tc, arrayType.st);
+        array.initialize(tc);
+        
+        array.set_elems(tc, items.length);
+        for (int i = 0; i < items.length; i++) {
+        	SixModelObject str = box_s(items[i], hllConfig.strBoxType, tc);
+        	array.bind_pos_boxed(tc, i, str);
+        }
+        
+        return array;
     }
     
     public static long indexfrom(String string, String pattern, long fromIndex) {
