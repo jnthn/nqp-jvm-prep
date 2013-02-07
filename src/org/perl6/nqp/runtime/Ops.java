@@ -869,25 +869,27 @@ public final class Ops {
     /* Capture related operations. */
     public static SixModelObject usecapture(ThreadContext tc) {
     	CallCaptureInstance cc = tc.savedCC;
+    	CallFrame cf = tc.curFrame;
     	cc.descriptor = tc.curFrame.callSite;
-    	cc.oArg = tc.curFrame.oArg == null ? null : tc.curFrame.oArg.clone();
-    	cc.iArg = tc.curFrame.iArg == null ? null : tc.curFrame.iArg.clone();
-    	cc.nArg = tc.curFrame.nArg == null ? null : tc.curFrame.nArg.clone();
-    	cc.sArg = tc.curFrame.sArg == null ? null : tc.curFrame.sArg.clone();
+    	cc.oArg = cf.proc_oArg == null ? null : cf.proc_oArg.clone();
+    	cc.iArg = cf.caller.iArg == null ? null : cf.caller.iArg.clone();
+    	cc.nArg = cf.caller.nArg == null ? null : cf.caller.nArg.clone();
+    	cc.sArg = cf.caller.sArg == null ? null : cf.caller.sArg.clone();
     	return cc;
     }
     public static SixModelObject savecapture(ThreadContext tc) {
     	SixModelObject CallCapture = tc.gc.CallCapture;
     	CallCaptureInstance cc = (CallCaptureInstance)CallCapture.st.REPR.allocate(tc, CallCapture.st);
+    	CallFrame cf = tc.curFrame;
     	cc.descriptor = tc.curFrame.callSite;
-    	if (tc.curFrame.oArg != null)
-    		cc.oArg = tc.curFrame.oArg.clone();
-    	if (tc.curFrame.iArg != null)
-    		cc.iArg = tc.curFrame.iArg.clone();
-    	if (tc.curFrame.nArg != null)
-    		cc.nArg = tc.curFrame.nArg.clone();
-    	if (tc.curFrame.sArg != null)
-    		cc.sArg = tc.curFrame.sArg.clone();
+    	if (cf.caller.oArg != null)
+    		cc.oArg = cf.caller.oArg.clone();
+    	if (cf.caller.iArg != null)
+    		cc.iArg = cf.caller.iArg.clone();
+    	if (cf.caller.nArg != null)
+    		cc.nArg = cf.caller.nArg.clone();
+    	if (cf.caller.sArg != null)
+    		cc.sArg = cf.caller.sArg.clone();
     	return cc;
     }
     public static long captureposelems(SixModelObject obj, ThreadContext tc) {
@@ -902,13 +904,16 @@ public final class Ops {
     		int i = (int)idx;
     		switch (cc.descriptor.argFlags[i]) {
     		case CallSiteDescriptor.ARG_OBJ:
-    			return cc.oArg[i];
+    			return cc.oArg[cc.descriptor.argIdx[i]];
     		case CallSiteDescriptor.ARG_INT:
-    			return box_i(cc.iArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
+    			return box_i(cc.iArg[cc.descriptor.argIdx[i]],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
     		case CallSiteDescriptor.ARG_NUM:
-    			return box_n(cc.nArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
+    			return box_n(cc.nArg[cc.descriptor.argIdx[i]],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
     		case CallSiteDescriptor.ARG_STR:
-    			return box_s(cc.sArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
+    			return box_s(cc.sArg[cc.descriptor.argIdx[i]],
+    					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     		default:
     			throw new RuntimeException("Invalid positional argument access from capture");
     		}
