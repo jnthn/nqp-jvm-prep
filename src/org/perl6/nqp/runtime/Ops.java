@@ -866,6 +866,58 @@ public final class Ops {
         throw new RuntimeException("Return value coercion NYI");
     }
     
+    /* Capture related operations. */
+    public static SixModelObject usecapture(ThreadContext tc) {
+    	CallCaptureInstance cc = tc.savedCC;
+    	cc.descriptor = tc.curFrame.callSite;
+    	cc.oArg = tc.curFrame.oArg == null ? null : tc.curFrame.oArg.clone();
+    	cc.iArg = tc.curFrame.iArg == null ? null : tc.curFrame.iArg.clone();
+    	cc.nArg = tc.curFrame.nArg == null ? null : tc.curFrame.nArg.clone();
+    	cc.sArg = tc.curFrame.sArg == null ? null : tc.curFrame.sArg.clone();
+    	return cc;
+    }
+    public static SixModelObject savecapture(ThreadContext tc) {
+    	SixModelObject CallCapture = tc.gc.CallCapture;
+    	CallCaptureInstance cc = (CallCaptureInstance)CallCapture.st.REPR.allocate(tc, CallCapture.st);
+    	cc.descriptor = tc.curFrame.callSite;
+    	if (tc.curFrame.oArg != null)
+    		cc.oArg = tc.curFrame.oArg.clone();
+    	if (tc.curFrame.iArg != null)
+    		cc.iArg = tc.curFrame.iArg.clone();
+    	if (tc.curFrame.nArg != null)
+    		cc.nArg = tc.curFrame.nArg.clone();
+    	if (tc.curFrame.sArg != null)
+    		cc.sArg = tc.curFrame.sArg.clone();
+    	return cc;
+    }
+    public static long captureposelems(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof CallCaptureInstance)
+    		return ((CallCaptureInstance)obj).descriptor.numPositionals;
+    	else
+    		throw new RuntimeException("captureposelems requires a CallCapture");
+    }
+    public static SixModelObject captureposarg(SixModelObject obj, long idx, ThreadContext tc) {
+    	if (obj instanceof CallCaptureInstance) {
+    		CallCaptureInstance cc = (CallCaptureInstance)obj;
+    		int i = (int)idx;
+    		switch (cc.descriptor.argFlags[i]) {
+    		case CallSiteDescriptor.ARG_OBJ:
+    			return cc.oArg[i];
+    		case CallSiteDescriptor.ARG_INT:
+    			return box_i(cc.iArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
+    		case CallSiteDescriptor.ARG_NUM:
+    			return box_n(cc.nArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
+    		case CallSiteDescriptor.ARG_STR:
+    			return box_s(cc.sArg[i], tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
+    		default:
+    			throw new RuntimeException("Invalid positional argument access from capture");
+    		}
+    	}
+    	else {
+    		throw new RuntimeException("captureposarg requires a CallCapture");
+    	}
+    }
+    
     /* Invocation. */
     private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
     public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {

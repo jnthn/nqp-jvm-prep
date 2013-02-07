@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.perl6.nqp.sixmodel.KnowHOWBootstrapper;
 import org.perl6.nqp.sixmodel.SerializationContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
 
 public class GlobalContext {
     /**
@@ -63,6 +64,11 @@ public class GlobalContext {
     public SixModelObject ContextRef;
     
     /**
+     * CallCapture type; a basic, method-less type with the CallContext REPR.
+     */
+    public SixModelObject CallCapture;
+    
+    /**
      * The main, startup thread's ThreadContext.
      */
     public ThreadContext mainThread;
@@ -105,7 +111,11 @@ public class GlobalContext {
         
         mainThread = new ThreadContext(this);
         KnowHOWBootstrapper.bootstrap(mainThread);
-        setupConfig(hllConfiguration.get("")); // BOOT* not available earlier.
+        
+        // BOOT* not available earlier; fixup some stuff.
+        setupConfig(hllConfiguration.get(""));
+        mainThread.savedCC = (CallCaptureInstance)CallCapture.st.REPR.allocate(mainThread, CallCapture.st);
+        mainThread.savedCC.initialize(mainThread);
     }
     
     /**

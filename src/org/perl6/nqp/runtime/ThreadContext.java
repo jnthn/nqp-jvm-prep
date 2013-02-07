@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
+
 /**
  * State of a currently running thread.
  */
@@ -45,8 +47,17 @@ public class ThreadContext {
      */
     public LexoticException theLexotic;
     
+    /**
+     * The currently saved capture for custom processing.
+     */
+    public CallCaptureInstance savedCC;
+    
     public ThreadContext(GlobalContext gc) {
         this.gc = gc;
         this.theLexotic = new LexoticException();
+        if (gc.CallCapture != null) {
+        	savedCC = (CallCaptureInstance)gc.CallCapture.st.REPR.allocate(this, gc.CallCapture.st);
+        	savedCC.initialize(this);
+        }
     }
 }

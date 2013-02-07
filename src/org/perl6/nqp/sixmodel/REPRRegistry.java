@@ -42,5 +42,6 @@ public class REPRRegistry {
         addREPR("SCRef", new SCRef());
         addREPR("ContextRef", new ContextRef());
         addREPR("CodeRef", new CodeRefREPR());
+        addREPR("CallCapture", new CallCapture());
     }
 }

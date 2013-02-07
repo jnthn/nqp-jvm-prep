@@ -1178,6 +1178,17 @@ QAST::OperationsJAST.map_classlib_core_op('callercode', $TYPE_OPS, 'callercode',
 QAST::OperationsJAST.map_classlib_core_op('ctxlexpad', $TYPE_OPS, 'ctxlexpad', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('curlexpad', $TYPE_OPS, 'ctx', [], $RT_OBJ, :tc);
 
+# Argument capture processing, for writing things like multi-dispatchers in
+# high level languages.
+QAST::OperationsJAST.map_classlib_core_op('usecapture', $TYPE_OPS, 'usecapture', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('savecapture', $TYPE_OPS, 'savecapture', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposelems', $TYPE_OPS, 'captureposelems', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposarg', $TYPE_OPS, 'captureposarg', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposarg_i', $TYPE_OPS, 'captureposarg_i', [$RT_OBJ, $RT_INT], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposarg_n', $TYPE_OPS, 'captureposarg_n', [$RT_OBJ, $RT_INT], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposarg_s', $TYPE_OPS, 'captureposarg_s', [$RT_OBJ, $RT_INT], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('captureposprimspec', $TYPE_OPS, 'captureposprimspec', [$RT_OBJ, $RT_INT], $RT_INT, :tc);
+
 # Default way to do positional and associative lookups.
 QAST::OperationsJAST.map_classlib_core_op('positional_get', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('positional_bind', $TYPE_OPS, 'bindpos', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);

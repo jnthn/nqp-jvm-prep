@@ -20,6 +20,7 @@ public class KnowHOWBootstrapper {
         tc.gc.BOOTCode = bootType(tc, "BOOTCode", "CodeRef");
         tc.gc.SCRef = bootType(tc, "SCRef", "SCRef");
         tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
+        tc.gc.CallCapture = bootType(tc, "CallCapture", "CallCapture");
         
         Ops.setboolspec(tc.gc.BOOTIter, BoolificationSpec.MODE_ITER, null, tc);
         Ops.setboolspec(tc.gc.BOOTInt, BoolificationSpec.MODE_UNBOX_INT, null, tc);
