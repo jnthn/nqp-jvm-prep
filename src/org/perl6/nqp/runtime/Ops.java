@@ -1111,6 +1111,16 @@ public final class Ops {
     public static long isinvokable(SixModelObject obj, ThreadContext tc) {
     	return obj instanceof CodeRef || obj.st.InvocationSpec != null ? 1 : 0;
     }
+    public static long istype(SixModelObject obj, SixModelObject type, ThreadContext tc) {
+    	/* Just the basic case so far. */
+    	SixModelObject[] cache = obj.st.TypeCheckCache;
+    	if (cache != null) {
+    		for (int i = 0; i < cache.length; i++)
+    			if (cache[i] == type)
+    				return 1;
+    	}
+    	return 0;
+    }
     
     /* Box/unbox operations. */
     public static SixModelObject box_i(long value, SixModelObject type, ThreadContext tc) {

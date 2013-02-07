@@ -1376,6 +1376,7 @@ QAST::OperationsJAST.map_classlib_core_op('isnull', $TYPE_OPS, 'isnull', [$RT_OB
 QAST::OperationsJAST.map_classlib_core_op('isnull_s', $TYPE_OPS, 'isnull_s', [$RT_STR], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('istrue', $TYPE_OPS, 'istrue', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('isfalse', $TYPE_OPS, 'isfalse', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('istype', $TYPE_OPS, 'istype', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('eqaddr', $TYPE_OPS, 'eqaddr', [$RT_OBJ, $RT_OBJ], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('getattr', $TYPE_OPS, 'getattr', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getattr_i', $TYPE_OPS, 'getattr_i', [$RT_OBJ, $RT_OBJ, $RT_STR], $RT_INT, :tc);
