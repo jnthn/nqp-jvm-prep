@@ -306,7 +306,7 @@ my knowhow NQPRoutine {
                 my $param_type := $param.WHAT;
                 my $type_obj := $cur_candidate<types>[$i];
                 my $definedness := $cur_candidate<definednesses>[$i];
-                unless nqp::eqaddr($param_type, $type_obj) || is_narrower_type($param_type, $type_obj) {
+                unless nqp::eqaddr($param_type, $type_obj) || nqp::isnull($type_obj) || is_narrower_type($param_type, $type_obj) {
                     $type_mismatch := 1;
                     last;
                 }
