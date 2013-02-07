@@ -947,7 +947,14 @@ public final class Ops {
     		}
     		throw throwee;
     	}
-        
+    	
+    	// TODO Find a smarter way to do this without all the pointer chasing.
+        if (callsiteIndex >= 0)
+        	invokeInternal(tc, invokee, tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex]);
+        else
+        	invokeInternal(tc, invokee, emptyCallSite);
+    }
+    private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) throws Exception {
     	// Otherwise, get the code ref.
     	CodeRef cr;
     	if (invokee instanceof CodeRef) {
@@ -965,18 +972,11 @@ public final class Ops {
         StaticCodeInfo sci = cr.staticInfo;
         
         // Create a new call frame and set caller and callsite.
-        // TODO Find a smarter way to do this without all the pointer chasing.
         CallFrame cf = new CallFrame();
         cf.tc = tc;
         cf.codeRef = cr;
-        if (callsiteIndex >= 0) {
-            cf.caller = tc.curFrame;
-            cf.callSite = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
-        }
-        else {
-        	cf.caller = tc.curFrame;
-        	cf.callSite = emptyCallSite;
-        }
+        cf.caller = tc.curFrame;
+        cf.callSite = csd;
         
         // Set outer; if it's explicitly in the code ref, use that. If not,
         // go hunting for one. Fall back to outer's prior invocation.
@@ -1035,12 +1035,50 @@ public final class Ops {
         	tc.curFrame = cf.caller;
         }
     }
+    public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
+    	if (capture instanceof CallCaptureInstance) {
+    		CallCaptureInstance cc = (CallCaptureInstance)capture;
+    		
+    		SixModelObject[] oArgOrig = tc.curFrame.oArg;
+    		long[] iArgOrig = tc.curFrame.iArg;
+    		double[] nArgOrig = tc.curFrame.nArg;
+    		String[] sArgOrig = tc.curFrame.sArg;
+    		
+    		try {
+    			tc.curFrame.oArg = cc.oArg;
+    			tc.curFrame.iArg = cc.iArg;
+    			tc.curFrame.nArg = cc.nArg;
+    			tc.curFrame.sArg = cc.sArg;
+    			invokeInternal(tc, invokee, cc.descriptor);
+    			return result_o(tc.curFrame);
+    		}
+    		finally {
+    			tc.curFrame.oArg = oArgOrig;
+    			tc.curFrame.iArg = iArgOrig;
+    			tc.curFrame.nArg = nArgOrig;
+    			tc.curFrame.sArg = sArgOrig;
+    		}
+    	}
+    	else {
+    		throw new RuntimeException("invokewithcapture requires a CallCapture");
+    	}
+    }
     
     /* Lexotic. */
     public static SixModelObject lexotic(long target) {
     	Lexotic res = new Lexotic();
     	res.target = target;
     	return res;
+    }
+    
+    /* Multi-dispatch cache. */
+    public static SixModelObject multicacheadd(SixModelObject cache, SixModelObject capture, SixModelObject result, ThreadContext tc) {
+    	// TODO
+    	return null;
+    }
+    public static SixModelObject multicachefind(SixModelObject cache, SixModelObject capture, ThreadContext tc) {
+    	// TODO
+    	return null;
     }
     
     /* Basic 6model operations. */
