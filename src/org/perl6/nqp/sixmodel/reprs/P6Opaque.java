@@ -29,9 +29,9 @@ public class P6Opaque extends REPR {
     }
     
     @SuppressWarnings("unchecked") // Because Java implemented generics stupidly
-    public void compose(ThreadContext tc, STable st, SixModelObject repr_info) {
-        if (!(repr_info instanceof VMArrayInstance))
-            throw new RuntimeException("P6opaque composition needs a VMArray");
+    public void compose(ThreadContext tc, STable st, SixModelObject repr_info_hash) {
+        /* Get attribute part of the protocol from the hash. */
+    	SixModelObject repr_info = repr_info_hash.at_key_boxed(tc, "attribute");
 
         /* Go through MRO and find all classes with attributes and build up
          * mapping info hashes. Note, reverse order so indexes will match

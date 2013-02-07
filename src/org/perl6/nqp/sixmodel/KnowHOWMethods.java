@@ -127,8 +127,13 @@ public class KnowHOWMethods extends CompilationUnit {
         parent_info.initialize(tc);
         type_info.push_boxed(tc, parent_info);
         
+        /* All of this goes in a hash. */
+        SixModelObject repr_info_hash = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
+        repr_info_hash.initialize(tc);
+        repr_info_hash.bind_key_boxed(tc, "attribute", repr_info);
+        
         /* Compose the representation using it. */
-        type_obj.st.REPR.compose(tc, type_obj.st, repr_info);
+        type_obj.st.REPR.compose(tc, type_obj.st, repr_info_hash);
         
         Ops.return_o(type_obj, tc.curFrame);
     }

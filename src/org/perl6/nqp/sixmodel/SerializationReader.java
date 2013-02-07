@@ -11,7 +11,7 @@ import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
 
 public class SerializationReader {
 	/* The current version of the serialization format. */
-	private final int CURRENT_VERSION = 1;
+	private final int CURRENT_VERSION = 2;
 	
 	/* Various sizes (in bytes). */
 	private final int HEADER_SIZE               = 4 * 16;
