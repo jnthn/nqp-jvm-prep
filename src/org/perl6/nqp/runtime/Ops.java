@@ -1,20 +1,33 @@
 package org.perl6.nqp.runtime;
 
-import java.math.BigInteger;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
-import org.perl6.nqp.sixmodel.*;
-import org.perl6.nqp.sixmodel.reprs.*;
+import org.perl6.nqp.sixmodel.BoolificationSpec;
+import org.perl6.nqp.sixmodel.InvocationSpec;
+import org.perl6.nqp.sixmodel.REPRRegistry;
+import org.perl6.nqp.sixmodel.STable;
+import org.perl6.nqp.sixmodel.SerializationContext;
+import org.perl6.nqp.sixmodel.SerializationReader;
+import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.StorageSpec;
+import org.perl6.nqp.sixmodel.TypeObject;
+import org.perl6.nqp.sixmodel.reprs.ContextRefInstance;
+import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
+import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMArrayInstance;
+import org.perl6.nqp.sixmodel.reprs.VMHash;
+import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
+import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
 
 /**
  * Contains complex operations that are more involved that the simple ops that the
@@ -1449,19 +1462,44 @@ public final class Ops {
     }
     
     public static SixModelObject split(String delimiter, String string, ThreadContext tc) {
-    	String[] items = string.split(Pattern.quote(delimiter));
+
+        if (string == null || delimiter == null) {
+            return null;
+        }
 
         HLLConfig hllConfig = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig;
         SixModelObject arrayType = hllConfig.slurpyArrayType;
         SixModelObject array = arrayType.st.REPR.allocate(tc, arrayType.st);
         array.initialize(tc);
-        
-        array.set_elems(tc, items.length);
-        for (int i = 0; i < items.length; i++) {
-        	SixModelObject str = box_s(items[i], hllConfig.strBoxType, tc);
-        	array.bind_pos_boxed(tc, i, str);
+
+        int slen = string.length();
+        if (slen == 0) {
+            return array;
         }
-        
+
+        int dlen = delimiter.length();
+        if (dlen == 0) {
+            for (int i = 0; i < slen; i++) {
+                String item = string.substring(i, i+1);
+                SixModelObject value = box_s(item, hllConfig.strBoxType, tc);
+                array.push_boxed(tc, value);
+            }
+        } else {
+            int curpos = 0;
+            int matchpos = string.indexOf(delimiter);
+            while (matchpos > -1) {
+                String item = string.substring(curpos, matchpos);
+                SixModelObject value = box_s(item, hllConfig.strBoxType, tc);
+                array.push_boxed(tc, value);
+
+                curpos = matchpos + dlen;
+                matchpos = string.indexOf(delimiter,  curpos);
+            }
+
+            String tail = string.substring(curpos);
+            SixModelObject value = box_s(tail, hllConfig.strBoxType, tc);
+            array.push_boxed(tc, value);
+        }        
         return array;
     }
     
