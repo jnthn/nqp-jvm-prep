@@ -279,6 +279,7 @@ public class SerializationReader {
 			sc.root_codes.add(closure);
 			
 			/* See if there's a code object we need to attach. */
+			orig.position(orig.position() + 4);
 			if (orig.getInt() != 0)
 				closure.codeObject = readObjRef();
 		}
