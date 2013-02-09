@@ -29,7 +29,7 @@ public class VMArrayInstance extends SixModelObject {
             key += this.elems;
         }
         if (key >= 0 && key < this.elems) {
-            return (this.slots[(int)key] != null) ? 1 : 0;
+            return (this.slots[start + (int)key] != null) ? 1 : 0;
         }
         return 0;
     }
