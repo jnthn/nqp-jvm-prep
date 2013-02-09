@@ -2,7 +2,7 @@
 
 # Test nqp::op pseudo-functions.
 
-plan(101);
+plan(102);
 
 
 ok( nqp::add_i(5,2) == 7, 'nqp::add_i');
@@ -140,3 +140,8 @@ ok(!nqp::existspos(@arr, -2), 'existspos with missing pos');
 ok(!nqp::existspos(@arr, -100), 'existspos with absurd values');
 @arr[1] := NQPMu;
 ok(nqp::existspos(@arr, 1), 'existspos with still existing pos');
+
+my @yarr;
+@yarr[1] := 1;
+nqp::shift(@yarr);
+ok(nqp::existspos(@yarr, 0), 'existspos works ok after shift');
