@@ -48,15 +48,15 @@ class QRegex::NFA {
         $id;
     }
 
-#    method addedge(int $from, int $to, $action, $value, :$newedge = 1) {
-#        $!edges := 1 if $newedge;
-#        $to := self.addstate() if $to < 0;
-#        my $st := $!states[$from];
-#        nqp::push($st, $action);
-#        nqp::push($st, nqp::istype($value, QAST::SVal) ?? $value.value !! $value);
-#        nqp::push($st, $to);
-#        $to;
-#    }
+    method addedge(int $from, int $to, $action, $value, :$newedge = 1) {
+        $!edges := 1 if $newedge;
+        $to := self.addstate() if $to < 0;
+        my $st := $!states[$from];
+        nqp::push($st, $action);
+        nqp::push($st, nqp::istype($value, QAST::SVal) ?? $value.value !! $value);
+        nqp::push($st, $to);
+        $to;
+    }
 
     method states() { $!states }
 
@@ -291,35 +291,35 @@ class QRegex::NFA {
         $!states
     }
 
-#    method mergesubrule(int $start, int $to, $fate, $cursor, str $name, %caller_seen?) {
-#        #nqp::say("adding $name");
-#        my %seen := nqp::clone(%caller_seen);
-#        my @substates;
-#        if nqp::can($cursor, $name) {
-#            if !nqp::existskey(%seen, $name) {
-#                my $meth := $cursor.HOW.find_method($cursor, $name, :no_trace(1));
-#                @substates := $meth.NFA() if nqp::can($meth, 'NFA');
-#                @substates := [] if nqp::isnull(@substates);
-#            }
-#            if !@substates && !nqp::existskey(%seen, $name) {
-#                # Maybe it's a protoregex, in which case states are an alternation
-#                # of all of the possible rules.
-#                my %protorx      := $cursor.HOW.cache($cursor, "!protoregex_table", { $cursor."!protoregex_table"() });
-#                my $nfa          := QRegex::NFA.new;
-#                my int $gotmatch := 0;
-#                if nqp::existskey(%protorx, $name) {
-#                    for %protorx{$name} -> $rxname {
-#                        $nfa.addedge(1, 0, $EDGE_SUBRULE, $rxname);
-#                        $gotmatch := 1;
-#                    }
-#                }
-#                @substates := $nfa.states() if $gotmatch;
-#            }
-#        }
-#        %seen{$name} := 1;
-#        self.mergesubstates($start, $to, $fate, @substates, $cursor, %seen);
-#    }
-#    
+    method mergesubrule(int $start, int $to, $fate, $cursor, str $name, %caller_seen?) {
+        #nqp::say("adding $name");
+        my %seen := nqp::clone(%caller_seen);
+        my @substates;
+        if nqp::can($cursor, $name) {
+            if !nqp::existskey(%seen, $name) {
+                my $meth := $cursor.HOW.find_method($cursor, $name, :no_trace(1));
+                @substates := $meth.NFA() if nqp::can($meth, 'NFA');
+                @substates := [] if nqp::isnull(@substates);
+            }
+            if !@substates && !nqp::existskey(%seen, $name) {
+                # Maybe it's a protoregex, in which case states are an alternation
+                # of all of the possible rules.
+                my %protorx      := $cursor.HOW.cache($cursor, "!protoregex_table", { $cursor."!protoregex_table"() });
+                my $nfa          := QRegex::NFA.new;
+                my int $gotmatch := 0;
+                if nqp::existskey(%protorx, $name) {
+                    for %protorx{$name} -> $rxname {
+                        $nfa.addedge(1, 0, $EDGE_SUBRULE, $rxname);
+                        $gotmatch := 1;
+                    }
+                }
+                @substates := $nfa.states() if $gotmatch;
+            }
+        }
+        %seen{$name} := 1;
+        self.mergesubstates($start, $to, $fate, @substates, $cursor, %seen);
+    }
+    
     method mergesubstates($start, $to, $fate, @substates, $cursor, %seen?) {
         if @substates {
             # create an empty end state for the subrule's NFA
@@ -388,50 +388,50 @@ class QRegex::NFA {
         $!generic
     }
     
-#    method instantiate_generic($env) {
-#        # Create a copy.
-#        my $copy := nqp::create(self);
-#        my @copied_states;
-#        for $!states -> @values {
-#            nqp::push(@copied_states, nqp::clone(@values));
-#        }
-#        nqp::bindattr($copy, QRegex::NFA, '$!states', @copied_states);
-#        nqp::bindattr($copy, QRegex::NFA, '$!edges', $!edges);
-#     
-#        # Work out what we need to do to instantiate it by replacing any
-#        # generic edges.
-#        my int $from := 0;
-#        for @copied_states -> @values {        
-#            my @output_values;
-#            my int $i := 0;
-#            my int $n := nqp::elems(@values);
-#            while $i < $n {
-#                my $act := @values[$i];
-#                my $arg := @values[$i + 1];
-#                my $to  := @values[$i + 2];
-#                if $act == $EDGE_GENERIC_VAR {
-#                    if nqp::existskey($env, $arg) {
-#                        $copy.literal(
-#                            QAST::Regex.new( :rxtype('literal'), nqp::atkey($env, $arg) ),
-#                            $from, $to);
-#                        @values[$i] := $EDGE_EPSILON;
-#                        @values[$i + 1] := 0;
-#                        @values[$i + 2] := 0;
-#                    }
-#                    else {
-#                        @values[$i] := $EDGE_FATE;
-#                        @values[$i + 1] := 0;
-#                        @values[$i + 2] := 0;
-#                    }
-#                }
-#                $i := $i + 3;
-#            }
-#            $from++;
-#        }
-#        
-#        $copy
-#    }
-#
+    method instantiate_generic($env) {
+        # Create a copy.
+        my $copy := nqp::create(self);
+        my @copied_states;
+        for $!states -> @values {
+            nqp::push(@copied_states, nqp::clone(@values));
+        }
+        nqp::bindattr($copy, QRegex::NFA, '$!states', @copied_states);
+        nqp::bindattr($copy, QRegex::NFA, '$!edges', $!edges);
+     
+        # Work out what we need to do to instantiate it by replacing any
+        # generic edges.
+        my int $from := 0;
+        for @copied_states -> @values {        
+            my @output_values;
+            my int $i := 0;
+            my int $n := nqp::elems(@values);
+            while $i < $n {
+                my $act := @values[$i];
+                my $arg := @values[$i + 1];
+                my $to  := @values[$i + 2];
+                if $act == $EDGE_GENERIC_VAR {
+                    if nqp::existskey($env, $arg) {
+                        $copy.literal(
+                            QAST::Regex.new( :rxtype('literal'), nqp::atkey($env, $arg) ),
+                            $from, $to);
+                        @values[$i] := $EDGE_EPSILON;
+                        @values[$i + 1] := 0;
+                        @values[$i + 2] := 0;
+                    }
+                    else {
+                        @values[$i] := $EDGE_FATE;
+                        @values[$i + 1] := 0;
+                        @values[$i + 2] := 0;
+                    }
+                }
+                $i := $i + 3;
+            }
+            $from++;
+        }
+        
+        $copy
+    }
+
 #    method __dump($dumper, $label) {
 #        my $subindent := $dumper.'newIndent'();
 #        print('[');
@@ -445,9 +445,9 @@ class QRegex::NFA {
 #    }
 }
 
-#INIT {
-#    NQPRegex.SET_NFA_TYPE(QRegex::NFA);
-#}
+INIT {
+    NQPRegex.SET_NFA_TYPE(QRegex::NFA);
+}
 # From src\QRegex\Cursor.nqp
 
 # Some things that all cursors involved in a given parse share.
@@ -702,23 +702,23 @@ role NQPCursorRole is export {
 #        }
 #        $cur // self."!cursor_start_cur"();
 #    }
-#
-#    method !protoregex_nfa($name) {
-#        my %protorx := self.HOW.cache(self, "!protoregex_table", { self."!protoregex_table"() });
-#        my $nfa := QRegex::NFA.new;
-#        my @fates := $nfa.states[0];
-#        my int $start := 1;
-#        my int $fate := 0;
-#        if nqp::existskey(%protorx, $name) {
-#            for %protorx{$name} -> $rxname {
-#                $fate := $fate + 1;
-#                @fates[$fate] := $rxname;
-#                $nfa.mergesubrule($start, 0, $fate, self, $rxname);
-#            }
-#        }
-#        $nfa;
-#    }
-#
+
+    method !protoregex_nfa($name) {
+        my %protorx := self.HOW.cache(self, "!protoregex_table", { self."!protoregex_table"() });
+        my $nfa := QRegex::NFA.new;
+        my @fates := $nfa.states[0];
+        my int $start := 1;
+        my int $fate := 0;
+        if nqp::existskey(%protorx, $name) {
+            for %protorx{$name} -> $rxname {
+                $fate := $fate + 1;
+                @fates[$fate] := $rxname;
+                $nfa.mergesubrule($start, 0, $fate, self, $rxname);
+            }
+        }
+        $nfa;
+    }
+
     method !protoregex_table() {
         my %protorx;
         for self.HOW.methods(self) -> $meth {
@@ -746,19 +746,19 @@ role NQPCursorRole is export {
         $nfa.run_alt(nqp::getattr_s($shared, ParseShared, '$!target'), $pos, $!bstack, $!cstack, @labels);
     }
 
-#    method !alt_nfa($regex, str $name) {
-#        my $nfa := QRegex::NFA.new;
-#        my @fates := $nfa.states[0];
-#        my int $start := 1;
-#        my int $fate := 0;
-#        for $regex.ALT_NFA($name) {
-#            @fates[$fate] := $fate;
-#            $nfa.mergesubstates($start, 0, $fate, $_, self);
-#            $fate++;
-#        }
-#        $nfa
-#    }
-#
+    method !alt_nfa($regex, str $name) {
+        my $nfa := QRegex::NFA.new;
+        my @fates := $nfa.states[0];
+        my int $start := 1;
+        my int $fate := 0;
+        for $regex.ALT_NFA($name) {
+            @fates[$fate] := $fate;
+            $nfa.mergesubstates($start, 0, $fate, $_, self);
+            $fate++;
+        }
+        $nfa
+    }
+
     method !precompute_nfas() {
         # Pre-compute all of the proto-regex NFAs.
         my %protorx := self.HOW.cache(self, "!protoregex_table", { self."!protoregex_table"() });

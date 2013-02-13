@@ -42,8 +42,8 @@ class QAST::Node {
 
     method new(*@children, *%options) {
         my $new := self.CREATE();
-#        nqp::bindattr($new, QAST::Node, '@!array', @children);
-#        nqp::bindattr($new, QAST::Node, '%!hash', nqp::hash());
+        nqp::bindattr($new, QAST::Node, '@!array', @children);
+        nqp::bindattr($new, QAST::Node, '%!hash', nqp::hash());
         for %options {
 #            nqp::findmethod($new, $_.key)($new, $_.value);
         }
@@ -54,33 +54,33 @@ class QAST::Node {
     method returns(*@value)    { $!returns := @value[0] if @value; $!returns }
     method arity(*@value)      { $!arity := @value[0] if @value; $!arity }
     
-#    method named(*@value) {
-#        if @value {
-#            self.HOW.mixin(self, QAST::SpecialArg);
-#            self.named(@value[0]);
-#        }
-#        else {
-#            ""
-#        }
-#    }
-#    method flat(*@value) {
-#        if @value {
-#            self.HOW.mixin(self, QAST::SpecialArg);
-#            self.flat(@value[0]);
-#        }
-#        else {
-#            0
-#        }
-#    }
-#    
-#    method has_compile_time_value() {
-#        0
-#    }
-#    
-#    method set_compile_time_value($value) {
-#        self.HOW.mixin(self, QAST::CompileTimeValue);
-#        self.set_compile_time_value($value);
-#    }
+    method named(*@value) {
+        if @value {
+            self.HOW.mixin(self, QAST::SpecialArg);
+            self.named(@value[0]);
+        }
+        else {
+            ""
+        }
+    }
+    method flat(*@value) {
+        if @value {
+            self.HOW.mixin(self, QAST::SpecialArg);
+            self.flat(@value[0]);
+        }
+        else {
+            0
+        }
+    }
+    
+    method has_compile_time_value() {
+        0
+    }
+    
+    method set_compile_time_value($value) {
+        self.HOW.mixin(self, QAST::CompileTimeValue);
+        self.set_compile_time_value($value);
+    }
     
     method hash()          { %!hash }
     method list()          { @!array }
@@ -99,7 +99,7 @@ class QAST::Node {
     
     method shallow_clone() {
         my $clone := nqp::clone(self);
-#        nqp::bindattr($clone, QAST::Node, '@!array', nqp::clone(@!array));
+        nqp::bindattr($clone, QAST::Node, '@!array', nqp::clone(@!array));
         $clone
     }
     
@@ -133,15 +133,15 @@ class QAST::Node {
 
     method dump_children(int $indent, @onto) {
         for @!array {
-#            if nqp::istype($_, QAST::Node) {
-#                nqp::push(@onto, $_.dump($indent));
-#            }
-#            else {
-#                nqp::push(@onto, nqp::x(' ', $indent));
-#                nqp::push(@onto, '- ');
-#                nqp::push(@onto, ~$_);
-#                nqp::push(@onto, "\n");
-#            }
+            if nqp::istype($_, QAST::Node) {
+                nqp::push(@onto, $_.dump($indent));
+            }
+            else {
+                nqp::push(@onto, nqp::x(' ', $indent));
+                nqp::push(@onto, '- ');
+                nqp::push(@onto, ~$_);
+                nqp::push(@onto, "\n");
+            }
         }
     }
 
@@ -360,9 +360,9 @@ class QAST::VM is QAST::Node {
     
     method new(*@children, *%alternatives) {
         my $obj := nqp::create(self);
-#        nqp::bindattr($obj, QAST::Node, '@!array', @children);
-#        nqp::bindattr($obj, QAST::Node, '%!hash', nqp::hash());
-#        nqp::bindattr($obj, QAST::VM, '%!alternatives', %alternatives);
+        nqp::bindattr($obj, QAST::Node, '@!array', @children);
+        nqp::bindattr($obj, QAST::Node, '%!hash', nqp::hash());
+        nqp::bindattr($obj, QAST::VM, '%!alternatives', %alternatives);
         $obj
     }
     
