@@ -3134,6 +3134,34 @@ class QAST::CompilerJAST {
         self.as_jast($qast, :want($RT_VOID)).jast
     }
     
+    method enumcharlist($node) {
+        my $il := JAST::InstructionList.new();
+        
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
+        
+        $il.append(JAST::PushSVal.new( :value($node[0]) ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('invokevirtual'),
+            $TYPE_STR, 'charAt', 'Char', 'Integer' ));
+        $il.append(JAST::Instruction.new( :op('invokevirtual'),
+            $TYPE_STR, 'indexOf', 'Integer', 'Integer' ));
+        $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifge' !! 'iflt'), %*REG<fail> ));
+        
+        unless $node.subtype eq 'zerowidth' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('ladd') ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        }
+        
+        $il;
+    }
+    
     method literal($node) {
         my $il := JAST::InstructionList.new();
         my $litconst := $node[0];
