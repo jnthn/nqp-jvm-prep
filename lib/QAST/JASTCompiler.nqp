@@ -13,6 +13,7 @@ my $TYPE_OPS  := 'Lorg/perl6/nqp/runtime/Ops;';
 my $TYPE_CSD  := 'Lorg/perl6/nqp/runtime/CallSiteDescriptor;';
 my $TYPE_SMO  := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR  := 'Ljava/lang/String;';
+my $TYPE_OBJ  := 'Ljava/lang/Object;';
 my $TYPE_MATH := 'Ljava/lang/Math;';
 my $TYPE_EX_NEXT := 'Lorg/perl6/nqp/runtime/NextControlException;';
 my $TYPE_EX_REDO := 'Lorg/perl6/nqp/runtime/RedoControlException;';
@@ -2959,6 +2960,230 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('dup') ));
         $il.append(JAST::Instruction.new( :op('invokespecial'), $type, '<init>', 'Void' ));
         $il.append(JAST::Instruction.new( :op('athrow') ));
+    }
+    
+    multi method as_jast(QAST::Regex $node, :$want) {
+        # build the list of (unique) locals we need
+        my %*REG;
+        my $prefix := self.unique('rx') ~ '_';
+        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i');
+        while $reglist {
+            my $reg := nqp::shift($reglist);
+            my $tc := nqp::shift($reglist);
+            my $type := $tc eq 'i' ?? int !! $tc eq 's' ?? str !! NQPMu;
+            %*REG{$reg} := $prefix ~ $reg;
+            $*BLOCK.add_local(QAST::Var.new( :name($prefix ~ $reg), :scope('local'), :returns($type), :decl('var') ));
+        }
+
+        # create our labels
+        my $startlabel   := JAST::Label.new( :name($prefix ~ 'start') );
+        my $endlabel     := JAST::Label.new( :name($prefix ~ 'end') );
+        my $donelabel    := JAST::Label.new( :name($prefix ~ 'done') );
+        my $restartlabel := JAST::Label.new( :name($prefix ~ 'restart') );
+        my $faillabel    := JAST::Label.new( :name($prefix ~ 'fail') );
+        my $jumplabel    := JAST::Label.new( :name($prefix ~ 'jump' ));
+        my $cutlabel     := JAST::Label.new( :name($prefix ~ 'cut') );
+        my $cstacklabel  := JAST::Label.new( :name($prefix ~ 'cstack_done') );
+        %*REG<fail>      := $faillabel;
+
+        # common prologue
+        my $il := JAST::InstructionList.new();
+        my $csa_res := self.as_jast(QAST::Stmt.new(
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('!cursor_start_all'),
+                    QAST::Var.new( :name('self'), :scope('local') )
+                )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name("\$\xa2"), :scope('lexical') ),
+                QAST::Op.new(
+                    :op('bind'),
+                    QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                        QAST::IVal.new( :value(0) )
+                    ))),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) ),
+                QAST::Op.new(
+                    :op('unbox_i'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                        QAST::IVal.new( :value(2) )
+                    ))),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<curclass>), :scope('local') ),
+                QAST::Op.new(
+                    :op('atpos'),
+                    QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                    QAST::IVal.new( :value(3) )
+                )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<bstack>), :scope('local') ),
+                QAST::Op.new(
+                    :op('atpos'),
+                    QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                    QAST::IVal.new( :value(4) )
+                )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<restart>), :scope('local'), :returns(int) ),
+                QAST::Op.new(
+                    :op('unbox_i'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                        QAST::IVal.new( :value(5) )
+                    ))),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<tgt>), :scope('local'), :returns(str) ),
+                QAST::Op.new(
+                    :op('unbox_s'),
+                    QAST::Op.new(
+                        :op('atpos'),
+                        QAST::Var.new( :name(%*REG<start>), :scope('local') ),
+                        QAST::IVal.new( :value(1) )
+                    )))));
+        $il.append($csa_res.jast);
+        $*STACK.obtain($csa_res);
+        $il.append(JAST::Instruction.new( :op('invokestatic'),
+            $TYPE_OPS, 'chars', 'Long', $TYPE_STR ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<eos> ));
+        #$ops.push_pirop('eq', '$I19', 1, $restartlabel);
+        #$ops.push_pirop('gt', %*REG<pos>, %*REG<eos>, %*REG<fail>);
+        
+        # Compile the regex body itself; if we make it thorugh it, we go to
+        # the end and are finished.
+        $il.append(self.regex_jast($node));
+        $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
+        
+        # Restart.
+        #$ops.push($restartlabel);
+        #$ops.push_pirop('repr_get_attr_obj', %*REG<cstack>, %*REG<cur>, %*REG<curclass>, '"$!cstack"');
+        
+        # Failure handling.
+        $il.append($faillabel);
+        emit_throw($il); # We don't handle failure/backtracking yet...
+        #$ops.push_pirop('unless', %*REG<bstack>, $donelabel);
+        #$ops.push_pirop('pop', '$I19', %*REG<bstack>);
+        #$ops.push_pirop('if_null', %*REG<cstack>, $cstacklabel);
+        #$ops.push_pirop('unless', %*REG<cstack>, $cstacklabel);
+        #$ops.push_pirop('dec', '$I19');
+        #$ops.push_pirop('set', '$P11', %*REG<cstack> ~ '[$I19]');
+        #$ops.push($cstacklabel);
+        #$ops.push_pirop('pop', %*REG<rep>, %*REG<bstack>);
+        #$ops.push_pirop('pop', %*REG<pos>, %*REG<bstack>);
+        #$ops.push_pirop('pop', '$I19', %*REG<bstack>);
+        #$ops.push_pirop('lt', %*REG<pos>, -1, $donelabel);
+        #$ops.push_pirop('lt', %*REG<pos>, 0, $faillabel);
+        #$ops.push_pirop('eq', '$I19', 0, $faillabel);
+        
+        # Backtrack the cursor stack
+        #$ops.push_pirop('nqp_islist', '$I20', %*REG<cstack>);
+        #$ops.push_pirop('unless', '$I20', $jumplabel);
+        #$ops.push_pirop('elements', '$I18', %*REG<bstack>);
+        #$ops.push_pirop('le', '$I18', 0, $cutlabel);
+        #$ops.push_pirop('dec', '$I18');
+        #$ops.push_pirop('set', '$I18', %*REG<bstack>~'[$I18]');
+        #$ops.push($cutlabel);
+        #$ops.push_pirop('assign', %*REG<cstack>, '$I18');
+        #$ops.push($jumplabel);
+        #$ops.push_pirop('jump', '$I19');
+        #$ops.push($donelabel);
+        #$ops.push_pirop('callmethod', '"!cursor_fail"', %*REG<cur>);
+
+        # Evaluate to the curosr.
+        $il.append($endlabel);
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        result($il, $RT_OBJ)
+    }
+
+    method regex_jast($node) {
+        my $rxtype := $node.rxtype() || 'concat';
+        self."$rxtype"($node);
+    }    
+
+    method concat($node) {
+        my $il := JAST::InstructionList.new();
+        for $node.list {
+            $il.append(self.regex_jast($_))
+        }
+        $il
+    }
+
+    method conj($node) { self.conjseq($node) }
+    
+    method literal($node) {
+        my $il := JAST::InstructionList.new();
+        my $litconst := $node[0];
+        $litconst := nqp::lc($litconst)
+            if $node.subtype eq 'ignorecase';
+        my $litlen := nqp::chars($litconst);
+        
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value($litlen) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifgt'), %*REG<fail> ));
+        
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::PushIndex.new( :value($litlen) ));
+        $il.append(JAST::Instruction.new( :op('iadd') ));
+        $il.append(JAST::Instruction.new( :op('invokevirtual'),
+            $TYPE_STR, 'substring', $TYPE_STR, 'Integer', 'Integer' ));
+        $il.append(JAST::PushSVal.new( :value($litconst) ));
+        if $node.subtype eq 'ignorecase' {
+            $il.append(JAST::Instruction.new( :op('invokevirtual'),
+                $TYPE_STR, 'equalsIgnoreCase', 'Z', $TYPE_STR ));
+        }
+        else {
+            $il.append(JAST::Instruction.new( :op('invokevirtual'),
+                $TYPE_STR, 'equals', 'Z', $TYPE_OBJ ));
+        }
+        $il.append(JAST::Instruction.new( :op('ifeq'), %*REG<fail> ));
+        
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value($litlen) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        
+        $il;
+    }
+    
+    method pass($node) {
+        my $qast := QAST::Op.new(
+            :op('callmethod'), :name('!cursor_pass'),
+            QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+            QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) )
+        );
+        if $node.name() {
+            $qast.push(QAST::SVal.new( :value($node.name()) ));
+        }
+        elsif +@($node) == 1 {
+            $qast.push($node[0]);
+        }
+        if $node.backtrack ne 'r' {
+            $qast.push(QAST::IVal.new( :value(1), :named('backtrack') ));
+        }
+        self.as_jast($qast, :want($RT_VOID)).jast
+    }
+    
+    method scan($node) {
+        # XXX TODO: Actually implement it.
+        JAST::InstructionList.new()
     }
     
     multi method as_jast($unknown, :$want) {
