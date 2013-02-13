@@ -3124,6 +3124,65 @@ class QAST::CompilerJAST {
 
     method conj($node) { self.conjseq($node) }
     
+    my %cclass_code;
+    INIT {
+        # Codes match constants in Ops.java.
+        %cclass_code<.>  := 0;
+        %cclass_code<d>  := 1;
+        %cclass_code<s>  := 2;
+        %cclass_code<w>  := 3;
+        %cclass_code<n>  := 4;
+        %cclass_code<nl> := 4;
+    }
+
+    method cclass($node) {
+        my $il := JAST::InstructionList.new();
+        
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
+        
+        my $subtype := nqp::lc($node.subtype);
+        self.panic("Unrecognized subtype '$subtype' in QAST::Regex cclass")
+            unless nqp::existskey(%cclass_code, $subtype);
+        my $cclass := %cclass_code{$subtype};
+        if $subtype ne '.' {
+            $il.append(JAST::PushIVal.new( :value($cclass) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifne' !! 'ifeq'), %*REG<fail> ));
+            
+            if $subtype eq 'nl' {
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+                $il.append(JAST::Instruction.new( :op('l2i') ));
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::PushIndex.new( :value(2) ));
+                $il.append(JAST::Instruction.new( :op('iadd') ));
+                $il.append(JAST::Instruction.new( :op('invokevirtual'),
+                    $TYPE_STR, 'substring', $TYPE_STR, 'Integer', 'Integer' ));
+                $il.append(JAST::PushSVal.new( :value("\r\n") ));
+                $il.append(JAST::Instruction.new( :op('invokevirtual'),
+                    $TYPE_STR, 'equals', 'Z', $TYPE_OBJ ));
+                $il.append(JAST::Instruction.new( :op('i2l') ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+                $il.append(JAST::Instruction.new( :op('ladd') ));
+                $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+            } 
+        }
+        
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        
+        $il
+    }
+    
     method dba($node) {
         my $qast := QAST::Op.new(
             :op('callmethod'), :name('!dba'),
