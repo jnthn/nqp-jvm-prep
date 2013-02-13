@@ -1136,6 +1136,15 @@ public final class Ops {
     public static SixModelObject bootarray(ThreadContext tc) {
         return tc.gc.BOOTArray;
     }
+    public static SixModelObject bootintarray(ThreadContext tc) {
+        return tc.gc.BOOTIntArray;
+    }
+    public static SixModelObject bootnumarray(ThreadContext tc) {
+        return tc.gc.BOOTNumArray;
+    }
+    public static SixModelObject bootstrarray(ThreadContext tc) {
+        return tc.gc.BOOTStrArray;
+    }
     public static SixModelObject boothash(ThreadContext tc) {
         return tc.gc.BOOTHash;
     }

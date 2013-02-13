@@ -310,6 +310,110 @@ QAST::OperationsJAST.add_core_op('list', -> $qastcomp, $op {
         $arr
     }
 });
+QAST::OperationsJAST.add_core_op('list_i', -> $qastcomp, $op {
+    # Just desugar to create the empty list.
+    my $arr := $qastcomp.as_jast(QAST::Op.new(
+        :op('create'),
+        QAST::Op.new( :op('bootintarray') )
+    ));
+    if +$op.list {
+        # Put list into a temporary so we can push to it.
+        my $il := JAST::InstructionList.new();
+        $il.append($arr.jast);
+        $*STACK.obtain($arr);
+        my $list_tmp := $*TA.fresh_o();
+        $il.append(JAST::Instruction.new( :op('astore'), $list_tmp ));
+        
+        # Push things to the list.
+        for $op.list {
+            my $item := $qastcomp.as_jast($_, :want($RT_INT));
+            $il.append($item.jast);
+            $*STACK.obtain($item);
+            $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+            $il.append(JAST::Instruction.new( :op('dup_x2') ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('pop2') ));
+        }
+        
+        $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+        result($il, $RT_OBJ);
+    }
+    else {
+        $arr
+    }
+});
+QAST::OperationsJAST.add_core_op('list_n', -> $qastcomp, $op {
+    # Just desugar to create the empty list.
+    my $arr := $qastcomp.as_jast(QAST::Op.new(
+        :op('create'),
+        QAST::Op.new( :op('bootnumarray') )
+    ));
+    if +$op.list {
+        # Put list into a temporary so we can push to it.
+        my $il := JAST::InstructionList.new();
+        $il.append($arr.jast);
+        $*STACK.obtain($arr);
+        my $list_tmp := $*TA.fresh_o();
+        $il.append(JAST::Instruction.new( :op('astore'), $list_tmp ));
+        
+        # Push things to the list.
+        for $op.list {
+            my $item := $qastcomp.as_jast($_, :want($RT_NUM));
+            $il.append($item.jast);
+            $*STACK.obtain($item);
+            $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+            $il.append(JAST::Instruction.new( :op('dup_x2') ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_n',
+                'Double', $TYPE_SMO, 'Double', $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('pop2') ));
+        }
+        
+        $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+        result($il, $RT_OBJ);
+    }
+    else {
+        $arr
+    }
+});
+QAST::OperationsJAST.add_core_op('list_s', -> $qastcomp, $op {
+    # Just desugar to create the empty list.
+    my $arr := $qastcomp.as_jast(QAST::Op.new(
+        :op('create'),
+        QAST::Op.new( :op('bootarray') )
+    ));
+    if +$op.list {
+        # Put list into a temporary so we can push to it.
+        my $il := JAST::InstructionList.new();
+        $il.append($arr.jast);
+        $*STACK.obtain($arr);
+        my $list_tmp := $*TA.fresh_o();
+        $il.append(JAST::Instruction.new( :op('astore'), $list_tmp ));
+        
+        # Push things to the list.
+        for $op.list {
+            my $item := $qastcomp.as_jast($_, :want($RT_STR));
+            $il.append($item.jast);
+            $*STACK.obtain($item);
+            $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+            $il.append(JAST::Instruction.new( :op('swap') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_s',
+                $TYPE_STR, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('pop') ));
+        }
+        
+        $il.append(JAST::Instruction.new( :op('aload'), $list_tmp ));
+        result($il, $RT_OBJ);
+    }
+    else {
+        $arr
+    }
+});
 QAST::OperationsJAST.add_core_op('list_b', -> $qastcomp, $op {
     # Just desugar to create the empty list.
     my $arr := $qastcomp.as_jast(QAST::Op.new(
@@ -1426,6 +1530,9 @@ QAST::OperationsJAST.map_classlib_core_op('bootint', $TYPE_OPS, 'bootint', [], $
 QAST::OperationsJAST.map_classlib_core_op('bootnum', $TYPE_OPS, 'bootnum', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bootstr', $TYPE_OPS, 'bootstr', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bootarray', $TYPE_OPS, 'bootarray', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bootintarray', $TYPE_OPS, 'bootintarray', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bootnumarray', $TYPE_OPS, 'bootnumarray', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bootstrarray', $TYPE_OPS, 'bootstrarray', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('boothash', $TYPE_OPS, 'boothash', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('create', $TYPE_OPS, 'create', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('clone', $TYPE_OPS, 'clone', [$RT_OBJ], $RT_OBJ, :tc);

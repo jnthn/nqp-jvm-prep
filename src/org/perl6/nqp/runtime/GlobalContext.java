@@ -69,6 +69,13 @@ public class GlobalContext {
     public SixModelObject CallCapture;
     
     /**
+     * Typed VMArrays.
+     */
+    public SixModelObject BOOTIntArray;
+    public SixModelObject BOOTNumArray;
+    public SixModelObject BOOTStrArray;
+    
+    /**
      * The main, startup thread's ThreadContext.
      */
     public ThreadContext mainThread;

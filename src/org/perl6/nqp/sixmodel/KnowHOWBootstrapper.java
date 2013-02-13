@@ -26,9 +26,13 @@ public class KnowHOWBootstrapper {
         Ops.setboolspec(tc.gc.BOOTInt, BoolificationSpec.MODE_UNBOX_INT, null, tc);
         Ops.setboolspec(tc.gc.BOOTNum, BoolificationSpec.MODE_UNBOX_NUM, null, tc);
         Ops.setboolspec(tc.gc.BOOTStr, BoolificationSpec.MODE_UNBOX_STR_NOT_EMPTY_OR_ZERO, null, tc);
+        
+        tc.gc.BOOTIntArray = bootTypedArray(tc, "BOOTIntArray", tc.gc.BOOTInt);
+        tc.gc.BOOTNumArray = bootTypedArray(tc, "BOOTNumArray", tc.gc.BOOTNum);
+        tc.gc.BOOTStrArray = bootTypedArray(tc, "BOOTStrArray", tc.gc.BOOTStr);
     }
 
-    private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
+	private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {
         /* Create our KnowHOW type object. Note we don't have a HOW just yet, so
          * pass in NULL. */
         REPR REPR = REPRRegistry.getByName("KnowHOWREPR");
@@ -130,4 +134,19 @@ public class KnowHOWBootstrapper {
         type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
         return type_obj;
     }
+
+    private static SixModelObject bootTypedArray(ThreadContext tc, String name, SixModelObject type) {
+    	SixModelObject booted = bootType(tc, name, "VMArray");
+    	
+    	SixModelObject BOOTHash = tc.gc.BOOTHash;
+    	SixModelObject repr_info = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+    	repr_info.initialize(tc);
+    	SixModelObject repr_array_info = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+    	repr_array_info.initialize(tc);
+    	repr_array_info.bind_key_boxed(tc, "type", type);
+    	repr_info.bind_key_boxed(tc, "array", repr_array_info);
+    	booted.st.REPR.compose(tc, booted.st, repr_info);
+    	
+    	return booted;
+	}
 }
