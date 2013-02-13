@@ -1586,6 +1586,61 @@ public final class Ops {
     public static long ordat(String str, long offset) {
         return str.codePointAt((int)offset);
     }
+    
+    private static final int CCLASS_ANY          = 0;
+    private static final int CCLASS_NUMERIC      = 1;
+    private static final int CCLASS_WHITESPACE   = 2;
+    private static final int CCLASS_WORD         = 3;
+    private static final int CCLASS_NEWLINE      = 4;
+    private static final int CCLASS_ALPHABETIC   = 5;
+    private static final int CCLASS_UPPERCASE    = 6;
+    private static final int CCLASS_LOWERCASE    = 7;
+    private static final int CCLASS_HEXADECIMAL  = 8;
+    private static final int CCLASS_BLANK        = 9;
+    private static final int CCLASS_CONTROL      = 10;
+    private static final int CCLASS_PUNCTUATION  = 11;
+    private static final int CCLASS_ALPHANUMERIC = 12;
+    private static final int PUNCT_MASK =
+    	Character.CONNECTOR_PUNCTUATION | Character.DASH_PUNCTUATION |
+       	Character.END_PUNCTUATION | Character.FINAL_QUOTE_PUNCTUATION |
+       	Character.INITIAL_QUOTE_PUNCTUATION | Character.OTHER_PUNCTUATION |
+       	Character.START_PUNCTUATION;
+    
+    public static long iscclass(long cclass, String target, long offset) {
+    	char test = target.charAt((int)offset);
+    	switch ((int)cclass) {
+        case CCLASS_ANY:
+        	return 1;
+        case CCLASS_NUMERIC:
+        	return Character.isDigit(test) ? 1 : 0;
+        case CCLASS_WHITESPACE:
+        	return Character.isWhitespace(test) ? 1 : 0;
+        case CCLASS_WORD:
+        	return test == '_' || Character.isLetterOrDigit(test) ? 1 : 0;
+        case CCLASS_NEWLINE:
+        	return Character.getType(test) == Character.LINE_SEPARATOR ? 1 : 0;
+        case CCLASS_ALPHABETIC:
+        	return Character.isAlphabetic(test) ? 1 : 0;
+        case CCLASS_UPPERCASE:
+        	return Character.isUpperCase(test) ? 1 : 0;
+        case CCLASS_LOWERCASE:
+        	return Character.isLowerCase(test) ? 1 : 0;
+        case CCLASS_HEXADECIMAL:
+        	return Character.isDigit(test) && 
+        			(test >= 'A' && test <= 'F' || test >= 'a' && test <= 'f')
+        			? 1 : 0;
+        case CCLASS_BLANK:
+        	return Character.getType(test) == Character.SPACE_SEPARATOR ? 1 : 0;
+        case CCLASS_CONTROL:
+        	return Character.isISOControl(test) ? 1 : 0;
+        case CCLASS_PUNCTUATION:
+        	return (Character.getType(test) & PUNCT_MASK) != 0 ? 1 : 0;
+        case CCLASS_ALPHANUMERIC:
+        	return Character.isLetterOrDigit(test) ? 1 : 0;
+    	default:
+    		return 0;
+    	}
+    }
 
     /* serialization context related opcodes */
     public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {

@@ -1194,6 +1194,31 @@ QAST::OperationsJAST.map_classlib_core_op('invokewithcapture', $TYPE_OPS, 'invok
 QAST::OperationsJAST.map_classlib_core_op('multicacheadd', $TYPE_OPS, 'multicacheadd', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('multicachefind', $TYPE_OPS, 'multicachefind', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 
+# Constant mapping.
+my %const_map := nqp::hash(
+    'CCLASS_ANY',           0,
+    'CCLASS_NUMERIC',       1,
+    'CCLASS_WHITESPACE',    2,
+    'CCLASS_WORD',          3,
+    'CCLASS_NEWLINE',       4,
+    'CCLASS_ALPHABETIC',    5,
+    'CCLASS_UPPERCASE',     6,
+    'CCLASS_LOWERCASE',     7,
+    'CCLASS_HEXADECIMAL',   8,
+    'CCLASS_BLANK',         9,
+    'CCLASS_CONTROL',       10,
+    'CCLASS_PUNCTUATION',   11,
+    'CCLASS_ALPHANUMERIC',  12
+);
+QAST::OperationsJAST.add_core_op('const', -> $qastcomp, $op {
+    if nqp::existskey(%const_map, $op.name) {
+        $qastcomp.as_jast(QAST::IVal.new( :value(%const_map{$op.name}) ))
+    }
+    else {
+        nqp::die("Unknown constant '" ~ $op.name ~ "'");
+    }
+});
+
 # Default way to do positional and associative lookups.
 QAST::OperationsJAST.map_classlib_core_op('positional_get', $TYPE_OPS, 'atpos', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('positional_bind', $TYPE_OPS, 'bindpos', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
@@ -1256,6 +1281,7 @@ QAST::OperationsJAST.map_classlib_core_op('chars', $TYPE_OPS, 'chars', [$RT_STR]
 QAST::OperationsJAST.map_classlib_core_op('uc', $TYPE_OPS, 'uc', [$RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('lc', $TYPE_OPS, 'lc', [$RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('x', $TYPE_OPS, 'x', [$RT_STR, $RT_INT], $RT_STR);
+QAST::OperationsJAST.map_classlib_core_op('iscclass', $TYPE_OPS, 'iscclass', [$RT_INT, $RT_STR, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('concat', $TYPE_OPS, 'concat', [$RT_STR, $RT_STR], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('chr', $TYPE_OPS, 'chr', [$RT_INT], $RT_STR);
 QAST::OperationsJAST.map_classlib_core_op('join', $TYPE_OPS, 'join', [$RT_STR, $RT_OBJ], $RT_STR, :tc);
