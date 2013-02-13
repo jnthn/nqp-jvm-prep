@@ -2011,6 +2011,21 @@ public final class Ops {
     	return filename;
     }
     
+    /* NFA operations. */
+    public static SixModelObject nfafromstatelist(SixModelObject list, SixModelObject type, ThreadContext tc) {
+    	throw new RuntimeException("nfafromstatelist NYI");
+    }
+    public static SixModelObject nfatostatelist(SixModelObject nfa, ThreadContext tc) {
+    	throw new RuntimeException("nfatostatelist NYI");
+    }
+    public static SixModelObject nfarunproto(SixModelObject nfa, String target, long pos, ThreadContext tc) {
+    	throw new RuntimeException("nfarunproto NYI");
+    }
+    public static SixModelObject nfarunalto(SixModelObject nfa, String target, long pos,
+    		SixModelObject bstack, SixModelObject cstack, SixModelObject labels, ThreadContext tc) {
+    	throw new RuntimeException("nfarunalt NYI");
+    }
+    
     /* Coercions. */
     public static long coerce_s2i(String in) {
         try {
