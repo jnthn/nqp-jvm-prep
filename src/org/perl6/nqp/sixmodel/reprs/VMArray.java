@@ -13,9 +13,45 @@ public class VMArray extends REPR {
     }
 
     public SixModelObject allocate(ThreadContext tc, STable st) {
-        SixModelObject obj = new VMArrayInstance();
+        SixModelObject obj;
+        if (st.REPRData == null) {
+        	obj = new VMArrayInstance();
+        }
+        else {
+        	switch ((short)st.REPRData) {
+        	case StorageSpec.BP_INT:
+        		obj = new VMArrayInstance_i();
+        		break;
+        	case StorageSpec.BP_NUM:
+        		obj = new VMArrayInstance_n();
+        		break;
+        	case StorageSpec.BP_STR:
+        		obj = new VMArrayInstance_s();
+        		break;
+        	default:
+        		throw new RuntimeException("Invalid REPR data for VMArray");
+        	}
+        }
         obj.st = st;
         return obj;
+    }
+    
+    public void compose(ThreadContext tc, STable st, SixModelObject repr_info) {
+    	SixModelObject arrayInfo = repr_info.at_key_boxed(tc, "array");
+    	if (arrayInfo != null) {
+        	SixModelObject type = arrayInfo.at_key_boxed(tc, "type");
+        	StorageSpec ss = type.st.REPR.get_storage_spec(tc, type.st);
+        	switch (ss.boxed_primitive) {
+        	case StorageSpec.BP_INT:
+        	case StorageSpec.BP_NUM:
+        	case StorageSpec.BP_STR:
+        		st.REPRData = ss.boxed_primitive;
+        		break;
+        	default:
+        		if (ss.inlineable != StorageSpec.REFERENCE)
+        			throw new RuntimeException("VMArray can only store native int/num/str or reference types");
+        	}
+        }
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
