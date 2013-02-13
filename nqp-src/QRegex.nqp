@@ -1130,13 +1130,13 @@ class NQPCursor does NQPCursorRole {
           && nqp::istrue(nqp::getattr(self, $?CLASS, '$!match'));
     }
 
-#    method parse($target, :$rule = 'TOP', :$actions, *%options) {
-#        my $*ACTIONS := $actions;
-#        my $cur := self.'!cursor_init'($target, |%options);
-#        nqp::isinvokable($rule) ??
-#            $rule($cur).MATCH() !!
-#            nqp::findmethod($cur, $rule)($cur).MATCH()
-#    }
+    method parse($target, :$rule = 'TOP', :$actions, *%options) {
+        my $*ACTIONS := $actions;
+        my $cur := self.'!cursor_init'($target, |%options);
+        nqp::isinvokable($rule) ??
+            $rule($cur).MATCH() !!
+            nqp::findmethod($cur, $rule)($cur).MATCH()
+    }
 
     method !INTERPOLATE($var) {
         if nqp::islist($var) {
