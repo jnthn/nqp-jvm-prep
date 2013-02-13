@@ -1304,23 +1304,140 @@ public final class Ops {
     public static SixModelObject atpos(SixModelObject arr, long idx, ThreadContext tc) {
         return arr.at_pos_boxed(tc, idx);
     }
+    public static long atpos_i(SixModelObject arr, long idx, ThreadContext tc) {
+    	arr.at_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+    	return tc.native_i; 
+    }
+    public static double atpos_n(SixModelObject arr, long idx, ThreadContext tc) {
+    	arr.at_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+    	return tc.native_n;
+    }
+    public static String atpos_s(SixModelObject arr, long idx, ThreadContext tc) {
+    	arr.at_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
+    	return tc.native_s;
+    }
     public static SixModelObject bindpos(SixModelObject arr, long idx, SixModelObject value, ThreadContext tc) {
         arr.bind_pos_boxed(tc, idx, value);
+        return value;
+    }
+    public static long bindpos_i(SixModelObject arr, long idx, long value, ThreadContext tc) {
+        tc.native_i = value;
+    	arr.bind_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+        return value;
+    }
+    public static double bindpos_n(SixModelObject arr, long idx, double value, ThreadContext tc) {
+        tc.native_n = value;
+    	arr.bind_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+        return value;
+    }
+    public static String bindpos_s(SixModelObject arr, long idx, String value, ThreadContext tc) {
+        tc.native_s = value;
+    	arr.bind_pos_native(tc, idx);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
         return value;
     }
     public static SixModelObject push(SixModelObject arr, SixModelObject value, ThreadContext tc) {
         arr.push_boxed(tc, value);
         return value;
     }
+    public static long push_i(SixModelObject arr, long value, ThreadContext tc) {
+    	tc.native_i = value;
+    	arr.push_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+        return value;
+    }
+    public static double push_n(SixModelObject arr, double value, ThreadContext tc) {
+    	tc.native_n = value;
+    	arr.push_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+        return value;
+    }
+    public static String push_s(SixModelObject arr, String value, ThreadContext tc) {
+    	tc.native_s = value;
+    	arr.push_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
+        return value;
+    }
     public static SixModelObject pop(SixModelObject arr, ThreadContext tc) {
         return arr.pop_boxed(tc);
+    }
+    public static long pop_i(SixModelObject arr, ThreadContext tc) {
+        arr.pop_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+        return tc.native_i;
+    }
+    public static double pop_n(SixModelObject arr, ThreadContext tc) {
+        arr.pop_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+        return tc.native_n;
+    }
+    public static String pop_s(SixModelObject arr, ThreadContext tc) {
+        arr.pop_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
+        return tc.native_s;
     }
     public static SixModelObject unshift(SixModelObject arr, SixModelObject value, ThreadContext tc) {
         arr.unshift_boxed(tc, value);
         return value;
     }
+    public static long unshift_i(SixModelObject arr, long value, ThreadContext tc) {
+    	tc.native_i = value;
+    	arr.unshift_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+        return value;
+    }
+    public static double unshift_n(SixModelObject arr, double value, ThreadContext tc) {
+    	tc.native_n = value;
+    	arr.unshift_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+        return value;
+    }
+    public static String unshift_s(SixModelObject arr, String value, ThreadContext tc) {
+    	tc.native_s = value;
+    	arr.unshift_native(tc);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
+        return value;
+    }
     public static SixModelObject shift(SixModelObject arr, ThreadContext tc) {
         return arr.shift_boxed(tc);
+    }
+    public static long shift_i(SixModelObject arr, ThreadContext tc) {
+        arr.shift_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int array");
+        return tc.native_i;
+    }
+    public static double shift_n(SixModelObject arr, ThreadContext tc) {
+        arr.shift_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num array");
+        return tc.native_n;
+    }
+    public static String shift_s(SixModelObject arr, ThreadContext tc) {
+        arr.shift_native(tc);
+        if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str array");
+        return tc.native_s;
     }
     public static SixModelObject splice(SixModelObject arr, SixModelObject from, long offset, long count, ThreadContext tc) {
         arr.splice(tc, from, offset, count);
