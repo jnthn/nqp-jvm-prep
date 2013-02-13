@@ -364,25 +364,25 @@ class QRegex::NFA {
     # NFA type.
     my knowhow NFAType is repr('NFA') { }
 
-#    method run(str $target, int $offset) {
-#        unless nqp::isconcrete($!nfa_object) {
+    method run(str $target, int $offset) {
+        unless nqp::isconcrete($!nfa_object) {
 #            pir::nqp_disable_sc_write_barrier__v();
-#            $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
+            $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
 #            pir::nqp_enable_sc_write_barrier__v();
-#            1;
-#        }
-#        nqp::nfarunproto($!nfa_object, $target, $offset)
-#    }
-#    
-#    method run_alt(str $target, int $offset, $bstack, $cstack, @labels) {
-#        unless nqp::isconcrete($!nfa_object) {
+            1;
+        }
+        nqp::nfarunproto($!nfa_object, $target, $offset)
+    }
+    
+    method run_alt(str $target, int $offset, $bstack, $cstack, @labels) {
+        unless nqp::isconcrete($!nfa_object) {
 #            pir::nqp_disable_sc_write_barrier__v();
-#            $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
+            $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
 #            pir::nqp_enable_sc_write_barrier__v();
-#            1;
-#        }
-#        nqp::nfarunalt($!nfa_object, $target, $offset, $bstack, $cstack, @labels)
-#    }
+            1;
+        }
+        nqp::nfarunalt($!nfa_object, $target, $offset, $bstack, $cstack, @labels)
+    }
     
     method generic() {
         $!generic
@@ -524,29 +524,29 @@ role NQPCursorRole is export {
         $caps;
     }
 
-#    method !cursor_init($orig, :$p = 0, :$c, :$shared) {
-#        my $new := self.CREATE();
-#        unless $shared {
-#            $shared := nqp::create(ParseShared);
-#            nqp::bindattr($shared, ParseShared, '$!orig', $orig);
-#            nqp::bindattr_s($shared, ParseShared, '$!target',
+    method !cursor_init($orig, :$p = 0, :$c, :$shared) {
+        my $new := self.CREATE();
+        unless $shared {
+            $shared := nqp::create(ParseShared);
+            nqp::bindattr($shared, ParseShared, '$!orig', $orig);
+            nqp::bindattr_s($shared, ParseShared, '$!target',
 #                pir::trans_encoding__Ssi($orig, pir::find_encoding__Is('ucs4')));
-#                $orig);
-#            nqp::bindattr_i($shared, ParseShared, '$!highwater', 0);
-#            nqp::bindattr($shared, ParseShared, '@!highexpect', nqp::list());
-#        }
-#        nqp::bindattr($new, $?CLASS, '$!shared', $shared);
-#        if nqp::defined($c) {
-#            nqp::bindattr_i($new, $?CLASS, '$!from', -1);
-#            nqp::bindattr_i($new, $?CLASS, '$!pos', $c);
-#        }
-#        else {
-#            nqp::bindattr_i($new, $?CLASS, '$!from', $p);
-#            nqp::bindattr_i($new, $?CLASS, '$!pos', $p);
-#        }
-#        $new;
-#    }
-#    
+                $orig);
+            nqp::bindattr_i($shared, ParseShared, '$!highwater', 0);
+            nqp::bindattr($shared, ParseShared, '@!highexpect', nqp::list());
+        }
+        nqp::bindattr($new, $?CLASS, '$!shared', $shared);
+        if nqp::defined($c) {
+            nqp::bindattr_i($new, $?CLASS, '$!from', -1);
+            nqp::bindattr_i($new, $?CLASS, '$!pos', $c);
+        }
+        else {
+            nqp::bindattr_i($new, $?CLASS, '$!from', $p);
+            nqp::bindattr_i($new, $?CLASS, '$!pos', $p);
+        }
+        $new;
+    }
+    
     # Starts a new Cursor, returning all information relating to it in an array.
     # The array is valid until the next call to !cursor_start_all.
     my $NO_RESTART := 0;
