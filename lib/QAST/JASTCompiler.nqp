@@ -3226,6 +3226,9 @@ class QAST::CompilerJAST {
         JAST::InstructionList.new()
     }
     
+    # a :rxtype<ws> node is a normal subrule call
+    method ws($node) { self.subrule($node) }
+    
     multi method as_jast($unknown, :$want) {
         nqp::die("Unknown QAST node type " ~ $unknown.HOW.name($unknown));
     }
