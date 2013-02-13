@@ -511,11 +511,11 @@ role NQPCursorRole is export {
                             !! nqp::bindkey($caps, $name, $submatch);
                     }
                     else {
-#                        for nqp::split('=', $name) -> $name {
-#                            %caplist{$name} >= 2
-#                                ?? nqp::push($caps{$name}, $submatch)
-#                                !! nqp::bindkey($caps, $name, $submatch);
-#                        }
+                        for nqp::split('=', $name) -> $name {
+                            %caplist{$name} >= 2
+                                ?? nqp::push($caps{$name}, $submatch)
+                                !! nqp::bindkey($caps, $name, $submatch);
+                        }
                     }
                 }
                 $csi++;
