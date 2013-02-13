@@ -7,8 +7,8 @@ grammar for regexes, getting the QAST -> JAST cross-compile to compile itself,
 then getting NQP self-hosting.
 
 QAST to JAST Compiler
-* Remaining string ops (of note, split)
 * xor
+* chain
 
 Exceptions
 * Design work
@@ -37,16 +37,9 @@ Parsing
 * alt
 * altseq
 * anchor
-* cclass
-* concat
-* conj
 * conjseq
-* dba
-* enumcharlist
-* literal
-* pass
-* qastnode
 * quant
 * scan
 * subcapture
 * subrule
+* uniprop
