@@ -1681,6 +1681,48 @@ public final class Ops {
         return sb.toString();
     }
     
+    public static SixModelObject split(String delimiter, String string, ThreadContext tc) {
+
+        if (string == null || delimiter == null) {
+            return null;
+        }
+
+        HLLConfig hllConfig = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig;
+        SixModelObject arrayType = hllConfig.slurpyArrayType;
+        SixModelObject array = arrayType.st.REPR.allocate(tc, arrayType.st);
+        array.initialize(tc);
+
+        int slen = string.length();
+        if (slen == 0) {
+            return array;
+        }
+
+        int dlen = delimiter.length();
+        if (dlen == 0) {
+            for (int i = 0; i < slen; i++) {
+                String item = string.substring(i, i+1);
+                SixModelObject value = box_s(item, hllConfig.strBoxType, tc);
+                array.push_boxed(tc, value);
+            }
+        } else {
+            int curpos = 0;
+            int matchpos = string.indexOf(delimiter);
+            while (matchpos > -1) {
+                String item = string.substring(curpos, matchpos);
+                SixModelObject value = box_s(item, hllConfig.strBoxType, tc);
+                array.push_boxed(tc, value);
+
+                curpos = matchpos + dlen;
+                matchpos = string.indexOf(delimiter,  curpos);
+            }
+
+            String tail = string.substring(curpos);
+            SixModelObject value = box_s(tail, hllConfig.strBoxType, tc);
+            array.push_boxed(tc, value);
+        }        
+        return array;
+    }
+    
     public static long indexfrom(String string, String pattern, long fromIndex) {
         return string.indexOf(pattern, (int)fromIndex);
     }
