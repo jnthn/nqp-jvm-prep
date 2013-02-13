@@ -552,48 +552,48 @@ role NQPCursorRole is export {
     my $NO_RESTART := 0;
     my $RESTART := 1;
     my @start_result;
-#    method !cursor_start_all() {
-#        my $new := nqp::create(self);
-#        my $sub := nqp::callercode();
-#        nqp::bindattr($new, $?CLASS, '$!shared', $!shared);
-#        nqp::bindattr($new, $?CLASS, '$!regexsub', nqp::ifnull(nqp::getcodeobj($sub), $sub));
-#        if nqp::defined($!restart) {
-#            nqp::bindattr_i($new, $?CLASS, '$!pos', $!pos);
-#            nqp::bindattr($new, $?CLASS, '$!cstack', nqp::clone($!cstack)) if $!cstack;
-#            nqp::bindpos(@start_result, 0, $new);
-#            nqp::bindpos(@start_result, 1, nqp::getattr_s($!shared, ParseShared, '$!target'));
-#            nqp::bindpos(@start_result, 2, nqp::bindattr_i($new, $?CLASS, '$!from', $!from));
-#            nqp::bindpos(@start_result, 3, $?CLASS);
-#            nqp::bindpos(@start_result, 4, nqp::bindattr($new, $?CLASS, '$!bstack', nqp::clone($!bstack)));
-#            nqp::bindpos(@start_result, 5, $RESTART);
-#            @start_result
-#        }
-#        else {
-#            nqp::bindattr_i($new, $?CLASS, '$!pos', -3);
-#            nqp::bindpos(@start_result, 0, $new);
-#            nqp::bindpos(@start_result, 1, nqp::getattr_s($!shared, ParseShared, '$!target'));
-#            nqp::bindpos(@start_result, 2, nqp::bindattr_i($new, $?CLASS, '$!from', $!pos));
-#            nqp::bindpos(@start_result, 3, $?CLASS);
-#            nqp::bindpos(@start_result, 4, nqp::bindattr($new, $?CLASS, '$!bstack', nqp::list_i()));
-#            nqp::bindpos(@start_result, 5, $NO_RESTART);
-#            @start_result
-#        }
-#    }
-#    
-#    # Starts a new cursor, returning nothing but the cursor.
-#    method !cursor_start_cur() {
-#        my $new := nqp::create(self);
-#        my $sub := nqp::callercode();
-#        nqp::bindattr($new, $?CLASS, '$!shared', $!shared);
-#        nqp::bindattr($new, $?CLASS, '$!regexsub', nqp::ifnull(nqp::getcodeobj($sub), $sub));
-#        if nqp::defined($!restart) {
-#            nqp::die("!cursor_start_cur cannot restart a cursor");
-#        }
-#        nqp::bindattr_i($new, $?CLASS, '$!pos', -3);
-#        nqp::bindattr_i($new, $?CLASS, '$!from', $!pos);
-#        nqp::bindattr($new, $?CLASS, '$!bstack', nqp::list_i());
-#        $new
-#    }
+    method !cursor_start_all() {
+        my $new := nqp::create(self);
+        my $sub := nqp::callercode();
+        nqp::bindattr($new, $?CLASS, '$!shared', $!shared);
+        nqp::bindattr($new, $?CLASS, '$!regexsub', nqp::ifnull(nqp::getcodeobj($sub), $sub));
+        if nqp::defined($!restart) {
+            nqp::bindattr_i($new, $?CLASS, '$!pos', $!pos);
+            nqp::bindattr($new, $?CLASS, '$!cstack', nqp::clone($!cstack)) if $!cstack;
+            nqp::bindpos(@start_result, 0, $new);
+            nqp::bindpos(@start_result, 1, nqp::getattr_s($!shared, ParseShared, '$!target'));
+            nqp::bindpos(@start_result, 2, nqp::bindattr_i($new, $?CLASS, '$!from', $!from));
+            nqp::bindpos(@start_result, 3, $?CLASS);
+            nqp::bindpos(@start_result, 4, nqp::bindattr($new, $?CLASS, '$!bstack', nqp::clone($!bstack)));
+            nqp::bindpos(@start_result, 5, $RESTART);
+            @start_result
+        }
+        else {
+            nqp::bindattr_i($new, $?CLASS, '$!pos', -3);
+            nqp::bindpos(@start_result, 0, $new);
+            nqp::bindpos(@start_result, 1, nqp::getattr_s($!shared, ParseShared, '$!target'));
+            nqp::bindpos(@start_result, 2, nqp::bindattr_i($new, $?CLASS, '$!from', $!pos));
+            nqp::bindpos(@start_result, 3, $?CLASS);
+            nqp::bindpos(@start_result, 4, nqp::bindattr($new, $?CLASS, '$!bstack', nqp::list_i()));
+            nqp::bindpos(@start_result, 5, $NO_RESTART);
+            @start_result
+        }
+    }
+    
+    # Starts a new cursor, returning nothing but the cursor.
+    method !cursor_start_cur() {
+        my $new := nqp::create(self);
+        my $sub := nqp::callercode();
+        nqp::bindattr($new, $?CLASS, '$!shared', $!shared);
+        nqp::bindattr($new, $?CLASS, '$!regexsub', nqp::ifnull(nqp::getcodeobj($sub), $sub));
+        if nqp::defined($!restart) {
+            nqp::die("!cursor_start_cur cannot restart a cursor");
+        }
+        nqp::bindattr_i($new, $?CLASS, '$!pos', -3);
+        nqp::bindattr_i($new, $?CLASS, '$!from', $!pos);
+        nqp::bindattr($new, $?CLASS, '$!bstack', nqp::list_i());
+        $new
+    }
 
     method !cursor_start_subcapture($from) {
         my $new := nqp::create(self);
@@ -603,17 +603,17 @@ role NQPCursorRole is export {
         $new;
     }
 
-#    method !cursor_capture($capture, $name) {
-#        $!match  := nqp::null();
-#        $!cstack := [] unless nqp::defined($!cstack);
-#        nqp::push($!cstack, $capture);
-#        nqp::bindattr($capture, $?CLASS, '$!name', $name);
-#        nqp::push_i($!bstack, 0);
-#        nqp::push_i($!bstack, $!pos);
-#        nqp::push_i($!bstack, 0);
-#        nqp::push_i($!bstack, nqp::elems($!cstack));
-#        $!cstack;
-#    }
+    method !cursor_capture($capture, $name) {
+        $!match  := nqp::null();
+        $!cstack := [] unless nqp::defined($!cstack);
+        nqp::push($!cstack, $capture);
+        nqp::bindattr($capture, $?CLASS, '$!name', $name);
+        nqp::push_i($!bstack, 0);
+        nqp::push_i($!bstack, $!pos);
+        nqp::push_i($!bstack, 0);
+        nqp::push_i($!bstack, nqp::elems($!cstack));
+        $!cstack;
+    }
     
     method !cursor_push_cstack($capture) {
         $!cstack := [] unless nqp::defined($!cstack);
@@ -677,31 +677,31 @@ role NQPCursorRole is export {
     
     method !shared() { $!shared }
 
-#    my @EMPTY := [];
-#    method !protoregex($name) {
-#        # Obtain and run NFA.
-#        my $shared := $!shared;
-#        my $nfa := self.HOW.cache(self, $name, { self.'!protoregex_nfa'($name) });
-#        my @fates := $nfa.run(nqp::getattr_s($shared, ParseShared, '$!target'), $!pos);
-#        
-#        # Update highwater mark.
-#        my int $highwater := nqp::getattr_i($shared, ParseShared, '$!highwater');
-#        if $!pos > $highwater {
-#            nqp::bindattr_i($shared, ParseShared, '$!highwater', $!pos);
-#        }
-#        
-#        # Visit rules in fate order.
-#        my @rxfate := $nfa.states[0];
-#        my $cur;
-#        my $rxname;
-#        while @fates {
-#            $rxname := nqp::atpos(@rxfate, nqp::pop_i(@fates));
-#            #nqp::say("invoking $rxname");
-#            $cur := self."$rxname"();
-#            @fates := @EMPTY if nqp::getattr_i($cur, $?CLASS, '$!pos') >= 0;
-#        }
-#        $cur // self."!cursor_start_cur"();
-#    }
+    my @EMPTY := [];
+    method !protoregex($name) {
+        # Obtain and run NFA.
+        my $shared := $!shared;
+        my $nfa := self.HOW.cache(self, $name, { self.'!protoregex_nfa'($name) });
+        my @fates := $nfa.run(nqp::getattr_s($shared, ParseShared, '$!target'), $!pos);
+        
+        # Update highwater mark.
+        my int $highwater := nqp::getattr_i($shared, ParseShared, '$!highwater');
+        if $!pos > $highwater {
+            nqp::bindattr_i($shared, ParseShared, '$!highwater', $!pos);
+        }
+        
+        # Visit rules in fate order.
+        my @rxfate := $nfa.states[0];
+        my $cur;
+        my $rxname;
+        while @fates {
+            $rxname := nqp::atpos(@rxfate, nqp::pop_i(@fates));
+            #nqp::say("invoking $rxname");
+            $cur := self."$rxname"();
+            @fates := @EMPTY if nqp::getattr_i($cur, $?CLASS, '$!pos') >= 0;
+        }
+        $cur // self."!cursor_start_cur"();
+    }
 
     method !protoregex_nfa($name) {
         my %protorx := self.HOW.cache(self, "!protoregex_table", { self."!protoregex_table"() });
