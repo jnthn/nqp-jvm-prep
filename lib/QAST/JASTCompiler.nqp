@@ -3220,6 +3220,42 @@ class QAST::CompilerJAST {
         }
         self.as_jast($qast, :want($RT_VOID)).jast
     }
+
+    method qastnode($node) {
+        my $il := JAST::InstructionList.new();
+        
+        $il.append(JAST::PushSVal.new( :value("\$\xa2") ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+        $il.append(JAST::PushSVal.new( :value('$!pos') ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "bindattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, 'Long', $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('pop2') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "bindlex", $TYPE_SMO, $TYPE_STR, $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('pop') ));
+
+        my $node_res := self.as_jast($node[0], :want($RT_OBJ));
+        $il.append($node_res.jast);
+        $*STACK.obtain($node_res);
+        
+        if $node.subtype eq 'zerowidth' {
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "istrue", 'Long', $TYPE_SMO, $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifne' !! 'ifeq'), %*REG<fail> ));
+        }
+        else {
+            $il.append(JAST::Instruction.new( :op('pop') ));
+        }
+        
+        $il;
+    }
     
     method scan($node) {
         # XXX TODO: Actually implement it.
