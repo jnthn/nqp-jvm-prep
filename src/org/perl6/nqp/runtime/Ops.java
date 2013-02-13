@@ -1154,6 +1154,9 @@ public final class Ops {
             throw new RuntimeException("Method '" + name + "' not found"); 
         return meth;
     }
+    public static SixModelObject findmethod(SixModelObject invocant, String name, ThreadContext tc) {
+        return invocant.st.MethodCache.get(name);
+    }
     public static long can(SixModelObject invocant, String name, ThreadContext tc) {
         SixModelObject meth = invocant.st.MethodCache.get(name);
         return meth == null ? 0 : 1;
