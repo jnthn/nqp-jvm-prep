@@ -1,13 +1,13 @@
 NQP JVM Preparation Roadmap
 
 This provides an idea of the things that need to be worked on, very roughly
-sorted by priority. The overall goal is to get to a cross-compiled MOP, module
-loader and minimal setting, then start attempting the test suite. This will in
-turn exercise further things needing implementation, such as regex handling.
+sorted by priority. Currently, quite a lot of the NQP test suite passes. The
+goal now is to get the grammar engine ported, then work through HLL, the
+grammar for regexes, getting the QAST -> JAST cross-compile to compile itself,
+then getting NQP self-hosting.
 
 QAST to JAST Compiler
-* Remaining positional ops (existspos, deletepos)
-* Remaining string ops (of note, split and join)
+* Remaining string ops (of note, split)
 * xor
 
 Exceptions
@@ -23,12 +23,10 @@ Context Introspection
 6model
 * BoolificationSpec - method and bigint cases
 * ContainerSpec
-* Type check handling
+* Type check handling (fallback case)
 * Work something out for bigint REPR
 
 SCs
-* P6opaque deserialization
-* Closure and context deserialization
 * Serialization
 
 Parsing
