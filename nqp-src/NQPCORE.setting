@@ -544,6 +544,15 @@ my class NQPMu {
     method new(*%attributes) {
         self.bless(|%attributes);
     }
+
+    proto method ACCEPTS($topic) { * }
+    multi method ACCEPTS(NQPMu:U $self: $topic) {
+        nqp::istype($topic, self.WHAT)
+    }
+
+    method isa($type) {
+        self.HOW.isa(self, $type)
+    }
 }
 
 # From src\core\NQPCapture.pm
