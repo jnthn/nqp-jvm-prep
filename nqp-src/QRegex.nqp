@@ -784,19 +784,19 @@ role NQPCursorRole is export {
         }
     }
     
-#    method !dba(int $pos, str $dba) {
-#        my $shared := $!shared;
-#        my int $highwater := nqp::getattr_i($shared, ParseShared, '$!highwater');
-#        my $highexpect;
-#        if $pos >= $highwater {
-#            $highexpect := nqp::getattr($shared, ParseShared, '@!highexpect');
-#            if $pos > $highwater {
+    method !dba(int $pos, str $dba) {
+        my $shared := $!shared;
+        my int $highwater := nqp::getattr_i($shared, ParseShared, '$!highwater');
+        my $highexpect;
+        if $pos >= $highwater {
+            $highexpect := nqp::getattr($shared, ParseShared, '@!highexpect');
+            if $pos > $highwater {
 #                pir::assign__0Pi($highexpect, 0);
-#                nqp::bindattr_i($shared, ParseShared, '$!highwater', $pos);
-#            }
+                nqp::bindattr_i($shared, ParseShared, '$!highwater', $pos);
+            }
 #            nqp::push_s($highexpect, $dba);
-#        }
-#    }
+        }
+    }
     
     method !highwater() {
         nqp::getattr_i($!shared, ParseShared, '$!highwater')

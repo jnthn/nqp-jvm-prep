@@ -3123,6 +3123,16 @@ class QAST::CompilerJAST {
 
     method conj($node) { self.conjseq($node) }
     
+    method dba($node) {
+        my $qast := QAST::Op.new(
+            :op('callmethod'), :name('!dba'),
+            QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+            QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) ),
+            QAST::SVal.new( :value($node.name()) )
+        );
+        self.as_jast($qast, :want($RT_VOID)).jast
+    }
+    
     method literal($node) {
         my $il := JAST::InstructionList.new();
         my $litconst := $node[0];
