@@ -2987,6 +2987,15 @@ class QAST::CompilerJAST {
         my $cutlabel     := JAST::Label.new( :name($prefix ~ 'cut') );
         my $cstacklabel  := JAST::Label.new( :name($prefix ~ 'cstack_done') );
         %*REG<fail>      := $faillabel;
+        
+        # label to index mapping, for the jump table
+        my @mark_labels;
+        my %mark_lookup;
+        my &*REGISTER_MARK := sub ($label) {
+            my $idx := nqp::elems(@mark_labels);
+            nqp::push(@mark_labels, $label.name);
+            %mark_lookup{$label.name} := $idx
+        }
 
         # common prologue
         my $il := JAST::InstructionList.new();
@@ -3317,8 +3326,56 @@ class QAST::CompilerJAST {
     }
     
     method scan($node) {
-        # XXX TODO: Actually implement it.
-        JAST::InstructionList.new()
+        my $il := JAST::InstructionList.new();
+        
+        my $prefix := self.unique('rxscan');
+        my $looplabel := JAST::Label.new( :name($prefix ~ '_loop') );
+        my $scanlabel := JAST::Label.new( :name($prefix ~ '_scan') );
+        my $donelabel := JAST::Label.new( :name($prefix ~ '_done') );
+        
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+        $il.append(JAST::PushSVal.new( :value('$!from') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "getattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+        $il.append(JAST::PushIVal.new( :value(-1) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $donelabel ));
+        $il.append(JAST::Instruction.new( :op('goto'), $scanlabel ));
+        
+        $il.append($looplabel);
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('dup2') ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifgt'), %*REG<fail> ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+        $il.append(JAST::PushSVal.new( :value('$!from') ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "bindattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, 'Long', $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('pop2') ));
+        
+        $il.append($scanlabel);
+        
+        my $mark := &*REGISTER_MARK($looplabel);
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::PushIVal.new( :value($mark) ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+        
+        $il.append($donelabel);
+        
+        $il;
     }
     
     # a :rxtype<ws> node is a normal subrule call
