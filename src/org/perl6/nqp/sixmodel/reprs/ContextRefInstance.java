@@ -8,7 +8,7 @@ public class ContextRefInstance extends SixModelObject {
 	public CallFrame context;
 	
 	public SixModelObject at_key_boxed(ThreadContext tc, String key) {
-        Integer idx = context.codeRef.staticInfo.nTryGetLexicalIdx(key);
+        Integer idx = context.codeRef.staticInfo.oTryGetLexicalIdx(key);
         return idx == null ? null : context.oLex[idx];
     }
 }
