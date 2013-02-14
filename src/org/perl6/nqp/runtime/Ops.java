@@ -2197,6 +2197,29 @@ public final class Ops {
     	throw new RuntimeException("nfarunalt NYI");
     }
     
+    /* Regex engine mark stack operations. */
+    public static void rxmark(SixModelObject bstack, long mark, long pos, long rep, ThreadContext tc) {
+    	long elems = bstack.elems(tc);
+        
+    	long caps;
+    	if (elems > 0) {
+    		bstack.at_pos_native(tc, elems - 1);
+    		caps = tc.native_i;
+    	}
+    	else {
+    		caps = 0;
+    	}
+    	
+    	tc.native_i = mark;
+    	bstack.push_native(tc);
+    	tc.native_i = pos;
+    	bstack.push_native(tc);
+    	tc.native_i = rep;
+    	bstack.push_native(tc);
+    	tc.native_i = caps;
+    	bstack.push_native(tc);
+    }
+    
     /* Coercions. */
     public static long coerce_s2i(String in) {
         try {
