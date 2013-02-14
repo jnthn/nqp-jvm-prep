@@ -3439,7 +3439,7 @@ class QAST::CompilerJAST {
         my $mark := &*REGISTER_MARK($looplabel);
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
         $il.append(JAST::PushIVal.new( :value($mark) ));
-        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
         $il.append(JAST::PushIVal.new( :value(0) ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
