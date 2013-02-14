@@ -2993,9 +2993,10 @@ class QAST::CompilerJAST {
         my %mark_lookup;
         my &*REGISTER_MARK := sub ($label) {
             my $idx := nqp::elems(@mark_labels);
-            nqp::push(@mark_labels, $label.name);
+            nqp::push(@mark_labels, $label);
             %mark_lookup{$label.name} := $idx
         }
+        &*REGISTER_MARK($faillabel);
 
         # common prologue
         my $il := JAST::InstructionList.new();
@@ -3069,6 +3070,8 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('invokestatic'),
             $TYPE_OPS, 'chars', 'Long', $TYPE_STR ));
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('aconst_null') ));
+        $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
         #$ops.push_pirop('eq', '$I19', 1, $restartlabel);
         #$ops.push_pirop('gt', %*REG<pos>, %*REG<eos>, %*REG<fail>);
         
@@ -3081,24 +3084,76 @@ class QAST::CompilerJAST {
         #$ops.push($restartlabel);
         #$ops.push_pirop('repr_get_attr_obj', %*REG<cstack>, %*REG<cur>, %*REG<curclass>, '"$!cstack"');
         
-        # Failure handling.
+        # Failure/backtrack handling. If no bstack, we're done.
         $il.append($faillabel);
-        emit_throw($il); # We don't handle failure/backtracking yet...
-        #$ops.push_pirop('unless', %*REG<bstack>, $donelabel);
-        #$ops.push_pirop('pop', '$I19', %*REG<bstack>);
-        #$ops.push_pirop('if_null', %*REG<cstack>, $cstacklabel);
-        #$ops.push_pirop('unless', %*REG<cstack>, $cstacklabel);
-        #$ops.push_pirop('dec', '$I19');
-        #$ops.push_pirop('set', '$P11', %*REG<cstack> ~ '[$I19]');
-        #$ops.push($cstacklabel);
-        #$ops.push_pirop('pop', %*REG<rep>, %*REG<bstack>);
-        #$ops.push_pirop('pop', %*REG<pos>, %*REG<bstack>);
-        #$ops.push_pirop('pop', '$I19', %*REG<bstack>);
-        #$ops.push_pirop('lt', %*REG<pos>, -1, $donelabel);
-        #$ops.push_pirop('lt', %*REG<pos>, 0, $faillabel);
-        #$ops.push_pirop('eq', '$I19', 0, $faillabel);
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "elems", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $donelabel ));
+        
+        # Otherwise, start handling the cstack, if it's not empty.
+        # The setup done here is used when we backtrack into subrules.
+        my $temp := $*TA.fresh_i();
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), $temp ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('ifnull'), $cstacklabel ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "elems", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $cstacklabel ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('lsub') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "atpos", $TYPE_SMO, $TYPE_SMO, 'Long', $TYPE_TC ));
+        # XXX TODO: the following pop should put it in a temporary for the
+        # purpose of subrule backtracking.
+        $il.append(JAST::Instruction.new( :op('pop') ));
+        $il.append($cstacklabel);
+        
+        # Pop rep, pos and mark off the stack and store them.
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('dup2') ));
+        $il.append(JAST::Instruction.new( :op('dup2') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), $temp ));
+        
+        # Handle position and mark special cases.
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value(-1) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('iflt'), $donelabel ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('iflt'), $faillabel ));
+        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $faillabel ));
         
         # Backtrack the cursor stack
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('ifnull'), $jumplabel ));
+        emit_throw($il); # XXX Implement backtracking the cursor stack
         #$ops.push_pirop('nqp_islist', '$I20', %*REG<cstack>);
         #$ops.push_pirop('unless', '$I20', $jumplabel);
         #$ops.push_pirop('elements', '$I18', %*REG<bstack>);
@@ -3107,10 +3162,27 @@ class QAST::CompilerJAST {
         #$ops.push_pirop('set', '$I18', %*REG<bstack>~'[$I18]');
         #$ops.push($cutlabel);
         #$ops.push_pirop('assign', %*REG<cstack>, '$I18');
-        #$ops.push($jumplabel);
-        #$ops.push_pirop('jump', '$I19');
-        #$ops.push($donelabel);
-        #$ops.push_pirop('callmethod', '"!cursor_fail"', %*REG<cur>);
+        
+        # Otherwise, we need to jump to the appropriate label. Emit the
+        # jump table.
+        $il.append($jumplabel);
+        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        my $ts := JAST::Instruction.new( :op('tableswitch'), $donelabel );
+        for @mark_labels {
+            $ts.push($_);
+        }
+        $il.append($ts);
+        
+        # If we make it to here, we failed to match.
+        $il.append($donelabel);
+        my $fail_res := self.as_jast(QAST::Op.new(
+            :op('callmethod'), :name('!cursor_fail'),
+            QAST::Var.new( :name(%*REG<cur>), :scope('local') )
+        ));
+        $il.append($fail_res.jast);
+        $*STACK.obtain($fail_res);
+        $il.append(JAST::Instruction.new( :op('pop') ));
 
         # Evaluate to the curosr.
         $il.append($endlabel);
