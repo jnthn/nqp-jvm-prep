@@ -31,15 +31,14 @@ SCs
 
 Parsing
 * NFA execution
-* Ops for regexes
-* Work out how backtracking will work (probably jumplist)
-* Compilation of QAST::Regex
+* Missing regex ops: rxpeek and rxcommit
+* Handling of cursor stack in backtracking
+* Backtracking into subrules
 * alt
 * altseq
 * anchor
 * conjseq
 * quant
-* scan
 * subcapture
 * subrule
 * uniprop
