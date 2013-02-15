@@ -3210,13 +3210,9 @@ class QAST::CompilerJAST {
             $altcount++;
             $altlabel := JAST::Label.new( :name($prefix ~ $altcount) );
             my $mark := &*REGISTER_MARK($altlabel);
-            $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
-            $il.append(JAST::PushIVal.new( :value($mark) ));
-            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
-            $il.append(JAST::PushIVal.new( :value(0) ));
-            $il.append(JAST::Instruction.new( :op('aload_1') ));
-            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+            self.regex_mark($il, $mark,
+                JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+                JAST::PushIVal.new( :value(0) ));
             $il.append($ajast);
             $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
             $ajast := self.regex_jast(nqp::shift($iter));
@@ -3451,22 +3447,14 @@ class QAST::CompilerJAST {
             my $mark := &*REGISTER_MARK($donelabel);
 
             if $min == 0 {
-                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
-                $il.append(JAST::PushIVal.new( :value($mark) ));
-                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
-                $il.append(JAST::PushIVal.new( :value(0) ));
-                $il.append(JAST::Instruction.new( :op('aload_1') ));
-                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+                self.regex_mark($il, $mark,
+                    JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+                    JAST::PushIVal.new( :value(0) ));
             }
             elsif $needmark {
-                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
-                $il.append(JAST::PushIVal.new( :value($mark) ));
-                $il.append(JAST::PushIVal.new( :value(-1) ));
-                $il.append(JAST::PushIVal.new( :value(0) ));
-                $il.append(JAST::Instruction.new( :op('aload_1') ));
-                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+                self.regex_mark($il, $mark,
+                    JAST::PushIVal.new( :value(-1) ),
+                    JAST::PushIVal.new( :value(0) ));
             }
             
             $il.append($looplabel);
@@ -3505,13 +3493,9 @@ class QAST::CompilerJAST {
             }
             
             unless $max == 1 {
-                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
-                $il.append(JAST::PushIVal.new( :value($mark) ));
-                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
-                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
-                $il.append(JAST::Instruction.new( :op('aload_1') ));
-                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+                self.regex_mark($il, $mark,
+                    JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+                    JAST::Instruction.new( :op('lload'), %*REG<rep> ));
                 $il.append(self.regex_jast($sep)) if $sep;
                 $il.append(JAST::Instruction.new( :op('goto'), $looplabel ));
             }
@@ -3569,14 +3553,9 @@ class QAST::CompilerJAST {
         $il.append($scanlabel);
         
         my $mark := &*REGISTER_MARK($looplabel);
-        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
-        $il.append(JAST::PushIVal.new( :value($mark) ));
-        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
-        $il.append(JAST::PushIVal.new( :value(0) ));
-        $il.append(JAST::Instruction.new( :op('aload_1') ));
-        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
-        
+        self.regex_mark($il, $mark,
+            JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+            JAST::PushIVal.new( :value(0) ));
         $il.append($donelabel);
         
         $il;
@@ -3584,6 +3563,16 @@ class QAST::CompilerJAST {
     
     # a :rxtype<ws> node is a normal subrule call
     method ws($node) { self.subrule($node) }
+    
+    method regex_mark($il, $mark, $pos, $rep) {
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::PushIVal.new( :value($mark) ));
+        $il.append($pos);
+        $il.append($rep);
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+    }
     
     method regex_commit($il, $mark) {
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
