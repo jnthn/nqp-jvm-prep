@@ -3441,7 +3441,49 @@ class QAST::CompilerJAST {
             # Nothing to do, and nothing to backtrack into.
         }
         elsif $backtrack eq 'f' {
-            nqp::die("Frugal quantifiers NYI");
+            my $seplabel := JAST::Label.new( :name($prefix ~ '_sep') );
+            my $mark     := &*REGISTER_MARK($looplabel);
+            my $itemp    := $*TA.fresh_i();
+            
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
+            if $min < 1 {
+                self.regex_mark($il, $mark,
+                    JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+                    JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::Instruction.new( :op('goto'), $donelabel ));
+            }
+            $il.append(JAST::Instruction.new( :op('goto'), $seplabel )) if $sep;
+            $il.append($looplabel);
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+            $il.append(JAST::Instruction.new( :op('lstore'), $itemp ));
+            $il.append(self.regex_jast($sep)) if $sep;
+            $il.append($seplabel) if $sep;
+            $il.append(self.regex_jast($node[0]));
+            $il.append(JAST::Instruction.new( :op('lload'), $itemp ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('ladd') ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
+            
+            if $min > 1 {
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::PushIVal.new( :value($min) ));
+                $il.append(JAST::Instruction.new( :op('lcmp') ));
+                $il.append(JAST::Instruction.new( :op('iflt'), $looplabel ));
+            }
+            if $max > 1 {
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::PushIVal.new( :value($max) ));
+                $il.append(JAST::Instruction.new( :op('lcmp') ));
+                $il.append(JAST::Instruction.new( :op('ifge'), $donelabel ));
+            }
+            if $max != 1 {
+                self.regex_mark($il, $mark,
+                    JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+                    JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+            }
+            
+            $il.append($donelabel);
         }
         else {
             my $mark := &*REGISTER_MARK($donelabel);
