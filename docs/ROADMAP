@@ -31,14 +31,10 @@ SCs
 
 Parsing
 * NFA execution
-* Missing regex ops: rxpeek and rxcommit
 * Handling of cursor stack in backtracking
 * Backtracking into subrules
 * alt
-* altseq
 * anchor
 * conjseq
-* quant
-* subcapture
 * subrule
 * uniprop
