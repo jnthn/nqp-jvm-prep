@@ -2220,6 +2220,17 @@ public final class Ops {
     	bstack.push_native(tc);
     }
     
+    public static long rxpeek(SixModelObject bstack, long mark, ThreadContext tc) {
+    	long ptr = bstack.elems(tc);
+        while (ptr >= 0) {
+        	bstack.at_pos_native(tc, ptr);
+        	if (tc.native_i == mark)
+        		break;
+        	ptr -= 4;
+        }
+        return ptr;
+    }
+    
     /* Coercions. */
     public static long coerce_s2i(String in) {
         try {
