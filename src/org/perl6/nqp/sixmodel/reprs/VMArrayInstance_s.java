@@ -17,6 +17,7 @@ public class VMArrayInstance_s extends SixModelObject {
         else if (index >= elems) {
         	tc.native_type = ThreadContext.NATIVE_STR;
             tc.native_s = null;
+            return;
         }
 
         tc.native_type = ThreadContext.NATIVE_STR;
