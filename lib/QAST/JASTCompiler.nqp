@@ -3072,6 +3072,8 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<eos> ));
         $il.append(JAST::Instruction.new( :op('aconst_null') ));
         $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
         #$ops.push_pirop('eq', '$I19', 1, $restartlabel);
         #$ops.push_pirop('gt', %*REG<pos>, %*REG<eos>, %*REG<fail>);
         
@@ -3426,6 +3428,106 @@ class QAST::CompilerJAST {
         
         $il;
     }
+
+    method quant($node) {
+        my $il        := JAST::InstructionList.new();
+        my $backtrack := $node.backtrack || 'g';
+        my $sep       := $node[1];
+        my $prefix    := self.unique('rxquant' ~ $backtrack);
+        my $looplabel := JAST::Label.new( :name($prefix ~ '_loop') );
+        my $donelabel := JAST::Label.new( :name($prefix ~ '_done') );
+        my $min       := $node.min;
+        my $max       := $node.max;
+        my $needrep   := $min > 1 || $max > 1;
+        my $needmark  := $needrep || $backtrack eq 'r';
+
+        if $min == 0 && $max == 0 {
+            # Nothing to do, and nothing to backtrack into.
+        }
+        elsif $backtrack eq 'f' {
+            nqp::die("Frugal quantifiers NYI");
+        }
+        else {
+            my $mark := &*REGISTER_MARK($donelabel);
+
+            if $min == 0 {
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+                $il.append(JAST::PushIVal.new( :value($mark) ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+                $il.append(JAST::PushIVal.new( :value(0) ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+            }
+            elsif $needmark {
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+                $il.append(JAST::PushIVal.new( :value($mark) ));
+                $il.append(JAST::PushIVal.new( :value(-1) ));
+                $il.append(JAST::PushIVal.new( :value(0) ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+            }
+            
+            $il.append($looplabel);
+            $il.append(self.regex_jast($node[0]));
+            
+            if $needmark {
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::PushIVal.new( :value($mark) ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "rxpeek", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::PushIVal.new( :value(2) ));
+                $il.append(JAST::Instruction.new( :op('ladd') ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
+                
+                if $backtrack eq 'r' {
+                    self.regex_commit($il, $mark);
+                }
+                
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::PushIVal.new( :value(1) ));
+                $il.append(JAST::Instruction.new( :op('ladd') ));
+                $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
+                
+                if $max > 1 {
+                    $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                    $il.append(JAST::PushIVal.new( :value($node.max) ));
+                    $il.append(JAST::Instruction.new( :op('lcmp') ));
+                    $il.append(JAST::Instruction.new( :op('l2i') ));
+                    $il.append(JAST::Instruction.new( :op('ifge'), $donelabel ));
+                }
+            }
+            
+            unless $max == 1 {
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+                $il.append(JAST::PushIVal.new( :value($mark) ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+                $il.append(self.regex_jast($sep)) if $sep;
+                $il.append(JAST::Instruction.new( :op('goto'), $looplabel ));
+            }
+            
+            $il.append($donelabel);
+            if $min > 1 {
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
+                $il.append(JAST::PushIVal.new( :value(+$node.min) ));
+                $il.append(JAST::Instruction.new( :op('lcmp') ));
+                $il.append(JAST::Instruction.new( :op('l2i  ') ));
+                $il.append(JAST::Instruction.new( :op('iflt'), %*REG<fail> ));
+            }
+        }
+        
+        $il;
+    }
     
     method scan($node) {
         my $il := JAST::InstructionList.new();
@@ -3482,6 +3584,14 @@ class QAST::CompilerJAST {
     
     # a :rxtype<ws> node is a normal subrule call
     method ws($node) { self.subrule($node) }
+    
+    method regex_commit($il, $mark) {
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::PushIVal.new( :value($mark) ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "rxcommit", 'Void', $TYPE_SMO, 'Long', $TYPE_TC ));
+    }
     
     multi method as_jast($unknown, :$want) {
         nqp::die("Unknown QAST node type " ~ $unknown.HOW.name($unknown));
