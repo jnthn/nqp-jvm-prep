@@ -2231,6 +2231,48 @@ public final class Ops {
         return ptr;
     }
     
+    public static void rxcommit(SixModelObject bstack, long mark, ThreadContext tc) {
+    	long ptr = bstack.elems(tc);
+    	long caps;
+    	if (ptr > 0) {
+    		bstack.at_pos_native(tc, ptr - 1);
+    		caps = tc.native_i;
+    	}
+    	else {
+    		caps = 0;
+    	}
+    	
+    	while (ptr >= 0) {
+        	bstack.at_pos_native(tc, ptr);
+        	if (tc.native_i == mark)
+        		break;
+        	ptr -= 4;
+        }
+        
+    	bstack.set_elems(tc, ptr);
+        
+        if (caps > 0) {
+            if (ptr > 0) {
+                /* top mark frame is an autofail frame, reuse it to hold captures */
+            	bstack.at_pos_native(tc, ptr - 3);
+            	if (tc.native_i < 0) {
+            		tc.native_i = caps;
+            		bstack.bind_pos_native(tc, ptr - 1);
+            	}
+            }
+            
+            /* push a new autofail frame onto bstack to hold the captures */
+            tc.native_i = 0;
+            bstack.push_native(tc);
+            tc.native_i = -1;
+            bstack.push_native(tc);
+            tc.native_i = 0;
+            bstack.push_native(tc);
+            tc.native_i = caps;
+            bstack.push_native(tc);
+        }
+    }
+    
     /* Coercions. */
     public static long coerce_s2i(String in) {
         try {
