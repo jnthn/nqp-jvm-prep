@@ -3600,6 +3600,71 @@ class QAST::CompilerJAST {
         
         $il;
     }
+
+    method subcapture($node) {
+        my $il        := JAST::InstructionList.new();
+        my $prefix    := self.unique('rxcap');
+        my $donelabel := JAST::Label.new( :name($prefix ~ '_done') );
+        my $faillabel := JAST::Label.new( :name($prefix ~ '_fail') );
+
+        my $mark := &*REGISTER_MARK($faillabel);
+        self.regex_mark($il, $mark,
+            JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+            JAST::PushIVal.new( :value(0) ));
+        $il.append(self.regex_jast($node[0]));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::PushIVal.new( :value($mark) ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "rxpeek", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
+
+        my $temp := QAST::Node.unique('rx_subcapture_cur_');
+        my $methqast := QAST::Stmts.new(
+            QAST::Op.new(
+                :op('bindattr_i'),
+                QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                QAST::Var.new( :name(%*REG<curclass>), :scope('local') ),
+                QAST::SVal.new( :value('$!pos') ),
+                QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) )
+            ),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name($temp), :scope('local'), :decl('var') ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('!cursor_start_subcapture'),
+                    QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                    QAST::Var.new( :name(%*REG<itemp>), :scope('local'), :returns(int) )
+                )),
+            QAST::Op.new(
+                :op('callmethod'), :name('!cursor_pass'),
+                QAST::Var.new( :name($temp), :scope('local') ),
+                QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) )
+            ),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<cstack>), :scope('local') ),
+                QAST::Op.new(
+                    :op('callmethod'), :name('!cursor_capture'),
+                    QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                    QAST::Var.new( :name($temp), :scope('local') ),
+                    QAST::SVal.new( :value($node.name) )
+                )));
+        $il.append(self.as_jast($methqast, :want($RT_VOID)).jast);
+        
+        $il.append(JAST::Instruction.new( :op('goto'), $donelabel ));
+        $il.append($faillabel);
+        $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
+        $il.append($donelabel);
+        
+        $il;
+    }
     
     # a :rxtype<ws> node is a normal subrule call
     method ws($node) { self.subrule($node) }
