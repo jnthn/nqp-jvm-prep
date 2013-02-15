@@ -3193,7 +3193,37 @@ class QAST::CompilerJAST {
     method regex_jast($node) {
         my $rxtype := $node.rxtype() || 'concat';
         self."$rxtype"($node);
-    }    
+    }
+
+    method altseq($node) {
+        my $il       := JAST::InstructionList.new();
+        my $prefix   := self.unique('alt') ~ '_';
+        my $altcount := 0;
+        my $iter     := nqp::iterator($node.list);
+        my $endlabel := JAST::Label.new( :name($prefix ~ 'end') );
+        my $altlabel := JAST::Label.new( :name($prefix ~ $altcount) );
+        my $ajast    := self.regex_jast(nqp::shift($iter));
+        while $iter {
+            $il.append($altlabel);
+            $altcount++;
+            $altlabel := JAST::Label.new( :name($prefix ~ $altcount) );
+            my $mark := &*REGISTER_MARK($altlabel);
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+            $il.append(JAST::PushIVal.new( :value($mark) ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "rxmark", 'Void', $TYPE_SMO, 'Long', 'Long', 'Long', $TYPE_TC ));
+            $il.append($ajast);
+            $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
+            $ajast := self.regex_jast(nqp::shift($iter));
+        }
+        $il.append($altlabel);
+        $il.append($ajast);
+        $il.append($endlabel);
+        $il;
+    }
 
     method concat($node) {
         my $il := JAST::InstructionList.new();
