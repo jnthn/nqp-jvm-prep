@@ -2968,7 +2968,7 @@ class QAST::CompilerJAST {
         # build the list of (unique) locals we need
         my %*REG;
         my $prefix := self.unique('rx') ~ '_';
-        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i');
+        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i itemp i');
         while $reglist {
             my $reg := nqp::shift($reglist);
             my $tc := nqp::shift($reglist);
@@ -3097,12 +3097,11 @@ class QAST::CompilerJAST {
         
         # Otherwise, start handling the cstack, if it's not empty.
         # The setup done here is used when we backtrack into subrules.
-        my $temp := $*TA.fresh_i();
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
-        $il.append(JAST::Instruction.new( :op('lstore'), $temp ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
         $il.append(JAST::Instruction.new( :op('ifnull'), $cstacklabel ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
@@ -3112,7 +3111,7 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('l2i') ));
         $il.append(JAST::Instruction.new( :op('ifeq'), $cstacklabel ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
-        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
         $il.append(JAST::PushIVal.new( :value(1) ));
         $il.append(JAST::Instruction.new( :op('lsub') ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
@@ -3136,7 +3135,7 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
-        $il.append(JAST::Instruction.new( :op('lstore'), $temp ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
         
         # Handle position and mark special cases.
         $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
@@ -3147,7 +3146,7 @@ class QAST::CompilerJAST {
         $il.append(JAST::PushIVal.new( :value(0) ));
         $il.append(JAST::Instruction.new( :op('lcmp') ));
         $il.append(JAST::Instruction.new( :op('iflt'), $faillabel ));
-        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
         $il.append(JAST::PushIVal.new( :value(0) ));
         $il.append(JAST::Instruction.new( :op('lcmp') ));
         $il.append(JAST::Instruction.new( :op('ifeq'), $faillabel ));
@@ -3168,7 +3167,7 @@ class QAST::CompilerJAST {
         # Otherwise, we need to jump to the appropriate label. Emit the
         # jump table.
         $il.append($jumplabel);
-        $il.append(JAST::Instruction.new( :op('lload'), $temp ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
         $il.append(JAST::Instruction.new( :op('l2i') ));
         my $ts := JAST::Instruction.new( :op('tableswitch'), $donelabel );
         for @mark_labels {
@@ -3443,7 +3442,6 @@ class QAST::CompilerJAST {
         elsif $backtrack eq 'f' {
             my $seplabel := JAST::Label.new( :name($prefix ~ '_sep') );
             my $mark     := &*REGISTER_MARK($looplabel);
-            my $itemp    := $*TA.fresh_i();
             
             $il.append(JAST::PushIVal.new( :value(0) ));
             $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
@@ -3456,11 +3454,11 @@ class QAST::CompilerJAST {
             $il.append(JAST::Instruction.new( :op('goto'), $seplabel )) if $sep;
             $il.append($looplabel);
             $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
-            $il.append(JAST::Instruction.new( :op('lstore'), $itemp ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
             $il.append(self.regex_jast($sep)) if $sep;
             $il.append($seplabel) if $sep;
             $il.append(self.regex_jast($node[0]));
-            $il.append(JAST::Instruction.new( :op('lload'), $itemp ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
             $il.append(JAST::PushIVal.new( :value(1) ));
             $il.append(JAST::Instruction.new( :op('ladd') ));
             $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
