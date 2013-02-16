@@ -1302,19 +1302,19 @@ QAST::OperationsJAST.map_classlib_core_op('multicachefind', $TYPE_OPS, 'multicac
 
 # Constant mapping.
 my %const_map := nqp::hash(
-    'CCLASS_ANY',           0,
-    'CCLASS_NUMERIC',       1,
-    'CCLASS_WHITESPACE',    2,
-    'CCLASS_WORD',          3,
-    'CCLASS_NEWLINE',       4,
-    'CCLASS_ALPHABETIC',    5,
-    'CCLASS_UPPERCASE',     6,
-    'CCLASS_LOWERCASE',     7,
-    'CCLASS_HEXADECIMAL',   8,
-    'CCLASS_BLANK',         9,
-    'CCLASS_CONTROL',       10,
-    'CCLASS_PUNCTUATION',   11,
-    'CCLASS_ALPHANUMERIC',  12
+    'CCLASS_ANY',           65535,
+    'CCLASS_UPPERCASE',     1,
+    'CCLASS_LOWERCASE',     2,
+    'CCLASS_ALPHABETIC',    4,
+    'CCLASS_NUMERIC',       8,
+    'CCLASS_HEXADECIMAL',   16,
+    'CCLASS_WHITESPACE',    32,
+    'CCLASS_BLANK',         256,
+    'CCLASS_CONTROL',       512,
+    'CCLASS_PUNCTUATION',   1024,
+    'CCLASS_ALPHANUMERIC',  2048,
+    'CCLASS_NEWLINE',       4096,
+    'CCLASS_WORD',          8192
 );
 QAST::OperationsJAST.add_core_op('const', -> $qastcomp, $op {
     if nqp::existskey(%const_map, $op.name) {
@@ -3300,12 +3300,12 @@ class QAST::CompilerJAST {
     my %cclass_code;
     INIT {
         # Codes match constants in Ops.java.
-        %cclass_code<.>  := 0;
-        %cclass_code<d>  := 1;
-        %cclass_code<s>  := 2;
-        %cclass_code<w>  := 3;
-        %cclass_code<n>  := 4;
-        %cclass_code<nl> := 4;
+        %cclass_code<.>  := nqp::const::CCLASS_ANY;
+        %cclass_code<d>  := nqp::const::CCLASS_NUMERIC;
+        %cclass_code<s>  := nqp::const::CCLASS_WHITESPACE;
+        %cclass_code<w>  := nqp::const::CCLASS_WORD;
+        %cclass_code<n>  := nqp::const::CCLASS_NEWLINE;
+        %cclass_code<nl> := nqp::const::CCLASS_NEWLINE;
     }
 
     method cclass($node) {

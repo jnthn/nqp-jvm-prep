@@ -1763,19 +1763,19 @@ public final class Ops {
         return str.codePointAt((int)offset);
     }
     
-    private static final int CCLASS_ANY          = 0;
-    private static final int CCLASS_NUMERIC      = 1;
-    private static final int CCLASS_WHITESPACE   = 2;
-    private static final int CCLASS_WORD         = 3;
-    private static final int CCLASS_NEWLINE      = 4;
-    private static final int CCLASS_ALPHABETIC   = 5;
-    private static final int CCLASS_UPPERCASE    = 6;
-    private static final int CCLASS_LOWERCASE    = 7;
-    private static final int CCLASS_HEXADECIMAL  = 8;
-    private static final int CCLASS_BLANK        = 9;
-    private static final int CCLASS_CONTROL      = 10;
-    private static final int CCLASS_PUNCTUATION  = 11;
-    private static final int CCLASS_ALPHANUMERIC = 12;
+    private static final int CCLASS_ANY          = 65535;
+    private static final int CCLASS_UPPERCASE    = 1;
+    private static final int CCLASS_LOWERCASE    = 2;
+    private static final int CCLASS_ALPHABETIC   = 4;
+    private static final int CCLASS_NUMERIC      = 8;
+    private static final int CCLASS_HEXADECIMAL  = 16;
+    private static final int CCLASS_WHITESPACE   = 32;
+    private static final int CCLASS_BLANK        = 256;
+    private static final int CCLASS_CONTROL      = 512;
+    private static final int CCLASS_PUNCTUATION  = 1024;
+    private static final int CCLASS_ALPHANUMERIC = 2048;
+    private static final int CCLASS_NEWLINE      = 4096;
+    private static final int CCLASS_WORD         = 8192;    
     private static final int PUNCT_MASK =
     	Character.CONNECTOR_PUNCTUATION | Character.DASH_PUNCTUATION |
        	Character.END_PUNCTUATION | Character.FINAL_QUOTE_PUNCTUATION |
