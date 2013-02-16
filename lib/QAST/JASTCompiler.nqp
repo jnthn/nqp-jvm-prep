@@ -3081,8 +3081,13 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('astore'), %*REG<subcur> ));
         $il.append(JAST::PushIVal.new( :value(0) ));
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
-        #$ops.push_pirop('eq', '$I19', 1, $restartlabel);
-        #$ops.push_pirop('gt', %*REG<pos>, %*REG<eos>, %*REG<fail>);
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<restart> ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifne'), $restartlabel ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op('ifgt'), %*REG<fail> ));
         
         # Compile the regex body itself; if we make it thorugh it, we go to
         # the end and are finished.
@@ -3090,8 +3095,14 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
         
         # Restart.
-        #$ops.push($restartlabel);
-        #$ops.push_pirop('repr_get_attr_obj', %*REG<cstack>, %*REG<cur>, %*REG<curclass>, '"$!cstack"');
+        $il.append($restartlabel);
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+        $il.append(JAST::PushSVal.new( :value('$!cstack') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "getattr", $TYPE_SMO, $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
         
         # Failure/backtrack handling. If no bstack, we're done.
         $il.append($faillabel);
@@ -3110,7 +3121,11 @@ class QAST::CompilerJAST {
                 "pop_i", 'Long', $TYPE_SMO, $TYPE_TC ));
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
-        $il.append(JAST::Instruction.new( :op('ifnull'), $cstacklabel ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "islist", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $cstacklabel ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
