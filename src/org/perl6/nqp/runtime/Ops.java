@@ -2245,7 +2245,19 @@ public final class Ops {
     	throw new RuntimeException("nfatostatelist NYI");
     }
     public static SixModelObject nfarunproto(SixModelObject nfa, String target, long pos, ThreadContext tc) {
-    	throw new RuntimeException("nfarunproto NYI");
+        /* Run the NFA. */
+    	int[] fates = runNFA(tc, (NFAInstance)nfa, target, pos);
+        
+        /* Copy results into an RIA. */
+    	SixModelObject BOOTIntArray = tc.gc.BOOTIntArray;
+        SixModelObject fateRes = BOOTIntArray.st.REPR.allocate(tc, BOOTIntArray.st);
+        fateRes.initialize(tc);
+        for (int i = 0; i < fates.length; i++) {
+            tc.native_i = fates[i];
+            fateRes.bind_pos_native(tc, i);
+        }
+        
+        return fateRes;
     }
     public static SixModelObject nfarunalt(SixModelObject nfa, String target, long pos,
     		SixModelObject bstack, SixModelObject cstack, SixModelObject marks, ThreadContext tc) {
