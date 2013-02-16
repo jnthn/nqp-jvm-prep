@@ -548,7 +548,8 @@ public class P6Opaque extends REPR {
             		obj.getClass().getField("field_" + i).set(obj, reader.readRef());
             	}
             	else {
-            		throw new RuntimeException("Cannot deserialize non-reference attributes in P6opaque yet");
+            		flattenedSTables[i].REPR.deserialize_inlined(tc, flattenedSTables[i],
+            				reader, "field_" + i, obj);
             	}
             }
         }

@@ -44,7 +44,7 @@ public class P6num extends REPR {
     }
 	
 	public void inlineStorage(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        FieldGen fg = new FieldGen(Constants.ACC_PRIVATE, Type.DOUBLE, prefix, cp);
+        FieldGen fg = new FieldGen(Constants.ACC_PUBLIC, Type.DOUBLE, prefix, cp);
         c.addField(fg.getField());
     }
     
@@ -114,5 +114,14 @@ public class P6num extends REPR {
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
 		((P6numInstance)obj).value = reader.readDouble();
+	}
+	
+	public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader,
+			String prefix, SixModelObject obj) {
+		try {
+			obj.getClass().getField(prefix).set(obj, reader.readDouble());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

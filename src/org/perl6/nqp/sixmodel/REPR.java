@@ -43,7 +43,7 @@ public abstract class REPR {
      * Gets attribute access hint for the representation.
      */
     public long hint_for(ThreadContext tc, STable st, SixModelObject class_handle, String name) {
-    return STable.NO_HINT;
+    	return STable.NO_HINT;
     }
     
     /**
@@ -79,7 +79,7 @@ public abstract class REPR {
     // XXX void (*serialize) (ThreadContext, STable *st, void *data, SerializationWriter *writer);
     
     /**
-     *  Object deserialization. Happens in two steps. The first stub step
+     * Object deserialization. Happens in two steps. The first stub step
      * creates an object to be filled out later. Note that the STable may
      * not be fully available yet if it's in the current compilation unit.
      * The second step has the STable fully formed (though objects it
@@ -119,6 +119,10 @@ public abstract class REPR {
     }
     public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
         throw new RuntimeException("This representation does not support being a box target");        
+    }
+    public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
+    		String prefix, SixModelObject obj) {
+    	throw new RuntimeException("This representation cannot deserialize an inlined representation of itself");
     }
 }
 
