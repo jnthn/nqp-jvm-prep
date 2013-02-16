@@ -1,10 +1,10 @@
 package org.perl6.nqp.sixmodel.reprs;
 
 public class NFAStateInfo {
-	int act;
-    int to;
-    int arg_i;
-    String arg_s;
-    char arg_uc;
-    char arg_lc;
+	public int act;
+    public int to;
+    public int arg_i;
+    public String arg_s;
+    public char arg_uc;
+    public char arg_lc;
 }

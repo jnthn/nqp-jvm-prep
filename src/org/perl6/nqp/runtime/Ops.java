@@ -2185,8 +2185,58 @@ public final class Ops {
     }
     
     /* NFA operations. */
-    public static SixModelObject nfafromstatelist(SixModelObject list, SixModelObject type, ThreadContext tc) {
-    	throw new RuntimeException("nfafromstatelist NYI");
+    public static SixModelObject nfafromstatelist(SixModelObject states, SixModelObject nfaType, ThreadContext tc) {
+        /* Create NFA object. */
+        NFAInstance nfa = (NFAInstance)nfaType.st.REPR.allocate(tc, nfaType.st);
+        nfa.initialize(tc);
+        
+        /* The first state entry is the fates list. */
+        nfa.fates = states.at_pos_boxed(tc, 0);
+        
+        /* Go over the rest and convert to the NFA. */
+        int numStates = (int)states.elems(tc) - 1;
+        nfa.numStates = numStates;
+        nfa.states = new NFAStateInfo[numStates][];
+        for (int i = 0; i < numStates; i++) {
+            SixModelObject edgeInfo = states.at_pos_boxed(tc, i + 1);
+            int elems = (int)edgeInfo.elems(tc);
+            int edges = elems / 3;
+            int curEdge = 0;
+            nfa.states[i] = new NFAStateInfo[edges];
+            for (int j = 0; j < elems; j += 3) {
+                int act = (int)smart_numify(edgeInfo.at_pos_boxed(tc, j), tc);
+                int to = (int)smart_numify(edgeInfo.at_pos_boxed(tc, j + 2), tc);
+                
+                nfa.states[i][curEdge] = new NFAStateInfo();
+                nfa.states[i][curEdge].act = act;
+                nfa.states[i][curEdge].to = to;
+                
+                switch (act) {
+                case NFA.EDGE_FATE:
+                case NFA.EDGE_CODEPOINT:
+                case NFA.EDGE_CODEPOINT_NEG:
+                case NFA.EDGE_CHARCLASS:
+                case NFA.EDGE_CHARCLASS_NEG:
+                    nfa.states[i][curEdge].arg_i = (int)smart_numify(edgeInfo.at_pos_boxed(tc, j + 1), tc);
+                    break;
+                case NFA.EDGE_CHARLIST:
+                case NFA.EDGE_CHARLIST_NEG:
+                    nfa.states[i][curEdge].arg_s = edgeInfo.at_pos_boxed(tc, j + 1).get_str(tc);
+                    break;
+                case NFA.EDGE_CODEPOINT_I:
+                case NFA.EDGE_CODEPOINT_I_NEG: {
+                    SixModelObject arg = edgeInfo.at_pos_boxed(tc, j + 1);
+                    nfa.states[i][curEdge].arg_lc = (char)smart_numify(arg.at_pos_boxed(tc, 0), tc);
+                    nfa.states[i][curEdge].arg_uc = (char)smart_numify(arg.at_pos_boxed(tc, 1), tc);
+                    break;
+                }
+                }
+                
+                curEdge++;
+            }
+        }
+        
+        return nfa;
     }
     public static SixModelObject nfatostatelist(SixModelObject nfa, ThreadContext tc) {
     	throw new RuntimeException("nfatostatelist NYI");
@@ -2194,7 +2244,7 @@ public final class Ops {
     public static SixModelObject nfarunproto(SixModelObject nfa, String target, long pos, ThreadContext tc) {
     	throw new RuntimeException("nfarunproto NYI");
     }
-    public static SixModelObject nfarunalto(SixModelObject nfa, String target, long pos,
+    public static SixModelObject nfarunalt(SixModelObject nfa, String target, long pos,
     		SixModelObject bstack, SixModelObject cstack, SixModelObject labels, ThreadContext tc) {
     	throw new RuntimeException("nfarunalt NYI");
     }
