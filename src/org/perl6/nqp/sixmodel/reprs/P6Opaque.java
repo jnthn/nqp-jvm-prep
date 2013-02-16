@@ -17,6 +17,8 @@ public class P6Opaque extends REPR {
     	public STable st;
     	public boolean boxTarget;
     	public boolean hasAutoVivContainer;
+    	public boolean posDelegate;
+    	public boolean assDelegate;
     }
     
     public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
@@ -73,6 +75,8 @@ public class P6Opaque extends REPR {
                     autoVivs.add(autoViv);
                     if (autoViv != null)
                     	info.hasAutoVivContainer = true;
+                    info.posDelegate = attrHash.exists_key(tc, "positional_delegate") != 0;
+                    info.assDelegate = attrHash.exists_key(tc, "associative_delegate") != 0;
                     attrInfoList.add(info);
                 }
                 classHandles.add(type);
@@ -291,6 +295,14 @@ public class P6Opaque extends REPR {
                     throw new RuntimeException("A box_target must not have a reference type attribute");
                 attr.st.REPR.generateBoxingMethods(tc, attr.st, c, cp, "field_" + i);
             }
+            
+            /* If it's a positional or associative delegate, give it the methods
+             * for that.
+             */
+            if (attr.posDelegate)
+            	generateDelegateMethod(tc, c, cp, "field_" + i, "posDelegate");
+            if (attr.assDelegate)
+            	generateDelegateMethod(tc, c, cp, "field_" + i, "assDelegate");
         }
         
         /* Finish bind_boxed_attribute. */
@@ -380,7 +392,25 @@ public class P6Opaque extends REPR {
         ((P6OpaqueREPRData)st.REPRData).jvmClass = new ByteClassLoader(classCompiled).findClass(className);
     }
 
-    public SixModelObject allocate(ThreadContext tc, STable st) {
+    private void generateDelegateMethod(ThreadContext tc, ClassGen c,
+			ConstantPoolGen cp, String field, String methodName) {
+    	InstructionFactory f = new InstructionFactory(cp);
+        InstructionList methIl = new InstructionList();
+        Type smoType = Type.getType("Lorg/perl6/nqp/sixmodel/SixModelObject;");
+        MethodGen meth = new MethodGen(Constants.ACC_PUBLIC,
+        		smoType,
+                new Type[] { },
+                new String[] { },
+                methodName, c.getClassName(), methIl, cp);
+        methIl.append(InstructionConstants.ALOAD_0);
+        methIl.append(f.createFieldAccess(c.getClassName(), field, smoType, Constants.GETFIELD));
+        methIl.append(InstructionConstants.ARETURN);
+        meth.setMaxStack();
+        c.addMethod(meth.getMethod());
+        methIl.dispose();
+	}
+
+	public SixModelObject allocate(ThreadContext tc, STable st) {
         try {
             P6OpaqueBaseInstance obj = (P6OpaqueBaseInstance)((P6OpaqueREPRData)st.REPRData).jvmClass.newInstance();
             obj.st = st;
@@ -483,7 +513,7 @@ public class P6Opaque extends REPR {
             }
         }
         
-        // Finally, read in the name to index mapping.
+        // Read in the name to index mapping.
         int numClasses = (int)reader.readLong();
         ArrayList<SixModelObject> classHandles = new ArrayList<SixModelObject>();
         ArrayList<HashMap<String, Integer>> nameToHintMaps = new ArrayList<HashMap<String, Integer>>(); 
@@ -510,6 +540,10 @@ public class P6Opaque extends REPR {
         REPRData.classHandles = classHandles.toArray(new SixModelObject[0]);
         REPRData.nameToHintMap = nameToHintMaps.toArray(new HashMap[0]);
         
+        // Read delegate slots.
+        int posDelegateSlot = (int)reader.readLong();
+        int assDelegateSlot = (int)reader.readLong();
+        
         // Finally, reassemble the Java backing type.
         ArrayList<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
         for (int i = 0; i < numAttributes; i++) {
@@ -519,6 +553,8 @@ public class P6Opaque extends REPR {
         	else
         		info.st = tc.gc.KnowHOW.st; // Any reference type will do
         	info.boxTarget = i == unboxIntSlot || i == unboxNumSlot || i == unboxStrSlot;
+        	info.posDelegate = i == posDelegateSlot;
+        	info.assDelegate = i == assDelegateSlot;
         	info.hasAutoVivContainer = REPRData.autoVivContainers[i] != null;
         	attrInfoList.add(info);
         }

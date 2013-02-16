@@ -45,4 +45,68 @@ public class P6OpaqueBaseInstance extends SixModelObject {
     public void badReference() {
         throw new RuntimeException("Cannot access a native attribute as a reference attribute");
     }
+    
+    public SixModelObject posDelegate() {
+    	throw new RuntimeException("This type does not support positional operations");
+    }
+    
+    public SixModelObject assDelegate() {
+    	throw new RuntimeException("This type does not support associative operations");
+    }
+    
+    public SixModelObject at_pos_boxed(ThreadContext tc, long index) {
+        return posDelegate().at_pos_boxed(tc, index);
+    }
+    public void at_pos_native(ThreadContext tc, long index) {
+    	posDelegate().at_pos_native(tc, index);
+    }
+    public void bind_pos_boxed(ThreadContext tc, long index, SixModelObject value) {
+    	posDelegate().bind_pos_boxed(tc, index, value);
+    }
+    public void bind_pos_native(ThreadContext tc, long index) {
+    	posDelegate().bind_pos_native(tc, index);
+    }
+    public void set_elems(ThreadContext tc, long count) {
+    	posDelegate().set_elems(tc, count);
+    }
+    public void push_boxed(ThreadContext tc, SixModelObject value) {
+    	posDelegate().push_boxed(tc, value);
+    }
+    public void push_native(ThreadContext tc) {
+    	posDelegate().push_native(tc);
+    }
+    public SixModelObject pop_boxed(ThreadContext tc) {
+        return posDelegate().pop_boxed(tc);
+    }
+    public void pop_native(ThreadContext tc) {
+    	posDelegate().pop_native(tc);
+    }
+    public void unshift_boxed(ThreadContext tc, SixModelObject value) {
+    	posDelegate().unshift_boxed(tc, value);
+    }
+    public void unshift_native(ThreadContext tc) {
+    	posDelegate().unshift_native(tc);
+    }
+    public SixModelObject shift_boxed(ThreadContext tc) {
+        return posDelegate().shift_boxed(tc);
+    }
+    public void shift_native(ThreadContext tc) {
+    	posDelegate().shift_native(tc);
+    }
+    public void splice(ThreadContext tc, SixModelObject from, long offset, long count) {
+    	posDelegate().splice(tc, from, offset, count);
+    }
+    
+    public SixModelObject at_key_boxed(ThreadContext tc, String key) {
+        return assDelegate().at_key_boxed(tc, key);
+    }
+    public void bind_key_boxed(ThreadContext tc, String key, SixModelObject value) {
+    	assDelegate().bind_key_boxed(tc, key, value);
+    }
+    public long exists_key(ThreadContext tc, String key) {
+    	return assDelegate().exists_key(tc, key);
+    }
+    public void delete_key(ThreadContext tc, String key) {
+    	assDelegate().delete_key(tc, key);
+    }
 }
