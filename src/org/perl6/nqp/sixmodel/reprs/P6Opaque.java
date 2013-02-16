@@ -375,7 +375,7 @@ public class P6Opaque extends REPR {
         /* Finally, add empty constructor and generate the JVM storage class. */
         c.addEmptyConstructor(Constants.ACC_PUBLIC);
         // Uncomment the following line to help debug the code-gen.
-        try { c.getJavaClass().dump(className + ".class"); } catch (Exception e) { }
+        //try { c.getJavaClass().dump(className + ".class"); } catch (Exception e) { }
         byte[] classCompiled = c.getJavaClass().getBytes();
         ((P6OpaqueREPRData)st.REPRData).jvmClass = new ByteClassLoader(classCompiled).findClass(className);
     }
