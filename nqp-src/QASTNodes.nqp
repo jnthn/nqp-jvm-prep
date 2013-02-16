@@ -45,7 +45,7 @@ class QAST::Node {
         nqp::bindattr($new, QAST::Node, '@!array', @children);
         nqp::bindattr($new, QAST::Node, '%!hash', nqp::hash());
         for %options {
-#            nqp::findmethod($new, $_.key)($new, $_.value);
+            nqp::findmethod($new, $_.key)($new, $_.value);
         }
         $new;
     }
@@ -250,9 +250,9 @@ class QAST::WVal is QAST::Node does QAST::CompileTimeValue {
 
 class QAST::Want is QAST::Node {
     method has_compile_time_value() {
-#        nqp::istype(self[0], QAST::Node)
-#            ?? self[0].has_compile_time_value()
-#            !! 0
+        nqp::istype(self[0], QAST::Node)
+            ?? self[0].has_compile_time_value()
+            !! 0
     }
     
     method compile_time_value() {
