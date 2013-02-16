@@ -2968,7 +2968,7 @@ class QAST::CompilerJAST {
         # build the list of (unique) locals we need
         my %*REG;
         my $prefix := self.unique('rx') ~ '_';
-        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i itemp i altmarks o');
+        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i itemp i altmarks o subcur o');
         while $reglist {
             my $reg := nqp::shift($reglist);
             my $tc := nqp::shift($reglist);
@@ -3077,6 +3077,8 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<eos> ));
         $il.append(JAST::Instruction.new( :op('aconst_null') ));
         $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('aconst_null') ));
+        $il.append(JAST::Instruction.new( :op('astore'), %*REG<subcur> ));
         $il.append(JAST::PushIVal.new( :value(0) ));
         $il.append(JAST::Instruction.new( :op('lstore'), %*REG<rep> ));
         #$ops.push_pirop('eq', '$I19', 1, $restartlabel);
@@ -3122,9 +3124,7 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('aload_1') ));
         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 "atpos", $TYPE_SMO, $TYPE_SMO, 'Long', $TYPE_TC ));
-        # XXX TODO: the following pop should put it in a temporary for the
-        # purpose of subrule backtracking.
-        $il.append(JAST::Instruction.new( :op('pop') ));
+        $il.append(JAST::Instruction.new( :op('astore'), %*REG<subcur> ));
         $il.append($cstacklabel);
         
         # Pop rep, pos and mark off the stack and store them.
@@ -3727,6 +3727,168 @@ class QAST::CompilerJAST {
         $il.append($faillabel);
         $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
         $il.append($donelabel);
+        
+        $il;
+    }
+
+    method subrule($node) {
+        my $il := JAST::InstructionList.new();
+        my $name := nqp::defined($node.name) ?? $node.name !! '';
+        my $subtype := $node.subtype;
+        my $captured := 0;
+
+        my $callqast := QAST::Stmts.new(
+            QAST::Op.new(
+                :op('bindattr_i'),
+                QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                QAST::Var.new( :name(%*REG<curclass>), :scope('local') ),
+                QAST::SVal.new( :value('$!pos') ),
+                QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) )
+            ));
+        if nqp::istype($node[0][0], QAST::SVal) {
+            # Method call.
+            my @callargs := nqp::clone($node[0].list);
+            my $name := @callargs.shift().value;
+            $callqast.push(QAST::Op.new(
+                :op('callmethod'), :name($name),
+                QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                |@callargs
+            ));
+        }
+        else {
+            # Normal invocation (probably positional capture).
+            my @callargs := nqp::clone($node[0].list);
+            my $target := @callargs.shift();
+            $callqast.push(QAST::Op.new(
+                :op('call'),
+                $target,
+                QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                |@callargs
+            ));
+        }
+        my $invres := self.as_jast($callqast, :want($RT_OBJ));
+        $il.append($invres.jast);
+        $*STACK.obtain($invres);
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('astore'), %*REG<subcur> ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+        $il.append(JAST::PushSVal.new( :value('$!pos') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "getattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('lcmp') ));
+        $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifge' !! 'iflt'), %*REG<fail> ));
+        
+        if $subtype ne 'zerowidth' {
+            my $rxname := self.unique('rxsubrule');
+            my $passlabel := JAST::Label.new( :name($rxname ~ '_pass') );
+            if $node.backtrack eq 'r' {
+                unless $subtype eq 'method' {
+                    my $mark := &*REGISTER_MARK($passlabel);
+                    self.regex_mark($il, $mark,
+                        JAST::PushIVal.new( :value(-1) ),
+                        JAST::PushIVal.new( :value(0) ));
+                    $il.append($passlabel);
+                }
+            }
+            else {
+                my $backlabel := JAST::Label.new( :name($rxname ~ '_back') );
+                $il.append(JAST::Instruction.new( :op('goto'), $passlabel ));
+                
+                $il.append($backlabel);
+                my $nextres := self.as_jast(QAST::Op.new(
+                    :op('callmethod'), :name('!cursor_next'),
+                    QAST::Var.new( :name(%*REG<subcur>), :scope('local') )
+                ), :want($RT_OBJ));
+                $il.append($nextres.jast);
+                $*STACK.obtain($nextres);
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::Instruction.new( :op('astore'), %*REG<subcur> ));
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+                $il.append(JAST::PushSVal.new( :value('$!pos') ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    "getattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+                $il.append(JAST::PushIVal.new( :value(0) ));
+                $il.append(JAST::Instruction.new( :op('lcmp') ));
+                $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifge' !! 'iflt'), %*REG<fail> ));
+                
+                $il.append($passlabel);
+                if $subtype eq 'capture' {
+                    my $capres := self.as_jast(QAST::Op.new(
+                        :op('callmethod'), :name('!cursor_capture'),
+                        QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                        QAST::Var.new( :name(%*REG<subcur>), :scope('local') ),
+                        QAST::SVal.new( :value($name) )
+                    ), :want($RT_OBJ));
+                    $il.append($capres.jast);
+                    $*STACK.obtain($capres);
+                    $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
+                    $captured := 1;
+                }
+                else {
+                    my $pushres := self.as_jast(QAST::Op.new(
+                        :op('callmethod'), :name('!cursor_push_cstack'),
+                        QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                        QAST::Var.new( :name(%*REG<subcur>), :scope('local') ),
+                    ), :want($RT_OBJ));
+                    $il.append($pushres.jast);
+                    $*STACK.obtain($pushres);
+                    $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
+                }
+                
+                my $mark := &*REGISTER_MARK($backlabel);
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::Instruction.new( :op('dup2') ));
+                $il.append(JAST::PushIVal.new( :value($mark) ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                    'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('pop2') ));
+                $il.append(JAST::PushIVal.new( :value(0) ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                    'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('pop2') ));
+                $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                    'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('pop2') ));
+                $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'elems',
+                    'Long', $TYPE_SMO, $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('aload_1') ));
+                $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                    'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+                $il.append(JAST::Instruction.new( :op('pop2') ));
+            }
+        }
+        
+        if !$captured && $subtype eq 'capture' {
+            my $capres := self.as_jast(QAST::Op.new(
+                :op('callmethod'), :name('!cursor_capture'),
+                QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+                QAST::Var.new( :name(%*REG<subcur>), :scope('local') ),
+                QAST::SVal.new( :value($name) )
+            ), :want($RT_OBJ));
+            $il.append($capres.jast);
+            $*STACK.obtain($capres);
+            $il.append(JAST::Instruction.new( :op('astore'), %*REG<cstack> ));
+        }
+        
+        unless $subtype eq 'zerowidth' {
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<subcur> ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
+            $il.append(JAST::PushSVal.new( :value('$!pos') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "getattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        }
         
         $il;
     }
