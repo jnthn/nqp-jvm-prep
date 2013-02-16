@@ -34,19 +34,42 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') is export {
     try unlink('output.temp');
 }
 
-sub qast_test($qast_maker, $expected, $desc = '') is export {
-    my $jast := QAST::CompilerJAST.jast($qast_maker(), :classname('QAST2JASTOutput'));
+class QASTResult {
+    has $!output;
+    has $!status;
+    has $!time;
+    has $!duration;
+    method status() { $!status }
+    method output() { $!output }
+    method time() { $!time }
+    method duration() { $!duration }
+}
+sub run_qast($qast) is export {
+    my $jast := QAST::CompilerJAST.jast($qast, :classname('QAST2JASTOutput'));
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
     run('java',
         '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
-    run('java',
-        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
-        'QAST2JASTOutput',
+
+    my $before := pir::time__N;
+    my $spawn_result := pir::spawnw__Is('java ' ~
+        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar') ~
+        ' QAST2JASTOutput' ~
         '> QAST2JASTOutput.output');
+    my $after := pir::time__N;
+    my $time := $after - $before;
+
+    my $exit   := pir::shr__Iii($spawn_result, 8);
+
     my $output := subst(slurp('QAST2JASTOutput.output'), /\r\n/, "\n", :global);
+
+    QASTResult.new(:output($output),:status($exit),:duration($time));
+}
+
+sub qast_test($qast_maker, $expected, $desc = '') is export {
+    my $output := run_qast($qast_maker()).output;
     if $output eq $expected {
         ok(1, $desc);
     }

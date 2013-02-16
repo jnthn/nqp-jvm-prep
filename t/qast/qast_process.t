@@ -10,24 +10,14 @@ plan(2);
             :op('exit'),
             QAST::IVal.new( :value($expected-exit) )
             ));
-    my $jast := QAST::CompilerJAST.jast(
-        QAST::CompUnit.new(
-            $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            ))),
-        :classname('QAST2JASTOutput'));
-    my $dump := $jast.dump();
-    spurt('QAST2JASTOutput.dump', $dump);
-    run('java',
-        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
-        'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
-        'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
-    my $output := pir::spawnw__Is('java -cp ' ~
-        pathlist('.', 'bin',  '3rdparty/bcel/bcel-5.2.jar') ~
-        ' QAST2JASTOutput');
-    my $exit   := pir::shr__Iii($output, 8);
+    my $qast := QAST::CompUnit.new(
+        $block,
+        :main(QAST::Op.new(
+            :op('call'),
+            QAST::BVal.new( :value($block) )
+        )));
+
+    my $exit   := run_qast($qast).status;
 
     if $exit == $expected-exit {
         ok(1, 'exit');
@@ -50,31 +40,13 @@ plan(2);
                     :op('sleep'),
                     QAST::NVal.new( :value($sleep) )
                 )));
-        my $jast := QAST::CompilerJAST.jast(
-            QAST::CompUnit.new(
-                $block,
-                :main(QAST::Op.new(
-                    :op('call'),
-                    QAST::BVal.new( :value($block) )
-                ))),
-                :classname('QAST2JASTOutput'));
-        my $dump := $jast.dump();
-        spurt('QAST2JASTOutput.dump', $dump);
-        run('java',
-            '-cp ' ~pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
-            'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
-            'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
-        my $before := pir::time__N;
-        run('java',
-            '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
-            'QAST2JASTOutput');
-        my $after := pir::time__N;
-        my $slept := $after - $before;
-
-        #unlink('QAST2JASTOutput.dump');
-        #unlink('QAST2JASTOutput.class');
-
-        return $slept;
+        my $qast := QAST::CompUnit.new(
+            $block,
+            :main(QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            )));
+        run_qast($qast).duration;
     }
 
     my $quick := timed_qast_test(0.0);
