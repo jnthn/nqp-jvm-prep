@@ -1489,10 +1489,10 @@ public final class Ops {
         return agg.exists_pos(tc, key);
     }
     public static long islist(SixModelObject obj, ThreadContext tc) {
-        return obj.st.REPR instanceof VMArray ? 1 : 0;
+        return obj != null && obj.st.REPR instanceof VMArray ? 1 : 0;
     }
     public static long ishash(SixModelObject obj, ThreadContext tc) {
-        return obj.st.REPR instanceof VMHash ? 1 : 0;
+        return obj != null && obj.st.REPR instanceof VMHash ? 1 : 0;
     }
     
     /* Container operations. */
