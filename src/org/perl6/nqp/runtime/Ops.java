@@ -10,7 +10,10 @@ import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.*;
@@ -2264,8 +2267,144 @@ public final class Ops {
         
         return nfa;
     }
+    
+    /* The NFA evaluator. */
+    private static ArrayList<Integer> fates = new ArrayList<Integer>();
+    private static ArrayList<Integer> curst = new ArrayList<Integer>();
+    private static ArrayList<Integer> nextst = new ArrayList<Integer>();
     private static int[] runNFA(ThreadContext tc, NFAInstance nfa, String target, long pos) {
-		throw new RuntimeException("NFA evaluation NYI");
+        int eos = target.length();
+        int gen = 1;
+        
+        /* Allocate a "done states" array. */
+        int numStates = nfa.numStates;
+        int[] done = new int[numStates + 1];
+        
+        /* Clear out other re-used arrays. */
+        curst.clear();
+        nextst.clear();
+        fates.clear();
+        
+        nextst.add(1);
+        while (!nextst.isEmpty() && pos <= eos) {
+            /* Translation of:
+             *    my @curst := @nextst;
+             *    @nextst := [];
+             * But avoids an extra allocation per offset. */
+        	ArrayList<Integer> temp = curst;
+            curst = nextst;
+            temp.clear();
+            nextst = temp;
+            
+            /* Save how many fates we have before this position is considered. */
+            int prevFates = fates.size();
+            
+            while (!curst.isEmpty()) {
+                int top = curst.size() - 1;
+                int st = curst.get(top);
+                curst.remove(top);
+                if (st <= numStates) {
+                    if (done[st] == gen)
+                        continue;
+                    done[st] = gen;
+                }
+                
+                NFAStateInfo[] edgeInfo = nfa.states[st - 1];
+                for (int i = 0; i < edgeInfo.length; i++) {
+                    int act = edgeInfo[i].act;
+                    int to  = edgeInfo[i].to;
+                    
+                    if (act == NFA.EDGE_FATE) {
+                        /* Crossed a fate edge. Check if we already saw this, and
+                         * if so bump the entry we already saw. */
+                        int arg = edgeInfo[i].arg_i;
+                        boolean foundFate = false;
+                        for (int j = 0; j < fates.size(); j++) {
+                            if (foundFate)
+                                fates.set(j - 1, fates.get(j));
+                            if (fates.get(j )== arg) {
+                                foundFate = true;
+                                if (j < prevFates)
+                                    prevFates--;
+                            }
+                        }
+                        if (foundFate)
+                            fates.set(fates.size() - 1, arg);
+                        else
+                            fates.add(arg);
+                    }
+                    else if (act == NFA.EDGE_EPSILON && to <= numStates && done[to] != gen) {
+                        curst.add(to);
+                    }
+                    else if (pos >= eos) {
+                        /* Can't match, so drop state. */
+                    }
+                    else if (act == NFA.EDGE_CODEPOINT) {
+                        char arg = (char)edgeInfo[i].arg_i;
+                        if (target.charAt((int)pos) == arg)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CODEPOINT_NEG) {
+                    	char arg = (char)edgeInfo[i].arg_i;
+                        if (target.charAt((int)pos) != arg)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CHARCLASS) {
+                        if (iscclass(edgeInfo[i].arg_i, target, pos) != 0)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CHARCLASS_NEG) {
+                    	if (iscclass(edgeInfo[i].arg_i, target, pos) == 0)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CHARLIST) {
+                        String arg = edgeInfo[i].arg_s;
+                        if (arg.indexOf(target.charAt((int)pos)) >= 0)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CHARLIST_NEG) {
+                    	String arg = edgeInfo[i].arg_s;
+                        if (arg.indexOf(target.charAt((int)pos)) < 0)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CODEPOINT_I) {
+                        char uc_arg = edgeInfo[i].arg_uc;
+                        char lc_arg = edgeInfo[i].arg_lc;
+                        char ord = target.charAt((int)pos);
+                        if (ord == lc_arg || ord == uc_arg)
+                        	nextst.add(to);
+                    }
+                    else if (act == NFA.EDGE_CODEPOINT_I_NEG) {
+                    	char uc_arg = edgeInfo[i].arg_uc;
+                        char lc_arg = edgeInfo[i].arg_lc;
+                        char ord = target.charAt((int)pos);
+                        if (ord != lc_arg && ord != uc_arg)
+                        	nextst.add(to);
+                    }
+                }
+            }
+            
+            /* Move to next character and generation. */
+            pos++;
+            gen++;
+            
+            /* If we got multiple fates at this offset, sort them by the
+             * declaration order (represented by the fate number). In the
+             * future, we'll want to factor in longest literal prefix too. */
+            int charFates = fates.size() - prevFates;
+            if (charFates > 1) {
+                List<Integer> charFateList = fates.subList(prevFates, fates.size());
+            	Collections.sort(charFateList);
+            	int insertPos = prevFates;
+            	for (int i = charFates - 1; i >= 0; i--)
+                    fates.set(insertPos++, charFateList.get(i));
+            }
+        }
+        
+        int[] result = new int[fates.size()];
+        for (int i = 0; i < fates.size(); i++)
+        		result[i] = fates.get(i);
+        return result;
 	}
 
 	/* Regex engine mark stack operations. */
