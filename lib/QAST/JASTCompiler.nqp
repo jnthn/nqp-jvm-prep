@@ -3159,15 +3159,35 @@ class QAST::CompilerJAST {
         # Backtrack the cursor stack
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
         $il.append(JAST::Instruction.new( :op('ifnull'), $jumplabel ));
-        emit_throw($il); # XXX Implement backtracking the cursor stack
-        #$ops.push_pirop('nqp_islist', '$I20', %*REG<cstack>);
-        #$ops.push_pirop('unless', '$I20', $jumplabel);
-        #$ops.push_pirop('elements', '$I18', %*REG<bstack>);
-        #$ops.push_pirop('le', '$I18', 0, $cutlabel);
-        #$ops.push_pirop('dec', '$I18');
-        #$ops.push_pirop('set', '$I18', %*REG<bstack>~'[$I18]');
-        #$ops.push($cutlabel);
-        #$ops.push_pirop('assign', %*REG<cstack>, '$I18');
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "islist", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $jumplabel ));
+        
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "elems", 'Long', $TYPE_SMO, $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('dup2') ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $cutlabel ));
+        
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('lsub') ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('dup_x2') ));
+        $il.append(JAST::Instruction.new( :op('pop') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+        
+        $il.append($cutlabel);
+        $il.append(JAST::Instruction.new( :op('invokevirtual'), $TYPE_SMO,
+            "set_elems", 'Void', $TYPE_TC, 'Long' ));
         
         # Otherwise, we need to jump to the appropriate label. Emit the
         # jump table.
