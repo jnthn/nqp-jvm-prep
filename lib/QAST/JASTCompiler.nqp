@@ -3208,19 +3208,18 @@ class QAST::CompilerJAST {
 
         # Calculate all the branches to try, which populates the bstack
         # with the options. Then immediately fail to start iterating it.
-        my $il       := JAST::InstructionList.new();
         my $prefix   := self.unique('alt') ~ '_';
         my $endlabel := JAST::Label.new( :name($prefix ~ 'end') );
-        
-        $il.append(JAST::Instruction.new( :op('aload'), %*REG<altmarks> ));
-        $il.append(JAST::Instruction.new( :op('aload_1') ));
-        $il.append(JAST::PushIVal.new( :value(0) ));
-        $il.append(JAST::Instruction.new( :op('invokevirtual'), $TYPE_SMO,
-            "set_elems", 'Void', $TYPE_TC, 'Long' ));
         my $il_marks := JAST::InstructionList.new();
-        $il.append($il_marks);
+        my $il_alts  := JAST::InstructionList.new();
+        $il_marks.append(JAST::Instruction.new( :op('aload'), %*REG<altmarks> ));
+        $il_marks.append(JAST::Instruction.new( :op('aload_1') ));
+        $il_marks.append(JAST::PushIVal.new( :value(0) ));
+        $il_marks.append(JAST::Instruction.new( :op('invokevirtual'), $TYPE_SMO,
+            "set_elems", 'Void', $TYPE_TC, 'Long' ));
+        
         my $mark_endlabel := &*REGISTER_MARK($endlabel);
-        self.regex_mark($il, $mark_endlabel,
+        self.regex_mark($il_alts, $mark_endlabel,
             JAST::PushIVal.new( :value(-1) ),
             JAST::PushIVal.new( :value(0) ));
         
@@ -3231,8 +3230,8 @@ class QAST::CompilerJAST {
             QAST::SVal.new( :value($node.name) ),
             QAST::Var.new( :name(%*REG<altmarks>), :scope('local') )
         );
-        $il.append(self.as_jast($altmeth, :want($RT_VOID)).jast);
-        $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
+        $il_alts.append(self.as_jast($altmeth, :want($RT_VOID)).jast);
+        $il_alts.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
 
         # Emit all the possible alternations.
         my $altcount := 0;
@@ -3240,9 +3239,9 @@ class QAST::CompilerJAST {
         while $iter {
             my $altlabel := JAST::Label.new( :name($prefix ~ $altcount) );
             my $ajast    := self.regex_jast(nqp::shift($iter));
-            $il.append($altlabel);
-            $il.append($ajast);
-            $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
+            $il_alts.append($altlabel);
+            $il_alts.append($ajast);
+            $il_alts.append(JAST::Instruction.new( :op('goto'), $endlabel ));
             my $altmark := &*REGISTER_MARK($altlabel);
             $il_marks.append(JAST::Instruction.new( :op('aload'), %*REG<altmarks> ));
             $il_marks.append(JAST::PushIVal.new( :value($altmark) ));
@@ -3253,9 +3252,12 @@ class QAST::CompilerJAST {
             $altcount++;
         }
         
-        $il.append($endlabel);
-        self.regex_commit($il, $mark_endlabel) if $node.backtrack eq 'r';
+        $il_alts.append($endlabel);
+        self.regex_commit($il_alts, $mark_endlabel) if $node.backtrack eq 'r';
         
+        my $il := JAST::InstructionList.new();
+        $il.append($il_marks);
+        $il.append($il_alts);
         $il;
     }
 
