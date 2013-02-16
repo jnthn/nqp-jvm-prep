@@ -2968,7 +2968,7 @@ class QAST::CompilerJAST {
         # build the list of (unique) locals we need
         my %*REG;
         my $prefix := self.unique('rx') ~ '_';
-        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i itemp i');
+        my $reglist := nqp::split(' ', 'start o tgt s pos i off i eos i rep i cur o curclass o bstack o cstack o restart i itemp i altmarks o');
         while $reglist {
             my $reg := nqp::shift($reglist);
             my $tc := nqp::shift($reglist);
@@ -3045,6 +3045,11 @@ class QAST::CompilerJAST {
                     QAST::Var.new( :name(%*REG<start>), :scope('local') ),
                     QAST::IVal.new( :value(4) )
                 )),
+            QAST::Op.new(
+                :op('bind'),
+                QAST::Var.new( :name(%*REG<altmarks>), :scope('local') ),
+                QAST::Op.new( :op('create'), QAST::Op.new( :op('bootintarray') ) )
+            ),
             QAST::Op.new(
                 :op('bind'),
                 QAST::Var.new( :name(%*REG<restart>), :scope('local'), :returns(int) ),
@@ -3194,6 +3199,64 @@ class QAST::CompilerJAST {
     method regex_jast($node) {
         my $rxtype := $node.rxtype() || 'concat';
         self."$rxtype"($node);
+    }
+
+    method alt($node) {
+        unless $node.name {
+            return self.altseq($node);
+        }
+
+        # Calculate all the branches to try, which populates the bstack
+        # with the options. Then immediately fail to start iterating it.
+        my $il       := JAST::InstructionList.new();
+        my $prefix   := self.unique('alt') ~ '_';
+        my $endlabel := JAST::Label.new( :name($prefix ~ 'end') );
+        
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<altmarks> ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::PushIVal.new( :value(0) ));
+        $il.append(JAST::Instruction.new( :op('invokevirtual'), $TYPE_SMO,
+            "set_elems", 'Void', $TYPE_TC, 'Long' ));
+        my $il_marks := JAST::InstructionList.new();
+        $il.append($il_marks);
+        my $mark_endlabel := &*REGISTER_MARK($endlabel);
+        self.regex_mark($il, $mark_endlabel,
+            JAST::PushIVal.new( :value(-1) ),
+            JAST::PushIVal.new( :value(0) ));
+        
+        my $altmeth := QAST::Op.new(
+            :op('callmethod'), :name('!alt'),
+            QAST::Var.new( :name(%*REG<cur>), :scope('local') ),
+            QAST::Var.new( :name(%*REG<pos>), :scope('local'), :returns(int) ),
+            QAST::SVal.new( :value($node.name) ),
+            QAST::Var.new( :name(%*REG<altmarks>), :scope('local') )
+        );
+        $il.append(self.as_jast($altmeth, :want($RT_VOID)).jast);
+        $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
+
+        # Emit all the possible alternations.
+        my $altcount := 0;
+        my $iter     := nqp::iterator($node.list);
+        while $iter {
+            my $altlabel := JAST::Label.new( :name($prefix ~ $altcount) );
+            my $ajast    := self.regex_jast(nqp::shift($iter));
+            $il.append($altlabel);
+            $il.append($ajast);
+            $il.append(JAST::Instruction.new( :op('goto'), $endlabel ));
+            my $altmark := &*REGISTER_MARK($altlabel);
+            $il_marks.append(JAST::Instruction.new( :op('aload'), %*REG<altmarks> ));
+            $il_marks.append(JAST::PushIVal.new( :value($altmark) ));
+            $il_marks.append(JAST::Instruction.new( :op('aload_1') ));
+            $il_marks.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'push_i',
+                'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+            $il_marks.append(JAST::Instruction.new( :op('pop2') ));
+            $altcount++;
+        }
+        
+        $il.append($endlabel);
+        self.regex_commit($il, $mark_endlabel) if $node.backtrack eq 'r';
+        
+        $il;
     }
 
     method altseq($node) {
