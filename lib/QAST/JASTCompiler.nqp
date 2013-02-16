@@ -2325,7 +2325,7 @@ class QAST::CompilerJAST {
             my $*MAX_ARGS_I := 0;
             my $*MAX_ARGS_N := 0;
             my $*MAX_ARGS_S := 0;
-            my $*MAX_ARGS_O := 0;
+            my $*MAX_ARGS_O := 1; # For method case of boolification protocol.
             my $*STACK := StackState.new();
             {
                 my $*BLOCK := $block;

@@ -1590,6 +1590,16 @@ public final class Ops {
     
     /* Smart coercions. */
     public static String smart_stringify(SixModelObject obj, ThreadContext tc) {
+    	// If it has a Str method, that wins.
+    	// We could put this in the generated code, but it's here to avoid the
+    	// bulk.
+    	SixModelObject numMeth = obj.st.MethodCache.get("Str");
+    	if (numMeth != null) {
+    		tc.curFrame.oArg[0] = obj;
+    		invokeInternal(tc, numMeth, invocantCallSite);
+        	return result_s(tc.curFrame);
+    	}
+    	
     	// If it's a type object, empty string.
     	if (obj instanceof TypeObject)
     		return "";
@@ -1607,6 +1617,16 @@ public final class Ops {
     	throw new RuntimeException("Cannot stringify this");
     }
     public static double smart_numify(SixModelObject obj, ThreadContext tc) {
+    	// If it has a Num method, that wins.
+    	// We could put this in the generated code, but it's here to avoid the
+    	// bulk.
+    	SixModelObject numMeth = obj.st.MethodCache.get("Num");
+    	if (numMeth != null) {
+    		tc.curFrame.oArg[0] = obj;
+    		invokeInternal(tc, numMeth, invocantCallSite);
+        	return result_n(tc.curFrame);
+    	}
+    	
     	// If it's a type object, empty string.
     	if (obj instanceof TypeObject)
     		return 0.0;
