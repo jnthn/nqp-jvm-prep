@@ -928,6 +928,7 @@ public final class Ops {
     
     /* Invocation. */
     private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
+    private static final CallSiteDescriptor invocantCallSite = new CallSiteDescriptor(new byte[] { CallSiteDescriptor.ARG_OBJ }, null);
     public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
         // If it's lexotic, throw the exception right off.
     	if (invokee instanceof Lexotic) {
@@ -962,7 +963,7 @@ public final class Ops {
         else
         	invokeInternal(tc, invokee, emptyCallSite);
     }
-    private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) throws Exception {
+    private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) {
     	// Otherwise, get the code ref.
     	CodeRef cr;
     	if (invokee instanceof CodeRef) {
@@ -971,7 +972,7 @@ public final class Ops {
     	else {
     		InvocationSpec is = invokee.st.InvocationSpec;
     		if (is == null)
-    			throw new Exception("Can not invoke this object");
+    			throw new RuntimeException("Can not invoke this object");
     		if (is.ClassHandle != null)
     			cr = (CodeRef)invokee.get_attribute_boxed(tc, is.ClassHandle, is.AttrName, is.Hint);
     		else
@@ -1005,7 +1006,7 @@ public final class Ops {
                 if (cf.outer == null)
                 	cf.outer = wanted.priorInvocation;
                 if (cf.outer == null)
-                    throw new Exception("Could not locate an outer for code reference " +
+                    throw new RuntimeException("Could not locate an outer for code reference " +
                         cr.staticInfo.uniqueId);
             }
         }
@@ -1549,6 +1550,10 @@ public final class Ops {
     public static long istrue(SixModelObject obj, ThreadContext tc) {
         BoolificationSpec bs = obj.st.BoolificationSpec;
         switch (bs == null ? BoolificationSpec.MODE_NOT_TYPE_OBJECT : bs.Mode) {
+        case BoolificationSpec.MODE_CALL_METHOD:
+        	tc.curFrame.oArg[0] = obj;
+        	invokeInternal(tc, bs.Method, invocantCallSite);
+        	return istrue(result_o(tc.curFrame), tc);
         case BoolificationSpec.MODE_UNBOX_INT:
             return obj instanceof TypeObject || obj.get_int(tc) == 0 ? 0 : 1;
         case BoolificationSpec.MODE_UNBOX_NUM:
