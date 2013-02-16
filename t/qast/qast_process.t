@@ -24,9 +24,6 @@ plan(2);
         '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
-    run('java',
-        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
-        'QAST2JASTOutput');
     my $output := pir::spawnw__Is('java -cp ' ~
         pathlist('.', 'bin',  '3rdparty/bcel/bcel-5.2.jar') ~
         ' QAST2JASTOutput');
