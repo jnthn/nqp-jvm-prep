@@ -2245,11 +2245,30 @@ public final class Ops {
     	throw new RuntimeException("nfarunproto NYI");
     }
     public static SixModelObject nfarunalt(SixModelObject nfa, String target, long pos,
-    		SixModelObject bstack, SixModelObject cstack, SixModelObject labels, ThreadContext tc) {
-    	throw new RuntimeException("nfarunalt NYI");
+    		SixModelObject bstack, SixModelObject cstack, SixModelObject marks, ThreadContext tc) {
+        /* Run the NFA. */
+        int[] fates = runNFA(tc, (NFAInstance)nfa, target, pos);
+        
+        /* Push the results onto the bstack. */
+        long caps = cstack == null || cstack instanceof TypeObject ? 0 : cstack.elems(tc);
+        for (int i = 0; i < fates.length; i++) {
+        	marks.at_pos_native(tc, fates[i]);
+        	bstack.push_native(tc);
+        	tc.native_i = pos;
+        	bstack.push_native(tc);
+        	tc.native_i = 0;
+        	bstack.push_native(tc);
+        	tc.native_i = caps;
+        	bstack.push_native(tc);
+        }
+        
+        return nfa;
     }
-    
-    /* Regex engine mark stack operations. */
+    private static int[] runNFA(ThreadContext tc, NFAInstance nfa, String target, long pos) {
+		throw new RuntimeException("NFA evaluation NYI");
+	}
+
+	/* Regex engine mark stack operations. */
     public static void rxmark(SixModelObject bstack, long mark, long pos, long rep, ThreadContext tc) {
     	long elems = bstack.elems(tc);
         
