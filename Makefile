@@ -14,7 +14,7 @@ JAVAS = src/org/perl6/nqp/jast2bc/*.java \
         src/org/perl6/nqp/sixmodel/reprs/*.java
 
 COMPILE         = $(NQP) --target=pir --output=$@
-PRECOMPILE      = $(NQP) --target=pir --no-regex-lib --stable-sc --output=$@
+PRECOMPILE      = $(NQP) --target=pir --no-regex-lib --stable-sc --setting=NQPCOREJVM --output=$@
 CROSSCOMPILE    = $(NQP) nqp-jvm-cc.nqp --no-regex-lib --target=classfile --output=$@
 PRECOMPILE_NS   = $(NQP) --target=pir --setting=NULL --stable-sc --output=$@
 CROSSCOMPILE_NS = $(NQP) nqp-jvm-cc.nqp --setting=NULL --target=classfile --output=$@
