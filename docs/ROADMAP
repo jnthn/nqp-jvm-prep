@@ -31,9 +31,6 @@ SCs
 
 Parsing
 * Protoregexes
-* Handling of cursor stack in backtracking
-* Backtracking into subrules
 * anchor
 * conjseq
-* subrule
 * uniprop
