@@ -22,14 +22,19 @@ public class KnowHOWBootstrapper {
         tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
         tc.gc.CallCapture = bootType(tc, "CallCapture", "CallCapture");
         
+        tc.gc.BOOTIntArray = bootTypedArray(tc, "BOOTIntArray", tc.gc.BOOTInt);
+        tc.gc.BOOTNumArray = bootTypedArray(tc, "BOOTNumArray", tc.gc.BOOTNum);
+        tc.gc.BOOTStrArray = bootTypedArray(tc, "BOOTStrArray", tc.gc.BOOTStr);
+        
         Ops.setboolspec(tc.gc.BOOTIter, BoolificationSpec.MODE_ITER, null, tc);
         Ops.setboolspec(tc.gc.BOOTInt, BoolificationSpec.MODE_UNBOX_INT, null, tc);
         Ops.setboolspec(tc.gc.BOOTNum, BoolificationSpec.MODE_UNBOX_NUM, null, tc);
         Ops.setboolspec(tc.gc.BOOTStr, BoolificationSpec.MODE_UNBOX_STR_NOT_EMPTY_OR_ZERO, null, tc);
-        
-        tc.gc.BOOTIntArray = bootTypedArray(tc, "BOOTIntArray", tc.gc.BOOTInt);
-        tc.gc.BOOTNumArray = bootTypedArray(tc, "BOOTNumArray", tc.gc.BOOTNum);
-        tc.gc.BOOTStrArray = bootTypedArray(tc, "BOOTStrArray", tc.gc.BOOTStr);
+        Ops.setboolspec(tc.gc.BOOTArray, BoolificationSpec.MODE_HAS_ELEMS, null, tc);
+        Ops.setboolspec(tc.gc.BOOTIntArray, BoolificationSpec.MODE_HAS_ELEMS, null, tc);
+        Ops.setboolspec(tc.gc.BOOTNumArray, BoolificationSpec.MODE_HAS_ELEMS, null, tc);
+        Ops.setboolspec(tc.gc.BOOTStrArray, BoolificationSpec.MODE_HAS_ELEMS, null, tc);
+        Ops.setboolspec(tc.gc.BOOTHash, BoolificationSpec.MODE_HAS_ELEMS, null, tc);
     }
 
 	private static void bootstrapKnowHOW(ThreadContext tc, CompilationUnit knowhowUnit) {

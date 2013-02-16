@@ -1561,6 +1561,8 @@ public final class Ops {
             return obj instanceof TypeObject ? 0 : 1;
         case BoolificationSpec.MODE_ITER:
             return ((VMIterInstance)obj).boolify() ? 1 : 0;
+        case BoolificationSpec.MODE_HAS_ELEMS:
+        	return obj.elems(tc) == 0 ? 0 : 1;
         default:
             throw new RuntimeException("Invalid boolification spec mode used");
         }

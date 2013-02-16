@@ -15,6 +15,7 @@ public class BoolificationSpec {
     public static final int MODE_NOT_TYPE_OBJECT = 5;
     public static final int MODE_BIGINT = 6;
     public static final int MODE_ITER = 7;
+    public static final int MODE_HAS_ELEMS = 8;
     
     /**
      * Boolification mode.
