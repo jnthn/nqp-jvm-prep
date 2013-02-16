@@ -45,7 +45,7 @@ sub MAIN(*@ARGS) {
     });
     
     $nqpcomp.command_line(@ARGS, :precomp(1), :stable-sc(1),
-        :no-regex-lib(1), :setting('NQPCOREJVM'),
+        :setting('NQPCOREJVM'), :custom-regex-lib('QRegexJVM'),
         :encoding('utf8'), :transcode('ascii iso-8859-1'));
 }
 
