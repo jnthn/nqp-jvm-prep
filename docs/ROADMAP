@@ -30,10 +30,9 @@ SCs
 * Serialization
 
 Parsing
-* NFA execution
+* Protoregexes
 * Handling of cursor stack in backtracking
 * Backtracking into subrules
-* alt
 * anchor
 * conjseq
 * subrule
