@@ -65,7 +65,24 @@ sub run_qast($qast) is export {
 
     my $output := subst(slurp('QAST2JASTOutput.output'), /\r\n/, "\n", :global);
 
+    #unlink('QAST2JASTOutput.dump');
+    #unlink('QAST2JASTOutput.class');
+    unlink('QAST2JASTOutput.output');
+
     QASTResult.new(:output($output),:status($exit),:duration($time));
+}
+
+sub qast_output_is_approx($qast_maker,$expected, $desc = '') is export {
+    my $tol := nqp::abs_n($expected) < 1e-6 ?? 1e-5 !! nqp::abs_n($expected) * 1e-6;
+    my $output := run_qast($qast_maker()).output;
+    if nqp::abs_n($output - $expected) <= $tol {
+        ok(1, $desc);
+    }
+    else {
+        ok(0, $desc);
+        say("# got: $output");
+        say("# expected approximately: $expected");
+    }
 }
 
 sub qast_test($qast_maker, $expected, $desc = '') is export {
@@ -78,9 +95,6 @@ sub qast_test($qast_maker, $expected, $desc = '') is export {
         say("# got: $output");
         say("# expected: $expected");
     }
-    #unlink('QAST2JASTOutput.dump');
-    #unlink('QAST2JASTOutput.class');
-    unlink('QAST2JASTOutput.output');
 }
 
 sub spurt($file, $stuff) is export {
