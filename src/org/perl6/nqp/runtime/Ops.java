@@ -1801,11 +1801,12 @@ public final class Ops {
     private static final int CCLASS_ALPHANUMERIC = 2048;
     private static final int CCLASS_NEWLINE      = 4096;
     private static final int CCLASS_WORD         = 8192;    
-    private static final int PUNCT_MASK =
-    	Character.CONNECTOR_PUNCTUATION | Character.DASH_PUNCTUATION |
-       	Character.END_PUNCTUATION | Character.FINAL_QUOTE_PUNCTUATION |
-       	Character.INITIAL_QUOTE_PUNCTUATION | Character.OTHER_PUNCTUATION |
-       	Character.START_PUNCTUATION;
+    private static final int[] PUNCT_TYPES = {
+    	Character.CONNECTOR_PUNCTUATION, Character.DASH_PUNCTUATION,
+       	Character.END_PUNCTUATION, Character.FINAL_QUOTE_PUNCTUATION,
+       	Character.INITIAL_QUOTE_PUNCTUATION, Character.OTHER_PUNCTUATION,
+       	Character.START_PUNCTUATION
+    };
     
     public static long iscclass(long cclass, String target, long offset) {
     	char test = target.charAt((int)offset);
@@ -1819,7 +1820,9 @@ public final class Ops {
         case CCLASS_WORD:
         	return test == '_' || Character.isLetterOrDigit(test) ? 1 : 0;
         case CCLASS_NEWLINE:
-        	return Character.getType(test) == Character.LINE_SEPARATOR ? 1 : 0;
+        	return (Character.getType(test) == Character.LINE_SEPARATOR) ||
+        			(test == '\n')
+        			? 1 : 0;
         case CCLASS_ALPHABETIC:
         	return Character.isAlphabetic(test) ? 1 : 0;
         case CCLASS_UPPERCASE:
@@ -1827,20 +1830,54 @@ public final class Ops {
         case CCLASS_LOWERCASE:
         	return Character.isLowerCase(test) ? 1 : 0;
         case CCLASS_HEXADECIMAL:
-        	return Character.isDigit(test) && 
+        	return Character.isDigit(test) || 
         			(test >= 'A' && test <= 'F' || test >= 'a' && test <= 'f')
         			? 1 : 0;
         case CCLASS_BLANK:
-        	return Character.getType(test) == Character.SPACE_SEPARATOR ? 1 : 0;
+        	return (Character.getType(test) == Character.SPACE_SEPARATOR) ||
+        			(test == '\t')
+        			? 1 : 0;
         case CCLASS_CONTROL:
         	return Character.isISOControl(test) ? 1 : 0;
         case CCLASS_PUNCTUATION:
-        	return (Character.getType(test) & PUNCT_MASK) != 0 ? 1 : 0;
+        	int type = Character.getType(test);
+        	for (int punct : PUNCT_TYPES) {
+        		if (type == punct) { return 1; }
+        	}
+        	return 0;
         case CCLASS_ALPHANUMERIC:
         	return Character.isLetterOrDigit(test) ? 1 : 0;
     	default:
     		return 0;
     	}
+    }
+    
+    public static long findcclass(long cclass, String target, long offset, long count) {
+    	long length = target.length();
+    	long end = offset + count;
+    	end = length < end ? length : end;
+    	
+    	for (long pos = offset; pos < end; pos++) {
+    		if (iscclass(cclass, target, pos) > 0) {
+    			return pos;
+    		}
+    	}
+    	
+    	return end;
+    }
+    
+    public static long findnotcclass(long cclass, String target, long offset, long count) {
+    	long length = target.length();
+    	long end = offset + count;
+    	end = length < end ? length : end;
+    	
+    	for (long pos = offset; pos < end; pos++) {
+    		if (iscclass(cclass, target, pos) == 0) {
+    			return pos;
+    		}
+    	}
+    	
+    	return end;    	
     }
 
     /* serialization context related opcodes */
