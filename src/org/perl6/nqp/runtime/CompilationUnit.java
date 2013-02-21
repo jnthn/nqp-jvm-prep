@@ -40,7 +40,7 @@ public abstract class CompilationUnit {
             throws Exception {
         ThreadContext tc = (new GlobalContext()).mainThread;
         CompilationUnit cu = setupCompilationUnit(tc, cuType);
-        Ops.invoke(tc, cu.codeRefs[entryCodeRefIdx], -1);
+        Ops.invoke(cu.codeRefs[entryCodeRefIdx], -1, tc);
     }
     
     /**
@@ -82,7 +82,7 @@ public abstract class CompilationUnit {
         int dIdx = deserializeIdx();
         if (dIdx >= 0)
         	try {
-        		Ops.invoke(tc, codeRefs[dIdx], -1);
+        		Ops.invoke(codeRefs[dIdx], -1, tc);
         	}
         	catch (Exception e)
         	{
@@ -98,7 +98,7 @@ public abstract class CompilationUnit {
     	int lIdx = loadIdx();
         if (lIdx >= 0)
         	try {
-        		Ops.invoke(tc, codeRefs[lIdx], -1);
+        		Ops.invoke(codeRefs[lIdx], -1, tc);
         	}
         	catch (Exception e)
         	{

@@ -929,7 +929,7 @@ public final class Ops {
     /* Invocation. */
     private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
     private static final CallSiteDescriptor invocantCallSite = new CallSiteDescriptor(new byte[] { CallSiteDescriptor.ARG_OBJ }, null);
-    public static void invoke(ThreadContext tc, SixModelObject invokee, int callsiteIndex) throws Exception {
+    public static void invoke(SixModelObject invokee, int callsiteIndex, ThreadContext tc) throws Exception {
         // If it's lexotic, throw the exception right off.
     	if (invokee instanceof Lexotic) {
     		LexoticException throwee = tc.theLexotic;

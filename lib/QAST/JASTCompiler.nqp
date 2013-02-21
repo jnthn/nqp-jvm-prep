@@ -870,10 +870,10 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     }
     my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite, []);
     if +@callsite > $*MAX_ARGS_O { $*MAX_ARGS_O := +@callsite }
-    $inv_il.append(JAST::Instruction.new( :op('aload_1') ));
     $inv_il.append(JAST::Instruction.new( :op('aload'), $block_tmp ));
     $inv_il.append(JAST::PushIndex.new( :value($cs_idx) ));
-    $inv_il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
+    $inv_il.append(JAST::Instruction.new( :op('aload_1') ));
+    $inv_il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_SMO, 'Integer', $TYPE_TC ));
     
     # Load result onto the stack, unless in void context.
     if $res {
@@ -1081,7 +1081,6 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
 }
 QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     my $il := JAST::InstructionList.new();
-    $il.append(JAST::Instruction.new( :op('aload_1') ));
     
     # Get thing to call.
     my $invokee;
@@ -1101,7 +1100,8 @@ QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
     # Emit call.
     $*STACK.obtain($invokee);
     $il.append(JAST::PushIndex.new( :value($cs_idx) ));
-    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_SMO, 'Integer', $TYPE_TC ));
     
     # Load result onto the stack, unless in void context.
     if $*WANT != $RT_VOID {
@@ -1144,7 +1144,6 @@ QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
     
     # Look up method.
     $il.append(JAST::Instruction.new( :op('aload_1') ));
-    $il.append(JAST::Instruction.new( :op('dup') ));
     $il.append(JAST::Instruction.new( :op('aload'), $inv_temp ));
     if $name_tmp {
         $il.append(JAST::Instruction.new( :op('aload'), $name_tmp ));
@@ -1156,7 +1155,8 @@ QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
 
     # Emit call.
     $il.append(JAST::PushIndex.new( :value($cs_idx) ));
-    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_TC, $TYPE_SMO, 'Integer' ));
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'invoke', 'Void', $TYPE_SMO, 'Integer', $TYPE_TC ));
     
     # Load result onto the stack, unless in void context.
     if $*WANT != $RT_VOID {
