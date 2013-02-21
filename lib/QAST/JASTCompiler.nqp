@@ -3663,7 +3663,7 @@ class QAST::CompilerJAST {
         my $scanlabel := JAST::Label.new( :name($prefix ~ '_scan') );
         my $donelabel := JAST::Label.new( :name($prefix ~ '_done') );
         
-        $il.append(JAST::Instruction.new( :op('aload'), %*REG<cur> ));
+        $il.append(JAST::Instruction.new( :op('aload'), 'self' ));
         $il.append(JAST::Instruction.new( :op('aload'), %*REG<curclass> ));
         $il.append(JAST::PushSVal.new( :value('$!from') ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
@@ -3671,7 +3671,7 @@ class QAST::CompilerJAST {
                 "getattr_i", 'Long', $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
         $il.append(JAST::PushIVal.new( :value(-1) ));
         $il.append(JAST::Instruction.new( :op('lcmp') ));
-        $il.append(JAST::Instruction.new( :op('ifeq'), $donelabel ));
+        $il.append(JAST::Instruction.new( :op('ifne'), $donelabel ));
         $il.append(JAST::Instruction.new( :op('goto'), $scanlabel ));
         
         $il.append($looplabel);
