@@ -235,19 +235,20 @@ public class KnowHOWMethods extends CompilationUnit {
     public CodeRef[] getCodeRefs() {
         CodeRef[] refs = new CodeRef[12];
         String[] snull = null;
+        long[][] hnull = new long[0][];
         short zero = 0;
-        refs[0] = new CodeRef(this, 0, "new_type", "new_type", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[1] = new CodeRef(this, 1, "add_method", "add_method", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[2] = new CodeRef(this, 2, "add_attribute", "add_attribute", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[3] = new CodeRef(this, 3, "compose", "compose", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[4] = new CodeRef(this, 4, "attributes", "attributes", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[5] = new CodeRef(this, 5, "methods", "methods", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[6] = new CodeRef(this, 6, "name", "name", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[7] = new CodeRef(this, 7, "new", "attr_new", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[8] = new CodeRef(this, 8, "compose", "attr_compose", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[9] = new CodeRef(this, 9, "name", "attr_name", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[10] = new CodeRef(this, 10, "type", "attr_type", snull, snull, snull, snull, zero, zero, zero, zero);
-        refs[11] = new CodeRef(this, 11, "box_target", "attr_box_target", snull, snull, snull, snull, zero, zero, zero, zero);
+        refs[0] = new CodeRef(this, 0, "new_type", "new_type", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[1] = new CodeRef(this, 1, "add_method", "add_method", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[2] = new CodeRef(this, 2, "add_attribute", "add_attribute", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[3] = new CodeRef(this, 3, "compose", "compose", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[4] = new CodeRef(this, 4, "attributes", "attributes", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[5] = new CodeRef(this, 5, "methods", "methods", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[6] = new CodeRef(this, 6, "name", "name", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[7] = new CodeRef(this, 7, "new", "attr_new", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[8] = new CodeRef(this, 8, "compose", "attr_compose", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[9] = new CodeRef(this, 9, "name", "attr_name", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[10] = new CodeRef(this, 10, "type", "attr_type", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
+        refs[11] = new CodeRef(this, 11, "box_target", "attr_box_target", snull, snull, snull, snull, zero, zero, zero, zero, hnull);
         return refs;
     }
 

@@ -82,6 +82,11 @@ public class CallFrame {
     public static final int RET_STR = 3;
     
     /**
+     * The current handler we're in, in this block. 0 if none.
+     */
+    public long curHandler = 0;
+    
+    /**
      * Current working copy of the named arguments data.
      */
     public HashMap<String, Integer> workingNameMap;

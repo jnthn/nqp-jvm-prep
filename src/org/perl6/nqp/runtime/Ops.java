@@ -2206,6 +2206,9 @@ public final class Ops {
     	// TODO Implement exceptions properly.
     	throw new RuntimeException(msg.get_str(tc));
     }
+    public static SixModelObject throwcatdyn(long category, ThreadContext tc) {
+    	return ExceptionHandling.handlerDynamic(tc, category);
+    }
 
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {

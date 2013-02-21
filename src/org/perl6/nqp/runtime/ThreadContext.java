@@ -43,6 +43,11 @@ public class ThreadContext {
     public static final int NATIVE_JVM_OBJ = 4;
     
     /**
+     * The current unwind exception.
+     */
+    public UnwindException unwinder;
+    
+    /**
      * The current lexotic we're throwing.
      */
     public LexoticException theLexotic;
@@ -55,6 +60,7 @@ public class ThreadContext {
     public ThreadContext(GlobalContext gc) {
         this.gc = gc;
         this.theLexotic = new LexoticException();
+        this.unwinder = new UnwindException();
         if (gc.CallCapture != null) {
         	savedCC = (CallCaptureInstance)gc.CallCapture.st.REPR.allocate(this, gc.CallCapture.st);
         	savedCC.initialize(this);

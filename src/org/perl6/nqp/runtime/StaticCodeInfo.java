@@ -57,6 +57,11 @@ public class StaticCodeInfo {
     public String[] sLexicalNames;
     
     /**
+     * Map of handlers.
+     */
+    public long[][] handlers;
+    
+    /**
      * Lexical name maps (produced lazily on first use). Note they are only
      * used when we do lexical lookup by name.
      */
@@ -115,7 +120,8 @@ public class StaticCodeInfo {
     public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs) {
+            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
+            long[][] handlers) {
         this.compUnit = compUnit;
         this.idx = idx;
         this.name = name;
@@ -128,6 +134,7 @@ public class StaticCodeInfo {
         this.iMaxArgs = iMaxArgs;
         this.nMaxArgs = nMaxArgs;
         this.sMaxArgs = sMaxArgs;
+        this.handlers = handlers;
         if (oLexicalNames != null)
         	this.oLexStatic = new SixModelObject[oLexicalNames.length];
     }
