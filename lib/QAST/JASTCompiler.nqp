@@ -1235,7 +1235,105 @@ QAST::OperationsJAST.add_core_op('bind', -> $qastcomp, $op {
 
 # Exception handling/munging.
 QAST::OperationsJAST.map_classlib_core_op('die_s', $TYPE_OPS, 'die_s', [$RT_STR], $RT_STR, :tc);
-QAST::OperationsJAST.map_classlib_core_op('die', $TYPE_OPS, 'die', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('die', $TYPE_OPS, 'die_s', [$RT_STR], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('exception', $TYPE_OPS, 'exception', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getextype', $TYPE_OPS, 'getextype', [$RT_OBJ], $RT_INT, :tc);
+my %handler_names := nqp::hash(
+    'CATCH',   $EX_CAT_CATCH,
+    'CONTROL', $EX_CAT_CONTROL,
+    'NEXT',    $EX_CAT_NEXT,
+    'LAST',    $EX_CAT_LAST,
+    'REDO',    $EX_CAT_REDO
+);
+QAST::OperationsJAST.add_core_op('handle', sub ($qastcomp, $op) {
+    my @children := nqp::clone($op.list());
+    if @children == 0 {
+        nqp::die("The 'handle' op requires at least one child");
+    }
+    
+    # If there's exactly one child, then there's nothing protecting
+    # it; just compile it and we're done.
+    my $protected := @children.shift();
+    unless @children {
+        return $qastcomp.as_jast($protected);
+    }
+    
+    # Otherwise, we need to generate an install a handler block, which will
+    # decide that to do by category.
+    my $mask := 0;
+    my $hblock := QAST::Block.new(
+        QAST::Op.new(
+            :op('bind'),
+            QAST::Var.new( :name('__category__'), :scope('local'), :decl('var') ),
+            QAST::Op.new(
+                :op('getextype'),
+                QAST::Op.new( :op('exception') )
+            )));
+    my $push_target := $hblock;
+    for @children -> $type, $handler {
+        # Get the category mask.
+        unless nqp::existskey(%handler_names, $type) {
+            nqp::die("Invalid handler type '$type'");
+        }
+        my $cat_mask := %handler_names{$type};
+        
+        # Chain in this handler.
+        my $check := QAST::Op.new(
+            :op('if'),
+            QAST::Op.new(
+                :op('bitand_i'),
+                QAST::Var.new( :name('__category__'), :scope('local') ),
+                QAST::IVal.new( :value($cat_mask) )
+            ),
+            $handler
+        );
+        $push_target.push($check);
+        $push_target := $check;
+        
+        # Add to mask.
+        $mask := nqp::bitor_i($mask, $cat_mask);
+    }
+    
+    # Compile, create a lexical to put the handler in, and add it.
+    my $name   := QAST::Node.unique('!HANDLER_');
+    my $lexidx := $*BLOCK.lexical_idx($name);
+    my $il     := JAST::InstructionList.new();
+    my $hb_res := $qastcomp.as_jast($hblock, :want($RT_OBJ));
+    $il.append($hb_res.jast);
+    $*STACK.obtain($hb_res);
+    $*BLOCK.add_lexical(QAST::Var.new( :name($name) ));
+    $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+    $il.append(JAST::PushIndex.new( :value($lexidx) ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+        'bindlex_o', $TYPE_SMO, $TYPE_SMO, $TYPE_CF, 'Integer' ));
+    $il.append(JAST::Instruction.new( :op('pop') ));
+    
+    # Register a handler.
+    my $handler := &*REGISTER_BLOCK_HANDLER($*HANDLER_IDX, $mask, $lexidx);
+    
+    # Evaluate the protected code and stash it in a temporary.
+    my $result := $*TA.fresh_o();
+    my $prores := $qastcomp.as_jast_in_handler($protected, $handler, :want($RT_OBJ));
+    my $tryil  := JAST::InstructionList.new();
+    $tryil.append($prores.jast);
+    $*STACK.obtain($prores);
+    $tryil.append(JAST::Instruction.new( :op('astore'), $result ));
+    
+    # The catch part just handles unwind; grab the result.
+    my $catchil := JAST::InstructionList.new();
+    $qastcomp.unwind_check($catchil, $handler);
+    $catchil.append(JAST::Instruction.new( :op('getfield'), $TYPE_EX_UNWIND, 'result', $TYPE_SMO ));
+    $catchil.append(JAST::Instruction.new( :op('astore'), $result ));
+    
+    # Wrap it all up in try/catch etc.
+    $il.append($qastcomp.delimit_handler(
+        JAST::TryCatch.new( :try($tryil), :catch($catchil), :type($TYPE_EX_UNWIND) ),
+        $*HANDLER_IDX, $handler));
+
+    # Evaluate to the result.
+    $il.append(JAST::Instruction.new( :op('aload'), $result ));
+    result($il, $RT_OBJ);
+});
 
 # Control exception throwing.
 my %control_map := nqp::hash(
@@ -2381,6 +2479,13 @@ class QAST::CompilerJAST {
                 my $unwind := $*EH_PREFIX + $*EH_IDX;
                 nqp::push(@handlers, [$unwind, $outer, $category,
                     $ex_obj ?? $EX_UNWIND_OBJECT !! $EX_UNWIND_SIMPLE]);
+                $unwind
+            }
+            my &*REGISTER_BLOCK_HANDLER := sub ($outer, $category, $lexidx) {
+                $*EH_IDX++;
+                my $unwind := $*EH_PREFIX + $*EH_IDX;
+                nqp::push(@handlers, [$unwind, $outer, $category,
+                    $EX_BLOCK, $lexidx]);
                 $unwind
             }
             

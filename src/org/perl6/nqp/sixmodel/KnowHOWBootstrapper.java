@@ -21,6 +21,7 @@ public class KnowHOWBootstrapper {
         tc.gc.SCRef = bootType(tc, "SCRef", "SCRef");
         tc.gc.ContextRef = bootType(tc, "ContextRef", "ContextRef");
         tc.gc.CallCapture = bootType(tc, "CallCapture", "CallCapture");
+        tc.gc.BOOTException = bootType(tc, "BOOTException", "VMException");
         
         tc.gc.BOOTIntArray = bootTypedArray(tc, "BOOTIntArray", tc.gc.BOOTInt);
         tc.gc.BOOTNumArray = bootTypedArray(tc, "BOOTNumArray", tc.gc.BOOTNum);

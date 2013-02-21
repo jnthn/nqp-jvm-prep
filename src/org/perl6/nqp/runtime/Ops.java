@@ -963,6 +963,9 @@ public final class Ops {
         else
         	invokeInternal(tc, invokee, emptyCallSite);
     }
+    public static void invokeArgless(ThreadContext tc, SixModelObject invokee) {
+    	invokeInternal(tc, invokee, emptyCallSite);
+    }
     private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) {
     	// Otherwise, get the code ref.
     	CodeRef cr;
@@ -2199,15 +2202,30 @@ public final class Ops {
     
     /* Exception related. */
     public static String die_s(String msg, ThreadContext tc) {
-    	// TODO Implement exceptions properly.
-    	throw new RuntimeException(msg);
-    }
-    public static SixModelObject die(SixModelObject msg, ThreadContext tc) {
-    	// TODO Implement exceptions properly.
-    	throw new RuntimeException(msg.get_str(tc));
+    	// Construct exception object.
+    	SixModelObject exType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.exceptionType;
+    	VMExceptionInstance exObj = (VMExceptionInstance)exType.st.REPR.allocate(tc, exType.st);
+    	exObj.initialize(tc);
+    	exObj.message = msg;
+    	exObj.category = ExceptionHandling.EX_CAT_CATCH;
+    	ExceptionHandling.handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
+    	return msg;
     }
     public static SixModelObject throwcatdyn(long category, ThreadContext tc) {
-    	return ExceptionHandling.handlerDynamic(tc, category);
+    	return ExceptionHandling.handlerDynamic(tc, category, null);
+    }
+    public static SixModelObject exception(ThreadContext tc) {
+    	int numHandlers = tc.handlers.size();
+    	if (numHandlers > 0)
+    		return tc.handlers.get(numHandlers - 1).exObj;
+    	else
+    		throw new RuntimeException("Cannot get exception object ouside of exception handler");
+    }
+    public static long getextype(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof VMExceptionInstance)
+    		return ((VMExceptionInstance)obj).category;
+    	else
+    		throw new RuntimeException("getextype needs an object with VMException representation");
     }
 
     /* HLL configuration and compiler related options. */

@@ -1,6 +1,7 @@
 package org.perl6.nqp.runtime;
 
 import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.reprs.VMExceptionInstance;
 
 public class ExceptionHandling {
 	/* Exception handler categories. */
@@ -16,7 +17,8 @@ public class ExceptionHandling {
 	public static final int EX_BLOCK = 2;
 	
 	/* Finds and executes a handler, using dynamic scope to find it. */
-	public static SixModelObject handlerDynamic(ThreadContext tc, long category) {
+	public static SixModelObject handlerDynamic(ThreadContext tc, long category,
+			VMExceptionInstance exObj) {
 		CallFrame f = tc.curFrame;
 		while (f != null) {
 			if (f.curHandler != 0) {
@@ -27,7 +29,7 @@ public class ExceptionHandling {
 						if (handlers[i][0] == tryHandler) {
 							// Found an active one, but is it the right category?
 							if ((handlers[i][2] & category) != 0)
-								return invokeHandler(tc, handlers[i], category);
+								return invokeHandler(tc, handlers[i], category, f, exObj);
 							
 							// If not, try outer one.
 							tryHandler = handlers[i][1];
@@ -38,20 +40,36 @@ public class ExceptionHandling {
 			}
 			f = f.caller;
 		}
-		return panic(tc, category);
+		return panic(tc, category, exObj);
 	}
 
 	/* Invokes the handler. */
-	private static SixModelObject invokeHandler(ThreadContext tc, long[] handlerInfo, long category) {
-		// TODO: Should not always just blindly go unwinding, may need an
-		// exception object or to run it in the current dynamic context.
-		tc.unwinder.unwindTarget = handlerInfo[0];
-		tc.unwinder.category = category;
-		throw tc.unwinder;
+	private static SixModelObject invokeHandler(ThreadContext tc, long[] handlerInfo,
+			long category, CallFrame handlerFrame, VMExceptionInstance exObj) {
+		switch ((int)handlerInfo[3]) {
+		case EX_UNWIND_SIMPLE:
+			tc.unwinder.unwindTarget = handlerInfo[0];
+			tc.unwinder.category = category;
+			throw tc.unwinder;
+		case EX_BLOCK:
+			try {
+				tc.handlers.add(new HandlerInfo(exObj));
+				Ops.invokeArgless(tc, Ops.getlex_o(handlerFrame, (int)handlerInfo[4]));
+			}
+			finally {
+				tc.handlers.remove(tc.handlers.size() - 1);
+			}
+			tc.unwinder.unwindTarget = handlerInfo[0];
+			tc.unwinder.result = Ops.result_o(tc.curFrame);
+			throw tc.unwinder;
+		default:
+			throw new RuntimeException("Unknown exception kind");
+		}
 	}
 
 	/* Unahndled exception. */
-	private static SixModelObject panic(ThreadContext tc, long category) {
+	private static SixModelObject panic(ThreadContext tc, long category,
+			VMExceptionInstance exObj) {
 		throw new RuntimeException("Unhandled exception; category = " + category);
 	}
 }

@@ -1,5 +1,7 @@
 package org.perl6.nqp.runtime;
 
+import java.util.ArrayList;
+
 import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
 
 /**
@@ -48,6 +50,11 @@ public class ThreadContext {
     public UnwindException unwinder;
     
     /**
+     * Stack of handlers we're currently in.
+     */
+    public ArrayList<HandlerInfo> handlers;
+    
+    /**
      * The current lexotic we're throwing.
      */
     public LexoticException theLexotic;
@@ -61,6 +68,7 @@ public class ThreadContext {
         this.gc = gc;
         this.theLexotic = new LexoticException();
         this.unwinder = new UnwindException();
+        this.handlers = new ArrayList<HandlerInfo>();
         if (gc.CallCapture != null) {
         	savedCC = (CallCaptureInstance)gc.CallCapture.st.REPR.allocate(this, gc.CallCapture.st);
         	savedCC.initialize(this);

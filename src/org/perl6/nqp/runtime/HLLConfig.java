@@ -32,4 +32,9 @@ public class HLLConfig {
      * The type to use for hash iteration (should have VMIter REPR).
      */
     public SixModelObject hashIteratorType;
+    
+    /**
+     * The type to construct for exceptions (should have VMException REPR).
+     */
+    public SixModelObject exceptionType;
 }

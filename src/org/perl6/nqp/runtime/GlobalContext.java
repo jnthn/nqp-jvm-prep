@@ -69,6 +69,11 @@ public class GlobalContext {
     public SixModelObject CallCapture;
     
     /**
+     * BOOTException type; a basic, method-less type with the VMException REPR. 
+     */
+    public SixModelObject BOOTException;
+    
+    /**
      * Typed VMArrays.
      */
     public SixModelObject BOOTIntArray;
@@ -148,5 +153,6 @@ public class GlobalContext {
         config.slurpyHashType = BOOTHash;
         config.arrayIteratorType = BOOTIter;
         config.hashIteratorType = BOOTIter;
+        config.exceptionType = BOOTException;
     }
 }
