@@ -1296,12 +1296,12 @@ QAST::OperationsJAST.add_core_op('handle', sub ($qastcomp, $op) {
     
     # Compile, create a lexical to put the handler in, and add it.
     my $name   := QAST::Node.unique('!HANDLER_');
+    $*BLOCK.add_lexical(QAST::Var.new( :name($name) ));
     my $lexidx := $*BLOCK.lexical_idx($name);
     my $il     := JAST::InstructionList.new();
     my $hb_res := $qastcomp.as_jast($hblock, :want($RT_OBJ));
     $il.append($hb_res.jast);
     $*STACK.obtain($hb_res);
-    $*BLOCK.add_lexical(QAST::Var.new( :name($name) ));
     $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
     $il.append(JAST::PushIndex.new( :value($lexidx) ));
     $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
