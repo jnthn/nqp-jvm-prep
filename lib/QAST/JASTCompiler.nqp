@@ -2087,7 +2087,7 @@ class QAST::CompilerJAST {
             @!locals[+@!locals] := $var;
         }
         
-        method register_lexical($var, $reg?) {
+        method register_lexical($var) {
             my $name := $var.name;
             my $type := rttype_from_typeobj($var.returns);
             if nqp::existskey(%!lexical_types, $name) {
