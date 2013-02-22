@@ -1812,6 +1812,8 @@ public final class Ops {
     };
     
     public static long iscclass(long cclass, String target, long offset) {
+    	if (offset < 0 || offset >= target.length())
+    		return 0;
     	char test = target.charAt((int)offset);
     	switch ((int)cclass) {
         case CCLASS_ANY:
