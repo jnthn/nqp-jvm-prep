@@ -855,20 +855,20 @@ role NQPCursorRole is export {
         $cur;
     }
 
-#    method before($regex) {
-#        my int $orig_highwater := nqp::getattr_i($!shared, ParseShared, '$!highwater');
-#        my $orig_highexpect := nqp::getattr($!shared, ParseShared, '@!highexpect');
-#        nqp::bindattr($!shared, ParseShared, '@!highexpect', []);
-#        my $cur := self."!cursor_start_cur"();
-#        nqp::bindattr_i($cur, $?CLASS, '$!pos', $!pos);
-#        nqp::getattr_i($regex($cur), $?CLASS, '$!pos') >= 0 ??
-#            $cur."!cursor_pass"($!pos, 'before') !!
-#            nqp::bindattr_i($cur, $?CLASS, '$!pos', -3);
-#        nqp::bindattr_i($!shared, ParseShared, '$!highwater', $orig_highwater);
-#        nqp::bindattr($!shared, ParseShared, '@!highexpect', $orig_highexpect);
-#        $cur;
-#    }
-#
+    method before($regex) {
+        my int $orig_highwater := nqp::getattr_i($!shared, ParseShared, '$!highwater');
+        my $orig_highexpect := nqp::getattr($!shared, ParseShared, '@!highexpect');
+        nqp::bindattr($!shared, ParseShared, '@!highexpect', []);
+        my $cur := self."!cursor_start_cur"();
+        nqp::bindattr_i($cur, $?CLASS, '$!pos', $!pos);
+        nqp::getattr_i($regex($cur), $?CLASS, '$!pos') >= 0 ??
+            $cur."!cursor_pass"($!pos, 'before') !!
+            nqp::bindattr_i($cur, $?CLASS, '$!pos', -3);
+        nqp::bindattr_i($!shared, ParseShared, '$!highwater', $orig_highwater);
+        nqp::bindattr($!shared, ParseShared, '@!highexpect', $orig_highexpect);
+        $cur;
+    }
+
 #    # Expects to get a regex whose syntax tree was flipped during the
 #    # compile.
 #    method after($regex) {
@@ -890,21 +890,21 @@ role NQPCursorRole is export {
 #        $cur;
 #    }
 
-#    method ws() {
-#        # skip over any whitespace, fail if between two word chars
-#        my str $target := nqp::getattr_s($!shared, ParseShared, '$!target');
-#        my $cur := self."!cursor_start_cur"();
-#        $!pos >= nqp::chars($target)
-#          ?? $cur."!cursor_pass"($!pos, 'ws')
-#          !! ($!pos < 1
-#              || !nqp::iscclass(nqp::const::CCLASS_WORD, $target, $!pos)
-#              || !nqp::iscclass(nqp::const::CCLASS_WORD, $target, $!pos-1)
-#             ) && $cur."!cursor_pass"(
-#                      nqp::findnotcclass(
-#                          nqp::const::CCLASS_WHITESPACE, $target, $!pos, nqp::chars($target)),
-#                      'ws');
-#        $cur;
-#    }
+    method ws() {
+        # skip over any whitespace, fail if between two word chars
+        my str $target := nqp::getattr_s($!shared, ParseShared, '$!target');
+        my $cur := self."!cursor_start_cur"();
+        $!pos >= nqp::chars($target)
+          ?? $cur."!cursor_pass"($!pos, 'ws')
+          !! ($!pos < 1
+              || !nqp::iscclass(nqp::const::CCLASS_WORD, $target, $!pos)
+              || !nqp::iscclass(nqp::const::CCLASS_WORD, $target, $!pos-1)
+             ) && $cur."!cursor_pass"(
+                      nqp::findnotcclass(
+                          nqp::const::CCLASS_WHITESPACE, $target, $!pos, nqp::chars($target)),
+                      'ws');
+        $cur;
+    }
     
     method ww() {
         my $cur := self."!cursor_start_cur"();
@@ -929,18 +929,18 @@ role NQPCursorRole is export {
         $cur;
     }
 
-#    method ident() {
-#        my $cur := self."!cursor_start_cur"();
-#        my str $target := nqp::getattr_s($!shared, ParseShared, '$!target');
-#        $cur."!cursor_pass"(
-#                nqp::findnotcclass(
-#                    nqp::const::CCLASS_WORD,
-#                    $target, $!pos, nqp::chars($target)))
-#            if $!pos < nqp::chars($target) &&
-#                (nqp::ord($target, $!pos) == 95
-#                 || nqp::iscclass(nqp::const::CCLASS_ALPHABETIC, $target, $!pos));
-#        $cur;
-#    }
+    method ident() {
+        my $cur := self."!cursor_start_cur"();
+        my str $target := nqp::getattr_s($!shared, ParseShared, '$!target');
+        $cur."!cursor_pass"(
+                nqp::findnotcclass(
+                    nqp::const::CCLASS_WORD,
+                    $target, $!pos, nqp::chars($target)))
+            if $!pos < nqp::chars($target) &&
+                (nqp::ord($target, $!pos) == 95
+                 || nqp::iscclass(nqp::const::CCLASS_ALPHABETIC, $target, $!pos));
+        $cur;
+    }
 
     method alpha() {
         my $cur := self."!cursor_start_cur"();
