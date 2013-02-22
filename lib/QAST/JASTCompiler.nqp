@@ -3541,6 +3541,128 @@ class QAST::CompilerJAST {
         $il.append($endlabel);
         $il;
     }
+    
+    method anchor($node) {
+        my $il        := JAST::InstructionList.new();
+        my $subtype   := $node.subtype;
+        my $donelabel := JAST::Label.new( :name(self.unique('rxanchor') ~ '_done') );
+        if $subtype eq 'bos' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+        }
+        elsif $subtype eq 'eos' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('iflt'), %*REG<fail> ));
+        }
+        elsif $subtype eq 'lwb' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_WORD) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifeq'), %*REG<fail> ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_WORD) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('lsub') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+        }
+        elsif $subtype eq 'rwb' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(0) ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('ifle'), %*REG<fail> ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_WORD) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_WORD) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('lsub') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifeq'), %*REG<fail> ));
+        }
+        elsif $subtype eq 'bol' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifeq'), $donelabel ));
+            
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_NEWLINE) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('lsub') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifeq'), %*REG<fail> ));
+            
+            $il.append($donelabel);
+        }
+        elsif $subtype eq 'eol' {
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_NEWLINE) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), $donelabel ));
+            
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<eos> ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+            
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifeq'), $donelabel ));
+            
+            $il.append(JAST::PushIVal.new( :value(nqp::const::CCLASS_NEWLINE) ));
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('lsub') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'iscclass', 'Long', 'Long', $TYPE_STR, 'Long' ));
+            $il.append(JAST::Instruction.new( :op('l2i') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+            
+            $il.append($donelabel);
+        }
+        elsif $subtype eq 'fail' {
+            $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
+        }
+
+        $il
+    }
 
     method concat($node) {
         my $il := JAST::InstructionList.new();
