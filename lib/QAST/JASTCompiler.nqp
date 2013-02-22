@@ -1614,6 +1614,11 @@ QAST::OperationsJAST.map_classlib_core_op('isge_n', $TYPE_OPS, 'isge_n', [$RT_NU
 QAST::OperationsJAST.map_classlib_core_op('cmp_s',  $TYPE_OPS, 'cmp_s',  [$RT_STR, $RT_STR], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('iseq_s', $TYPE_OPS, 'iseq_s', [$RT_STR, $RT_STR], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('isne_s', $TYPE_OPS, 'isne_s', [$RT_STR, $RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('islt_s', $TYPE_OPS, 'islt_s', [$RT_STR, $RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isle_s', $TYPE_OPS, 'isle_s', [$RT_STR, $RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isgt_s', $TYPE_OPS, 'isgt_s', [$RT_STR, $RT_STR], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('isge_s', $TYPE_OPS, 'isge_s', [$RT_STR, $RT_STR], $RT_INT);
+
 
 # boolean opcodes
 QAST::OperationsJAST.map_classlib_core_op('not_i', $TYPE_OPS, 'not_i', [$RT_INT], $RT_INT);

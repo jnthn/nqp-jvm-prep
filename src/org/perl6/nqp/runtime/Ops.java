@@ -2127,6 +2127,18 @@ public final class Ops {
     public static long isne_s(String a, String b) {
     	return a.equals(b) ? 0 : 1;
     }
+    public static long islt_s(String a, String b) {
+    	return a.compareTo(b) < 0 ? 1 : 0;
+    }
+    public static long isle_s(String a, String b) {
+    	return a.compareTo(b) <= 0 ? 1 : 0;
+    }
+    public static long isgt_s(String a, String b) {
+    	return a.compareTo(b) > 0 ? 1 : 0;
+    }
+    public static long isge_s(String a, String b) {
+    	return a.compareTo(b) >= 0 ? 1 : 0;
+    }
     
     /* Code object related. */
     public static SixModelObject takeclosure(SixModelObject code, ThreadContext tc) {
