@@ -3674,6 +3674,85 @@ class QAST::CompilerJAST {
 
     method conj($node) { self.conjseq($node) }
     
+    method conjseq($node) {
+        my $il         := JAST::InstructionList.new();
+        my $prefix     := self.unique('rxconj') ~ '_';
+        my $conjlabel  := JAST::Label.new( :name($prefix ~ 'fail') );
+        my $firstlabel := JAST::Label.new( :name($prefix ~ 'first') );
+        my $iter       := nqp::iterator($node.list);
+        
+        # make a mark that holds our starting position in the pos slot
+        my $mark := &*REGISTER_MARK($conjlabel);
+        self.regex_mark($il, $mark,
+             JAST::Instruction.new( :op('lload'), %*REG<pos> ),
+             JAST::PushIVal.new( :value(0) ));
+        
+        $il.append(JAST::Instruction.new( :op('goto'), $firstlabel ));
+        $il.append($conjlabel);
+        $il.append(JAST::Instruction.new( :op('goto'), %*REG<fail> ));
+        
+        # call the first child
+        $il.append($firstlabel);
+        $il.append(self.regex_jast(nqp::shift($iter)));
+        
+        # use previous mark to make one with pos=start, rep=end
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::PushIVal.new( :value($mark) ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "rxpeek", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+        $il.append(JAST::PushIVal.new( :value(1) ));
+        $il.append(JAST::Instruction.new( :op('ladd') ));
+        $il.append(JAST::Instruction.new( :op('aload_1') ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+        $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
+        self.regex_mark($il, $mark,
+             JAST::Instruction.new( :op('lload'), %*REG<itemp> ),
+             JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+
+        while $iter {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+            $il.append(self.regex_jast(nqp::shift($iter)));
+            
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+            $il.append(JAST::PushIVal.new( :value($mark) ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "rxpeek", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
+            
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
+            $il.append(JAST::PushIVal.new( :value(2) ));
+            $il.append(JAST::Instruction.new( :op('ladd') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::Instruction.new( :op('lcmp') ));
+            $il.append(JAST::Instruction.new( :op('ifne'), %*REG<fail> ));
+            
+            $il.append(JAST::Instruction.new( :op('aload'), %*REG<bstack> ));
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('ladd') ));
+            $il.append(JAST::Instruction.new( :op('aload_1') ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                "atpos_i", 'Long', $TYPE_SMO, 'Long', $TYPE_TC ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<itemp> ));
+        }
+        
+        if $node.subtype eq 'zerowidth' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<itemp> ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        }
+        
+        $il
+    }
+    
     my %cclass_code;
     INIT {
         # Codes match constants in Ops.java.
