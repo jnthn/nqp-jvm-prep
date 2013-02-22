@@ -2,9 +2,9 @@ NQP JVM Preparation Roadmap
 
 This provides an idea of the things that need to be worked on, very roughly
 sorted by priority. Currently, quite a lot of the NQP test suite passes. The
-goal now is finish porting the grammar engine, then cross-compile HLL, then the
-grammar for regexes, get the QAST -> JAST cross-compiler to compile itself, then
-get NQP self-hosting.
+current goals are to cross-compile the HLL library, then the grammar for
+regexes, get the QAST -> JAST cross-compiler to compile itself, then get NQP
+self-hosting.
 
 QAST to JAST Compiler
 * xor
@@ -28,8 +28,3 @@ Context Introspection
 
 SCs
 * Serialization
-
-Parsing
-* anchor
-* conjseq
-* uniprop
