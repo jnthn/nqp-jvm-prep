@@ -4348,6 +4348,27 @@ class QAST::CompilerJAST {
         
         $il;
     }
+
+    method uniprop($node) {
+        my $il := JAST::InstructionList.new();
+        
+        $il.append(JAST::PushSVal.new( :value($node[0]) ));
+        $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
+        $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            "ischarprop", 'Long', $TYPE_STR, $TYPE_STR, 'Long' ));
+        $il.append(JAST::Instruction.new( :op('l2i') ));
+        $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifne' !! 'ifeq'), %*REG<fail> ));
+        
+        unless $node.subtype eq 'zerowidth' {
+            $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
+            $il.append(JAST::PushIVal.new( :value(1) ));
+            $il.append(JAST::Instruction.new( :op('ladd') ));
+            $il.append(JAST::Instruction.new( :op('lstore'), %*REG<pos> ));
+        }
+        
+        $il
+    }
     
     # a :rxtype<ws> node is a normal subrule call
     method ws($node) { self.subrule($node) }

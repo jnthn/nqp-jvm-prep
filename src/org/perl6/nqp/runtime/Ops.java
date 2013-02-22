@@ -1884,6 +1884,11 @@ public final class Ops {
     	
     	return end;    	
     }
+    
+    public static long ischarprop(String propName, String target, long offset) {
+    	String check = target.substring((int)offset, (int)offset + 1);
+    	return check.matches("\\p{" + propName + "}") ? 1 : 0;
+    }
 
     /* serialization context related opcodes */
     public static String sha1(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
