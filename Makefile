@@ -4,8 +4,8 @@ JAVAC  = javac
 PERL   = perl
 PROVE  = prove
 
-NQPLIBS    = NQPCOREJVM.setting.class nqp-mo.class ModuleLoader.class QASTNodesJVM.class QRegexJVM.class NQPHLLJVM.class JASTNodesJVM.class
-NQPLIBPIRS = NQPCOREJVM.setting.pir nqp-mo.pir QASTNodesJVM.pir QRegexJVM.pir NQPHLLJVM.pir JASTNodesJVM.pir
+NQPLIBS    = NQPCOREJVM.setting.class nqp-mo.class ModuleLoader.class QASTNodeJVM.class QRegexJVM.class NQPHLLJVM.class JASTNodesJVM.class
+NQPLIBPIRS = NQPCOREJVM.setting.pir nqp-mo.pir QASTNodeJVM.pir QRegexJVM.pir NQPHLLJVM.pir JASTNodesJVM.pir
 CROSSPBCS  = JASTNodes.pbc QASTJASTCompiler.pbc helper.pbc
 
 JAVAS = src/org/perl6/nqp/jast2bc/*.java \
@@ -57,10 +57,10 @@ nqp-mo.pir: nqp-src/nqp-mo.pm
 NQPCOREJVM.setting.pir: nqp-src/NQPCORE.setting nqp-mo.pbc
 	$(PRECOMPILE_NS) nqp-src/NQPCORE.setting
 
-QASTNodesJVM.pir: nqp-src/QASTNodes.nqp NQPCOREJVM.setting.pbc
+QASTNodeJVM.pir: nqp-src/QASTNodes.nqp NQPCOREJVM.setting.pbc
 	$(PRECOMPILE) nqp-src/QASTNodes.nqp
 
-QRegexJVM.pir: nqp-src/QRegex.nqp QASTNodesJVM.pbc
+QRegexJVM.pir: nqp-src/QRegex.nqp QASTNodeJVM.pbc
 	$(PRECOMPILE) nqp-src/QRegex.nqp
 
 NQPHLLJVM.pir: nqp-src/NQPHLL.pm QRegexJVM.pbc
@@ -78,7 +78,7 @@ ModuleLoader.class: nqp-src/ModuleLoader.pm
 NQPCOREJVM.setting.class: nqp-src/NQPCORE.setting NQPCOREJVM.setting.pbc
 	$(CROSSCOMPILE_NS) nqp-src/NQPCORE.setting
 
-QASTNodesJVM.class: nqp-src/QASTNodes.nqp QASTNodesJVM.pbc
+QASTNodeJVM.class: nqp-src/QASTNodes.nqp QASTNodeJVM.pbc
 	$(CROSSCOMPILE) nqp-src/QASTNodes.nqp
 
 QRegexJVM.class: nqp-src/QRegex.nqp QRegexJVM.pbc

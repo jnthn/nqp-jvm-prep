@@ -2,7 +2,7 @@
 
 # From src\QRegex\NFA.nqp
 
-use QASTNodesJVM;
+use QASTNodeJVM;
 
 class QRegex::NFA {
     my $EDGE_FATE            := 0;
