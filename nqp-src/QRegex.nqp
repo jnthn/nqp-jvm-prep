@@ -1067,23 +1067,23 @@ class NQPMatch is NQPCapture {
     method !make($ast) { $!ast := $ast }
     method ast()       { $!ast }
 
-#    method !dump_str($key) {
-#        sub dump_array($key, $item) {
-#            my $str := '';
-#            if $item ~~ NQPCapture {
-#                $str := $str ~ $item."!dump_str"($key)
-#            }
-#            elsif !nqp::isnull($item) {
-#                my $n := 0;
-#                for $item { $str := $str ~ dump_array($key ~ "[$n]", $_); $n++ }
-#            }
-#            $str;
-#        }
-#        my $str := $key ~ ': ' ~ nqp::escape(self.Str) ~ ' @ ' ~ self.from ~ "\n";
-#        $str := $str ~ dump_array($key, self.list);
-#        for self.hash { $str := $str ~ dump_array($key ~ '<' ~ $_.key ~ '>', $_.value); }
-#        $str;
-#    }
+    method !dump_str($key) {
+        sub dump_array($key, $item) {
+            my $str := '';
+            if $item ~~ NQPCapture {
+                $str := $str ~ $item."!dump_str"($key)
+            }
+            elsif !nqp::isnull($item) {
+                my $n := 0;
+                for $item { $str := $str ~ dump_array($key ~ "[$n]", $_); $n++ }
+            }
+            $str;
+        }
+        my $str := $key ~ ': ' ~ nqp::escape(self.Str) ~ ' @ ' ~ self.from ~ "\n";
+        $str := $str ~ dump_array($key, self.list);
+        for self.hash { $str := $str ~ dump_array($key ~ '<' ~ $_.key ~ '>', $_.value); }
+        $str;
+    }
 }
 
 class NQPCursor does NQPCursorRole {

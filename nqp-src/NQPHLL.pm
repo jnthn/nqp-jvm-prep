@@ -274,7 +274,7 @@ of the match.
         @args.push(' at line ');
         @args.push(HLL::Compiler.lineof($target, $pos) + 1);
         @args.push(', near "');
-#        @args.push(nqp::escape(nqp::substr($target, $pos, 10)));
+        @args.push(nqp::escape(nqp::substr($target, $pos, 10)));
         @args.push('"');
         nqp::die(nqp::join('', @args))
     }
