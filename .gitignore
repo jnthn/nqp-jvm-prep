@@ -2,3 +2,4 @@
 *.dump
 *.pbc
 *.pir
+nqp-src/QASTJVM.nqp
