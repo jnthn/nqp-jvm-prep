@@ -680,35 +680,35 @@ class HLL::Actions {
                     )))))
     }
    
-#    method SET_BLOCK_OUTER_CTX($block) {
-#        my $outer_ctx := %*COMPILING<%?OPTIONS><outer_ctx>;
-#        if nqp::defined($outer_ctx) {
-#            until nqp::isnull($outer_ctx) {
-#                my $pad := nqp::ctxlexpad($outer_ctx);
-#                unless nqp::isnull($pad) {
-#                    for $pad {
-#                        my str $key := ~$_;
-#                        unless $block.symbol($key) {
-#                            my $lextype := nqp::lexprimspec($pad, $key);
-#                            if $lextype == 0 {
-#                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey($pad, $key)));
-#                            }
-#                            elsif $lextype == 1 {
+    method SET_BLOCK_OUTER_CTX($block) {
+        my $outer_ctx := %*COMPILING<%?OPTIONS><outer_ctx>;
+        if nqp::defined($outer_ctx) {
+            until nqp::isnull($outer_ctx) {
+                my $pad := nqp::ctxlexpad($outer_ctx);
+                unless nqp::isnull($pad) {
+                    for $pad {
+                        my str $key := ~$_;
+                        unless $block.symbol($key) {
+                            my $lextype := nqp::lexprimspec($pad, $key);
+                            if $lextype == 0 {
+                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey($pad, $key)));
+                            }
+                            elsif $lextype == 1 {
 #                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_i($pad, $key)), :type(int));
-#                            }
-#                            elsif $lextype == 2 {
+                            }
+                            elsif $lextype == 2 {
 #                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_n($pad, $key)), :type(num));
-#                            }
-#                            elsif $lextype == 3 {
+                            }
+                            elsif $lextype == 3 {
 #                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_s($pad, $key)), :type(str));
-#                            }
-#                        }
-#                    }
-#                }
-#                $outer_ctx := nqp::ctxouter($outer_ctx);
-#            }
-#        }
-#    }
+                            }
+                        }
+                    }
+                }
+                $outer_ctx := nqp::ctxouter($outer_ctx);
+            }
+        }
+    }
 
     method EXPR($/, $key?) {
         unless $key { return 0; }
@@ -832,13 +832,13 @@ class HLL::Actions {
         make $<textq> ?? '\\' ~ $<textq>.Str !! $<textqq>.Str;
     }
 
-#    method charname($/) {
-#        my $codepoint := $<integer>
-#                         ?? $<integer>.ast
-#                         !! nqp::codepointfromname(~$/);
-#        $/.CURSOR.panic("Unrecognized character name $/") if $codepoint < 0;
-#        make nqp::chr($codepoint);
-#    }
+    method charname($/) {
+        my $codepoint := $<integer>
+                         ?? $<integer>.ast
+                         !! nqp::codepointfromname(~$/);
+        $/.CURSOR.panic("Unrecognized character name $/") if $codepoint < 0;
+        make nqp::chr($codepoint);
+    }
 
     method charnames($/) {
         my $str := '';
