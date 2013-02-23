@@ -457,8 +457,8 @@ An operator precedence parser.
                         nqp::push(@opstack, nqp::pop(@postfixish));
                     }
                 }
-#                nqp::push(@opstack, nqp::shift(@prefixish)) while @prefixish;
-#                nqp::push(@opstack, nqp::pop(@postfixish)) while @postfixish;
+                nqp::push(@opstack, nqp::shift(@prefixish)) while @prefixish;
+                nqp::push(@opstack, nqp::pop(@postfixish)) while @postfixish;
             }
             nqp::deletekey($termish, 'prefixish');            
             nqp::deletekey($termish, 'postfixish');
