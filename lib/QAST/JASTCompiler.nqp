@@ -1421,6 +1421,7 @@ QAST::OperationsJAST.map_classlib_core_op('curcode', $TYPE_OPS, 'curcode', [], $
 QAST::OperationsJAST.map_classlib_core_op('callercode', $TYPE_OPS, 'callercode', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('ctxlexpad', $TYPE_OPS, 'ctxlexpad', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('curlexpad', $TYPE_OPS, 'ctx', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('lexprimspec', $TYPE_OPS, 'lexprimspec', [$RT_OBJ, $RT_STR], $RT_INT, :tc);
 
 # Argument capture processing, for writing things like multi-dispatchers in
 # high level languages.

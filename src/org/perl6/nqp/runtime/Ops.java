@@ -426,6 +426,19 @@ public final class Ops {
     	CallFrame caller = tc.curFrame.caller;
     	return caller == null ? null : caller.codeRef;
     }
+    public static long lexprimspec(SixModelObject pad, String key, ThreadContext tc) {
+    	if (pad instanceof ContextRefInstance) {
+    		StaticCodeInfo sci = ((ContextRefInstance)pad).context.codeRef.staticInfo;
+    		if (sci.oTryGetLexicalIdx(key) != null) return StorageSpec.BP_NONE;
+    		if (sci.iTryGetLexicalIdx(key) != null) return StorageSpec.BP_INT;
+    		if (sci.nTryGetLexicalIdx(key) != null) return StorageSpec.BP_NUM;
+    		if (sci.sTryGetLexicalIdx(key) != null) return StorageSpec.BP_STR;
+    		throw new RuntimeException("Invalid lexical name passed to lexprimspec");
+    	}
+    	else {
+    		throw new RuntimeException("lexprimspec requires an operand with REPR ContextRef");
+    	}
+    }
     
     /* Argument setting. */
     public static void arg(long v, long[] args, int i) { args[i] = v; }
