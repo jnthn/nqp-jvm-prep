@@ -1480,8 +1480,47 @@ public final class Ops {
     public static SixModelObject atkey(SixModelObject hash, String key, ThreadContext tc) {
         return hash.at_key_boxed(tc, key);
     }
+    public static long atkey_i(SixModelObject hash, String key, ThreadContext tc) {
+    	hash.at_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int hash");
+    	return tc.native_i; 
+    }
+    public static double atkey_n(SixModelObject hash, String key, ThreadContext tc) {
+    	hash.at_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num hash");
+    	return tc.native_n; 
+    }
+    public static String atkey_s(SixModelObject hash, String key, ThreadContext tc) {
+    	hash.at_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str hash");
+    	return tc.native_s; 
+    }
     public static SixModelObject bindkey(SixModelObject hash, String key, SixModelObject value, ThreadContext tc) {
         hash.bind_key_boxed(tc, key, value);
+        return value;
+    }
+    public static long bindkey_i(SixModelObject hash, String key, long value, ThreadContext tc) {
+    	tc.native_i = value;
+    	hash.bind_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_INT)
+    		throw new RuntimeException("This is not a native int hash");
+        return value;
+    }
+    public static double bindkey_n(SixModelObject hash, String key, double value, ThreadContext tc) {
+    	tc.native_n = value;
+    	hash.bind_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_NUM)
+    		throw new RuntimeException("This is not a native num hash");
+        return value;
+    }
+    public static String bindkey_s(SixModelObject hash, String key, String value, ThreadContext tc) {
+    	tc.native_s = value;
+    	hash.bind_key_native(tc, key);
+    	if (tc.native_type != ThreadContext.NATIVE_STR)
+    		throw new RuntimeException("This is not a native str hash");
         return value;
     }
     public static long existskey(SixModelObject hash, String key, ThreadContext tc) {

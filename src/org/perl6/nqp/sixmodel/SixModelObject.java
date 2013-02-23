@@ -124,8 +124,14 @@ public abstract class SixModelObject implements Cloneable {
     public SixModelObject at_key_boxed(ThreadContext tc, String key) {
         throw new RuntimeException("This representation does not implement at_key_boxed");
     }
+    public void at_key_native(ThreadContext tc, String key) {
+        throw new RuntimeException("This representation does not implement at_key_native");
+    }
     public void bind_key_boxed(ThreadContext tc, String key, SixModelObject value) {
         throw new RuntimeException("This representation does not implement bind_key_boxed");
+    }
+    public void bind_key_native(ThreadContext tc, String key) {
+        throw new RuntimeException("This representation does not implement bind_key_native");
     }
     public long exists_key(ThreadContext tc, String key) {
         throw new RuntimeException("This representation does not implement exists_key");

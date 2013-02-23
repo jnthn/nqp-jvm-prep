@@ -1636,11 +1636,17 @@ QAST::OperationsJAST.map_classlib_core_op('atpos_i', $TYPE_OPS, 'atpos_i', [$RT_
 QAST::OperationsJAST.map_classlib_core_op('atpos_n', $TYPE_OPS, 'atpos_n', [$RT_OBJ, $RT_INT], $RT_NUM, :tc);
 QAST::OperationsJAST.map_classlib_core_op('atpos_s', $TYPE_OPS, 'atpos_s', [$RT_OBJ, $RT_INT], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('atkey', $TYPE_OPS, 'atkey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('atkey_i', $TYPE_OPS, 'atkey_i', [$RT_OBJ, $RT_STR], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('atkey_n', $TYPE_OPS, 'atkey_n', [$RT_OBJ, $RT_STR], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('atkey_s', $TYPE_OPS, 'atkey_s', [$RT_OBJ, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindpos', $TYPE_OPS, 'bindpos', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindpos_i', $TYPE_OPS, 'bindpos_i', [$RT_OBJ, $RT_INT, $RT_INT], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindpos_n', $TYPE_OPS, 'bindpos_n', [$RT_OBJ, $RT_INT, $RT_NUM], $RT_NUM, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindpos_s', $TYPE_OPS, 'bindpos_s', [$RT_OBJ, $RT_INT, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindkey', $TYPE_OPS, 'bindkey', [$RT_OBJ, $RT_STR, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindkey_i', $TYPE_OPS, 'bindkey_i', [$RT_OBJ, $RT_STR, $RT_INT], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindkey_n', $TYPE_OPS, 'bindkey_n', [$RT_OBJ, $RT_STR, $RT_NUM], $RT_NUM, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindkey_s', $TYPE_OPS, 'bindkey_s', [$RT_OBJ, $RT_STR, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('existspos', $TYPE_OPS, 'existspos', [$RT_OBJ, $RT_INT], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('existskey', $TYPE_OPS, 'existskey', [$RT_OBJ, $RT_STR], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('deletekey', $TYPE_OPS, 'deletekey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
