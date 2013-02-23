@@ -694,13 +694,13 @@ class HLL::Actions {
                                 $block.symbol($key, :scope<lexical>, :value(nqp::atkey($pad, $key)));
                             }
                             elsif $lextype == 1 {
-#                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_i($pad, $key)), :type(int));
+                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_i($pad, $key)), :type(int));
                             }
                             elsif $lextype == 2 {
-#                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_n($pad, $key)), :type(num));
+                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_n($pad, $key)), :type(num));
                             }
                             elsif $lextype == 3 {
-#                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_s($pad, $key)), :type(str));
+                                $block.symbol($key, :scope<lexical>, :value(nqp::atkey_s($pad, $key)), :type(str));
                             }
                         }
                     }
