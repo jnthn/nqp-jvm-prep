@@ -11,4 +11,26 @@ public class ContextRefInstance extends SixModelObject {
         Integer idx = context.codeRef.staticInfo.oTryGetLexicalIdx(key);
         return idx == null ? null : context.oLex[idx];
     }
+	
+	public void at_key_native(ThreadContext tc, String key) {
+        Integer idx = context.codeRef.staticInfo.iTryGetLexicalIdx(key);
+        if (idx != null) {
+        	tc.native_i = context.iLex[idx];
+        	tc.native_type = ThreadContext.NATIVE_INT;
+        	return;
+        }
+        idx = context.codeRef.staticInfo.nTryGetLexicalIdx(key);
+        if (idx != null) {
+        	tc.native_n = context.nLex[idx];
+        	tc.native_type = ThreadContext.NATIVE_NUM;
+        	return;
+        }
+        idx = context.codeRef.staticInfo.sTryGetLexicalIdx(key);
+        if (idx != null) {
+        	tc.native_s = context.sLex[idx];
+        	tc.native_type = ThreadContext.NATIVE_STR;
+        	return;
+        }
+        throw new RuntimeException("No lexical " + key + " in this lexpad");
+    }
 }
