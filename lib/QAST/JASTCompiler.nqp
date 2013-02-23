@@ -671,15 +671,15 @@ for ('', 'repeat_') -> $repness {
             }
             
             # Emit loop prelude, evaluating condition. 
-            my $il := JAST::InstructionList.new();
+            my $testil := JAST::InstructionList.new();
             if $repness {
                 # It's a repeat_ variant, need to go straight into the
                 # loop body unconditionally.
-                $il.append(JAST::Instruction.new( :op('goto'), $redo_lbl ));
+                $testil.append(JAST::Instruction.new( :op('goto'), $redo_lbl ));
             }
-            $il.append($test_lbl);
+            $testil.append($test_lbl);
             my $cond_res := $qastcomp.as_jast_in_handler(@operands[0], $l_handler_id || $*HANDLER_IDX);
-            $il.append($cond_res.jast);
+            $testil.append($cond_res.jast);
             $*STACK.obtain($cond_res);
             
             # Compile loop body, then do any analysis of result type if
@@ -697,17 +697,18 @@ for ('', 'repeat_') -> $repness {
             # If we're non-void, store the condition's evaluation as a
             # result.
             if $res {
-                $il.append(dup_ins($cond_res.type));
-                $il.append($qastcomp.coercion($cond_res, $res_type));
-                $il.append(JAST::Instruction.new( :op(store_ins($res_type)), $res ));
+                $testil.append(dup_ins($cond_res.type));
+                $testil.append($qastcomp.coercion($cond_res, $res_type));
+                $testil.append(JAST::Instruction.new( :op(store_ins($res_type)), $res ));
             }
             
             # Emit test.
-            boolify_instructions($il, $cond_res.type);
-            $il.append(JAST::Instruction.new($done_lbl,
+            boolify_instructions($testil, $cond_res.type);
+            $testil.append(JAST::Instruction.new($done_lbl,
                 :op($op_name eq 'while' ?? 'ifeq' !! 'ifne')));
 
             # Emit the loop body; stash the result if needed.
+            my $il := JAST::InstructionList.new();
             $il.append($redo_lbl);
             my $body_il := JAST::InstructionList.new();
             $body_il.append($body_res.jast);
@@ -756,14 +757,15 @@ for ('', 'repeat_') -> $repness {
                     $*HANDLER_IDX, $l_handler_id);
             }
 
+            my $res_il := JAST::InstructionList.new();
+            $res_il.append($testil);
+            $res_il.append($il);
             if $res {
-                my $res_il := JAST::InstructionList.new();
-                $res_il.append($il);
                 $res_il.append(JAST::Instruction.new( :op(load_ins($res_type)), $res ));
                 result($res_il, $res_type)
             }
             else {
-                result($il, $RT_VOID)
+                result($res_il, $RT_VOID)
             }
         });
     }
