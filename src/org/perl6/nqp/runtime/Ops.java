@@ -2151,8 +2151,8 @@ public final class Ops {
     		
     		String[] shArray = new String[(int)sh.elems(tc)];
     		for (int i = 0; i < shArray.length; i++) {
-    			SixModelObject strObj = sh.at_pos_boxed(tc, i);
-    			shArray[i] = strObj == null ? null : strObj.get_str(tc);
+    			sh.at_pos_native(tc, i); 
+    			shArray[i] = tc.native_s;
     		}
     		
     		CodeRef[] crArray = new CodeRef[(int)cr.elems(tc)];

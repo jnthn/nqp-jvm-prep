@@ -57,7 +57,7 @@ my @jtypes := [$TYPE_SMO, 'Long', 'Double', $TYPE_STR];
 sub jtype($type_idx) { @jtypes[$type_idx] }
 my @rttypes := [$RT_OBJ, $RT_INT, $RT_NUM, $RT_STR];
 sub rttype_from_typeobj($typeobj) {
-    @rttypes[pir::repr_get_primitive_type_spec__IP($typeobj)]
+    @rttypes[nqp::objprimspec($typeobj)]
 }
 my @typechars := ['o', 'i', 'n', 's'];
 sub typechar($type_idx) { @typechars[$type_idx] }
@@ -395,7 +395,7 @@ QAST::OperationsJAST.add_core_op('list_s', -> $qastcomp, $op {
     # Just desugar to create the empty list.
     my $arr := $qastcomp.as_jast(QAST::Op.new(
         :op('create'),
-        QAST::Op.new( :op('bootarray') )
+        QAST::Op.new( :op('bootstrarray') )
     ));
     if +$op.list {
         # Put list into a temporary so we can push to it.
@@ -2419,16 +2419,15 @@ class QAST::CompilerJAST {
         my $serialized := nqp::serialize($sc, $sh);
         
         # Now it's serialized, pop this SC off the compiling SC stack.
-        # XXX TODO
+        nqp::popcompsc();
         
         # String heap QAST.
-        # XXX Should use list_s and null_s
-        my $sh_ast := QAST::Op.new( :op('list') );
+        my $sh_ast := QAST::Op.new( :op('list_s') );
         my $sh_elems := nqp::elems($sh);
         my $i := 0;
         while $i < $sh_elems {
             $sh_ast.push(nqp::isnull_s($sh[$i])
-                ?? QAST::Op.new( :op('null') )
+                ?? QAST::Op.new( :op('null_s') )
                 !! QAST::SVal.new( :value($sh[$i]) ));
             $i := $i + 1;
         }
