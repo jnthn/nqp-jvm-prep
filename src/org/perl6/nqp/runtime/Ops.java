@@ -1878,6 +1878,19 @@ public final class Ops {
     	return sb.toString();
     }
     
+    /* Brute force, but not normally needed for most programs. */
+    private static HashMap<String, Character> cpNameMap;
+    public static long codepointfromname(String name) {
+    	if (cpNameMap == null) {
+    		cpNameMap = new HashMap<String, Character>();
+    		for (char i = 0; i < Character.MAX_VALUE; i++)
+    			if (Character.isValidCodePoint(i))
+    				cpNameMap.put(Character.getName(i), i);
+    	}
+    	Character found = cpNameMap.get(name);
+    	return found == null ? -1 : found;
+    }
+    
     private static final int CCLASS_ANY          = 65535;
     private static final int CCLASS_UPPERCASE    = 1;
     private static final int CCLASS_LOWERCASE    = 2;
