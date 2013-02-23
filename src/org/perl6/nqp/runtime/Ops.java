@@ -1225,6 +1225,9 @@ public final class Ops {
     	obj.st.TypeCheckCache = cache;
     	return obj;
     }
+    public static long objprimspec(SixModelObject obj, ThreadContext tc) {
+    	return obj.st.REPR.get_storage_spec(tc, obj.st).boxed_primitive;
+    }
     public static SixModelObject setinvokespec(SixModelObject obj, SixModelObject ch,
     		String name, SixModelObject invocationHandler, ThreadContext tc) {
     	InvocationSpec is = new InvocationSpec();
