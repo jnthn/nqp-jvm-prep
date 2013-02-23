@@ -1791,6 +1791,28 @@ public final class Ops {
         return str.codePointAt((int)offset);
     }
     
+    public static String escape(String str) {
+    	int len = str.length();
+    	StringBuilder sb = new StringBuilder(2 * len);
+    	for (int i = 0; i < len; i++) {
+    		char c = str.charAt(i);
+    		switch (c) {
+    		case '\\': sb.append("\\\\"); break;
+    		case 7: sb.append("\\a"); break;
+    		case '\b': sb.append("\\b"); break;
+    		case '\n': sb.append("\\n"); break;
+    		case '\r': sb.append("\\r"); break;
+    		case '\t': sb.append("\\t"); break;
+    		case '\f': sb.append("\\f"); break;
+    		case '"': sb.append("\\\""); break;
+    		case 27: sb.append("\\e"); break;
+    		default:
+    			sb.append(c);
+    		}
+    	}
+    	return sb.toString();
+    }
+    
     private static final int CCLASS_ANY          = 65535;
     private static final int CCLASS_UPPERCASE    = 1;
     private static final int CCLASS_LOWERCASE    = 2;
