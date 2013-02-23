@@ -2429,6 +2429,10 @@ public final class Ops {
             config.slurpyArrayType = configHash.at_key_boxed(tc, "slurpy_array");
         if (configHash.exists_key(tc, "slurpy_hash") != 0)
             config.slurpyHashType = configHash.at_key_boxed(tc, "slurpy_hash");
+        if (configHash.exists_key(tc, "array_iter") != 0)
+        	config.arrayIteratorType = configHash.at_key_boxed(tc, "array_iter");
+        if (configHash.exists_key(tc, "hash_iter") != 0)
+        	config.hashIteratorType = configHash.at_key_boxed(tc, "hash_iter");
         return configHash;
     }
     public static SixModelObject getcomp(String name, ThreadContext tc) {
