@@ -2173,6 +2173,33 @@ public final class Ops {
     public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
     	return tc.gc.scs.get(sc).root_objects.get((int)idx);
     }
+    public static long scwbdisable(ThreadContext tc) {
+    	return ++tc.scwbDisableDepth;
+    }
+    public static long scwbenable(ThreadContext tc) {
+    	return --tc.scwbDisableDepth;
+    }
+    public static SixModelObject pushcompsc(SixModelObject sc, ThreadContext tc) {
+    	if (sc instanceof SCRefInstance) {
+    		if (tc.compilingSCs == null)
+    			tc.compilingSCs = new ArrayList<SCRefInstance>();
+    		tc.compilingSCs.add((SCRefInstance)sc);
+    		return sc;
+    	}
+    	else {
+    		throw new RuntimeException("Can only push an SCRef with pushcompsc");
+    	}
+    }
+    public static SixModelObject popcompsc(ThreadContext tc) {
+    	if (tc.compilingSCs == null)
+    		throw new RuntimeException("No current compiling SC.");
+    	int idx = tc.compilingSCs.size() - 1;
+    	SixModelObject result = tc.compilingSCs.get(idx);
+    	tc.compilingSCs.remove(idx);
+    	if (idx == 0)
+    		tc.compilingSCs = null;
+    	return result;
+    }
 
     /* bitwise operations. */
     public static long bitor_i(long valA, long valB) {

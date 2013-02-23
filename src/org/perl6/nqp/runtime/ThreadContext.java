@@ -3,6 +3,7 @@ package org.perl6.nqp.runtime;
 import java.util.ArrayList;
 
 import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
+import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
 
 /**
  * State of a currently running thread.
@@ -63,6 +64,17 @@ public class ThreadContext {
      * The currently saved capture for custom processing.
      */
     public CallCaptureInstance savedCC;
+    
+    /**
+     * Serialization context write barrier disabled depth (anything non-zero
+     * means disabled).
+     */
+    public int scwbDisableDepth;
+    
+    /**
+     * Any serialization contexts we are compiling; null if none.
+     */
+    public ArrayList<SCRefInstance> compilingSCs;
     
     public ThreadContext(GlobalContext gc) {
         this.gc = gc;
