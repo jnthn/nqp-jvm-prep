@@ -1670,6 +1670,58 @@ public final class Ops {
     public static long lcm_i(long valA, long valB) {
         return valA * (valB / gcd_i(valA, valB));
     }
+    
+    public static SixModelObject radix(long radix, String str, long zpos, long flags, ThreadContext tc) {
+    	double zvalue = 0.0;
+        double zbase = 1.0;
+        int chars = str.length();
+        double value = zvalue;
+        double base = zbase;
+        long pos = -1;
+        char ch;
+        boolean neg = false;
+
+        if (radix > 36) {
+        	throw new RuntimeException("Cannot convert radix of " + radix + " (max 36)");
+        }
+
+        ch = (zpos < chars) ? str.charAt((int)zpos) : 0;
+        if ((flags & 0x02) != 0 && (ch == '+' || ch == '-')) {
+            neg = (ch == '-');
+            zpos++;
+            ch = (zpos < chars) ? str.charAt((int)zpos) : 0;
+        }
+        while (zpos < chars) {
+            if (ch >= '0' && ch <= '9') ch = (char)(ch - '0');
+            else if (ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 10);
+            else if (ch >= 'A' && ch <= 'Z') ch = (char)(ch - 'A' + 10);
+            else break;
+            if (ch >= radix) break;
+            zvalue = zvalue * radix + ch;
+            zbase = zbase * radix;
+            zpos++; pos = zpos;
+            if (ch != 0 || (flags & 0x04) == 0) { value=zvalue; base=zbase; }
+            if (zpos >= chars) break;
+            ch = str.charAt((int)zpos);
+            if (ch != '_') continue;
+            zpos++;
+            if (zpos >= chars) break;
+            ch = str.charAt((int)zpos);
+        }
+
+        if (neg || (flags & 0x01) != 0) { value = -value; }
+        
+        HLLConfig hllConfig = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig;
+        SixModelObject result = hllConfig.slurpyArrayType.st.REPR.allocate(tc,
+        		hllConfig.slurpyArrayType.st);
+        result.initialize(tc);
+        
+        result.push_boxed(tc, box_n(value, hllConfig.numBoxType, tc));
+        result.push_boxed(tc, box_n(base, hllConfig.numBoxType, tc));
+        result.push_boxed(tc, box_n(pos, hllConfig.numBoxType, tc));
+        
+        return result;
+    }
 
     /* String operations. */
     public static long chars(String val) {
