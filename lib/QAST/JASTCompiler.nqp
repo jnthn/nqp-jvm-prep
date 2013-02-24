@@ -59,6 +59,10 @@ my @rttypes := [$RT_OBJ, $RT_INT, $RT_NUM, $RT_STR];
 sub rttype_from_typeobj($typeobj) {
     @rttypes[nqp::objprimspec($typeobj)]
 }
+my @typeobjs := [NQPMu, int, num, str];
+sub typeobj_from_rttype($rttype) {
+    @typeobjs[$rttype]
+}
 my @typechars := ['o', 'i', 'n', 's'];
 sub typechar($type_idx) { @typechars[$type_idx] }
 
@@ -533,6 +537,15 @@ for <if unless> -> $op_name {
         my $operands := +$op.list;
         nqp::die("Operation '$op_name' needs either 2 or 3 operands")
             if $operands < 2 || $operands > 3;
+            
+        # See if any immediate block wants to be passed the condition.
+        my $im_then := nqp::istype($op[1], QAST::Block) && 
+                       $op[1].blocktype eq 'immediate' &&
+                       $op[1].arity > 0;
+        my $im_else := $operands == 3 &&
+                       nqp::istype($op[2], QAST::Block) && 
+                       $op[2].blocktype eq 'immediate' &&
+                       $op[2].arity > 0;
         
         # Create labels and a place to store the overall result.
         my $if_id    := $qastcomp.unique($op_name);
@@ -546,6 +559,29 @@ for <if unless> -> $op_name {
         my $cond := $qastcomp.as_jast($op[0]);
         $il.append($cond.jast);
         $*STACK.obtain($cond);
+        if $im_then || $im_else {
+            my $im_local := QAST::Node.unique('__IM_');
+            $*BLOCK.add_local(QAST::Var.new(
+                :name($im_local),
+                :returns(typeobj_from_rttype($cond.type))
+            ));
+            if $im_then {
+                $op[1].blocktype('declaration');
+                $op[1] := QAST::Op.new(
+                    :op('call'), $op[1],
+                    QAST::Var.new( :name($im_local), :scope('local') )
+                );
+            }
+            if $im_else {
+                $op[2].blocktype('declaration');
+                $op[2] := QAST::Op.new(
+                    :op('call'), $op[2],
+                    QAST::Var.new( :name($im_local), :scope('local') )
+                );
+            }
+            $il.append(dup_ins($cond.type));
+            $il.append(JAST::Instruction.new( :op(store_ins($cond.type)), $im_local ));
+        }
         unless $*WANT == $RT_VOID || $operands == 3 {
             $il.append(dup_ins($cond.type));
             $res_type := $cond.type;
