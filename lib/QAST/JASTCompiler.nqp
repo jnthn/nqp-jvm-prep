@@ -2584,12 +2584,6 @@ class QAST::CompilerJAST {
                 $*CODEREFS.set_max_args($node.cuid, $*MAX_ARGS_I, $*MAX_ARGS_N, $*MAX_ARGS_S, $*MAX_ARGS_O);
             }
             
-            # Add all the locals.
-            for $block.locals {
-                $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
-            }
-            $*BLOCK_TA.add_temps_to_method($*JMETH);
-            
             # Stash lexical names.
             $*CODEREFS.set_lexical_names($node.cuid, |$block.lexical_names_by_type());
             
@@ -2720,6 +2714,12 @@ class QAST::CompilerJAST {
                 }
                 $param_idx++;
             }
+            
+            # Add all the locals.
+            for $block.locals {
+                $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
+            }
+            $*BLOCK_TA.add_temps_to_method($*JMETH);
             
             # Add method body JAST.
             $*JMETH.append($body.jast);
