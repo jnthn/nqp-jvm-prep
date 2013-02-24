@@ -1637,10 +1637,10 @@ public final class Ops {
         return istrue(obj, tc) == 0 ? 1 : 0;
     }
     public static long istrue_s(String str) {
-        return str.equals("") || str.equals("0") ? 0 : 1;
+        return str == null || str.equals("") || str.equals("0") ? 0 : 1;
     }
     public static long isfalse_s(String str) {
-        return str.equals("") || str.equals("0") ? 1 : 0;
+        return str == null || str.equals("") || str.equals("0") ? 1 : 0;
     }
     public static long not_i(long v) {
     	return v == 0 ? 1 : 0;
