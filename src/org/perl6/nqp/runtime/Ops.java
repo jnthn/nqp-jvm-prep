@@ -349,7 +349,7 @@ public final class Ops {
     }
     
     /* Dynamic lexicals. */
-    public static SixModelObject binddynlex(SixModelObject value, String name, ThreadContext tc) {
+    public static SixModelObject bindlexdyn(SixModelObject value, String name, ThreadContext tc) {
         CallFrame curFrame = tc.curFrame;
         while (curFrame != null) {
             Integer idx =  curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);
@@ -361,7 +361,7 @@ public final class Ops {
         }
         throw new RuntimeException("Dyanmic variable '" + name + "' not found");
     }
-    public static SixModelObject getdynlex(String name, ThreadContext tc) {
+    public static SixModelObject getlexdyn(String name, ThreadContext tc) {
         CallFrame curFrame = tc.curFrame;
         while (curFrame != null) {
             Integer idx =  curFrame.codeRef.staticInfo.oTryGetLexicalIdx(name);

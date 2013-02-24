@@ -1784,6 +1784,8 @@ QAST::OperationsJAST.map_classlib_core_op('bindlex', $TYPE_OPS, 'bindlex', [$RT_
 QAST::OperationsJAST.map_classlib_core_op('bindlex_i', $TYPE_OPS, 'bindlex_i', [$RT_STR, $RT_INT], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindlex_n', $TYPE_OPS, 'bindlex_n', [$RT_STR, $RT_NUM], $RT_NUM, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bindlex_s', $TYPE_OPS, 'bindlex_s', [$RT_STR, $RT_STR], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getlexdyn', $TYPE_OPS, 'getlexdyn', [$RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bindlexdyn', $TYPE_OPS, 'bindlexdyn', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 
 # code object related opcodes
 QAST::OperationsJAST.map_classlib_core_op('takeclosure', $TYPE_OPS, 'takeclosure', [$RT_OBJ], $RT_OBJ, :tc);
@@ -3023,9 +3025,9 @@ class QAST::CompilerJAST {
             $il.append(JAST::Instruction.new( :op('aload_1') ));
             $il.append($*BINDVAL
                 ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "binddynlex", $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC )
+                        "bindlexdyn", $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC )
                 !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "getdynlex", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+                        "getlexdyn", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
             return result($il, $RT_OBJ);
         }
         elsif $scope eq 'attribute' {
