@@ -22,6 +22,16 @@ public class CodeRef extends SixModelObject {
     public SixModelObject codeObject;
     
     /**
+     * Is this flagged as a static code ref?
+     */
+    public boolean isStaticCodeRef;
+    
+    /**
+     * Is this flagged as a compiler stub?
+     */
+    public boolean isCompilerStub;
+    
+    /**
      * Sets up the code-ref data structure.
      */
     public CodeRef(CompilationUnit compUnit, int idx, String name, String uniqueId,

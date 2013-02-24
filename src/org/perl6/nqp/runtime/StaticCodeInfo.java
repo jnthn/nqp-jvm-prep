@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
 
-public class StaticCodeInfo {
+public class StaticCodeInfo implements Cloneable {
     /**
      * The compilation unit where the code lives.
      */
@@ -137,5 +137,17 @@ public class StaticCodeInfo {
         this.handlers = handlers;
         if (oLexicalNames != null)
         	this.oLexStatic = new SixModelObject[oLexicalNames.length];
+    }
+    
+    public StaticCodeInfo clone() {
+    	try {
+    		StaticCodeInfo result = (StaticCodeInfo)super.clone();
+    		if (result.oLexStatic != null)
+    			result.oLexStatic = result.oLexStatic.clone();
+    		return result;
+    	}
+    	catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
     }
 }

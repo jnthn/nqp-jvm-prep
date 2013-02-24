@@ -2358,6 +2358,25 @@ public final class Ops {
     	((CodeRef)code).outer = ((ContextRefInstance)ctx).context;
     	return code;
     }
+    public static SixModelObject freshcoderef(SixModelObject code, ThreadContext tc) {
+    	if (!(code instanceof CodeRef))
+    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    	CodeRef clone = (CodeRef)code.clone(tc);
+    	clone.staticInfo = clone.staticInfo.clone();
+    	return clone;
+    }
+    public static SixModelObject markcodestatic(SixModelObject code, ThreadContext tc) {
+    	if (!(code instanceof CodeRef))
+    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    	((CodeRef)code).isStaticCodeRef = true;
+    	return code;
+    }
+    public static SixModelObject markcodestub(SixModelObject code, ThreadContext tc) {
+    	if (!(code instanceof CodeRef))
+    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    	((CodeRef)code).isCompilerStub = true;
+    	return code;
+    }
 
     /* process related opcodes */
     public static long exit(final long status) {
