@@ -2,24 +2,68 @@ use QASTJASTCompiler;
 use JASTNodes;
 use helper;
 
-sub MAIN(*@ARGS) {
-    # Add --javaclass command line option for specifying the name of the Java class
-    # to generate.
-    my $nqpcomp := pir::compreg__Ps('nqp');
-    my @clo := $nqpcomp.commandline_options();
-    @clo.push('javaclass=s');
+# Backend class for the JVM.
+class HLL::Backend::JVM {
+    method apply_transcodings($s, $transcode) {
+        $s
+    }
     
-    $nqpcomp.stages(< start classname parse past jast classfile jvm >);
-    $nqpcomp.HOW.add_method($nqpcomp, 'classname', method ($source, *%adverbs) {
+    method config() {
+        nqp::hash()
+    }
+    
+    method force_gc() {
+        nqp::die("Cannot force GC on JVM backend yet");
+    }
+    
+    method name() {
+        'jvm'
+    }
+
+    method nqpevent($spec?) {
+        # Doesn't do anything just yet
+    }
+    
+    method run_profiled($what) {
+        nqp::printfh(nqp::getstderr(),
+            "Attach a profiler (e.g. JVisualVM) and press enter");
+        nqp::readlinefh(nqp::getstdin());
+        $what();
+    }
+    
+    method run_traced($level, $what) {
+        nqp::die("No tracing support");
+    }
+    
+    method version_string() {
+        "JVM"
+    }
+    
+    method stages() {
+        'jast classfile jvm'
+    }
+    
+    method is_precomp_stage($stage) {
+        # Currently, everything is pre-comp since we're a cross-compiler.
+        1
+    }
+    
+    method is_textual_stage($stage) {
+        0
+    }
+    
+    method classname($source, *%adverbs) {
         unless %*COMPILING<%?OPTIONS><javaclass> {
             %*COMPILING<%?OPTIONS><javaclass> := nqp::sha1(nqp::sha1($source) ~ nqp::time_n());
         }
         $source
-    });
-    $nqpcomp.HOW.add_method($nqpcomp, 'jast', method ($qast, *%adverbs) {
+    }
+    
+    method jast($qast, *%adverbs) {
         QAST::CompilerJAST.jast($qast, :classname(%*COMPILING<%?OPTIONS><javaclass>));
-    });
-    $nqpcomp.HOW.add_method($nqpcomp, 'classfile', method ($jast, *%adverbs) {
+    }
+    
+    method classfile($jast, *%adverbs) {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         my $dump := $jast.dump();
         spurt($name ~ '.dump', $dump);
@@ -33,8 +77,9 @@ sub MAIN(*@ARGS) {
         my $class := $fh.readall();
         $fh.close();
         $class
-    });
-    $nqpcomp.HOW.add_method($nqpcomp, 'jvm', method ($class, *%adverbs) {
+    }
+    
+    method jvm($class, *%adverbs) {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         -> {
             run('java',
@@ -42,9 +87,24 @@ sub MAIN(*@ARGS) {
                 $name);
             unlink($name ~ '.class');
         }
-    });
+    }
+}
+
+sub MAIN(*@ARGS) {
+    # Get original compiler, then re-register it as a cross compiler.
+    my $nqpcomp-orig := nqp::getcomp('nqp');
+    my $nqpcomp-cc   := nqp::clone($nqpcomp-orig);
+    $nqpcomp-cc.language('nqp-cc');
     
-    $nqpcomp.command_line(@ARGS, :precomp(1), :stable-sc(1),
+    # Add --javaclass command line option for specifying the name of the Java class
+    # to generate.
+    my @clo := $nqpcomp-cc.commandline_options();
+    @clo.push('javaclass=s');
+    
+    $nqpcomp-cc.backend(HLL::Backend::JVM);
+    $nqpcomp-cc.addstage('classname', :after<start>);
+    
+    $nqpcomp-cc.command_line(@ARGS, :stable-sc(1),
         :setting('NQPCOREJVM'), :custom-regex-lib('QRegexJVM'),
         :encoding('utf8'), :transcode('ascii iso-8859-1'));
 }
