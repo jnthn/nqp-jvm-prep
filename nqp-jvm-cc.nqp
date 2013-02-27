@@ -88,6 +88,10 @@ class HLL::Backend::JVM {
             unlink($name ~ '.class');
         }
     }
+    
+    method is_compunit($cuish) {
+        !pir::isa__IPs($cuish, 'String')
+    }
 }
 
 sub MAIN(*@ARGS) {
