@@ -572,6 +572,7 @@ my class NQPHashIter is repr('VMIter') {
 }
 nqp::setboolspec(NQPHashIter, 7, nqp::null());
 nqp::sethllconfig('nqp', nqp::hash(
+    'list', NQPArray,
     'slurpy_array', NQPArray,
     'array_iter', NQPArrayIter,
     'hash_iter', NQPHashIter
