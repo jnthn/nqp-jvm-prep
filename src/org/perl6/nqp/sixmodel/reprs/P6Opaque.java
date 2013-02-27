@@ -444,12 +444,19 @@ public class P6Opaque extends REPR {
     		// Create delegate.
     		SixModelObject delegate = newType.st.REPR.allocate(tc, newType.st);
     		
+    		// Find original object.
+    		SixModelObject orig;
+    		if (((P6OpaqueBaseInstance)obj).delegate != null)
+    			orig = ((P6OpaqueBaseInstance)obj).delegate;
+    		else
+    			orig = obj;
+    		
     		// Copy over current attribute values.
-    		Field[] fromFields = obj.getClass().getFields();
+    		Field[] fromFields = orig.getClass().getFields();
     		Field[] toFields = delegate.getClass().getFields();
     		try {
-    			for (int i = 3; i < fromFields.length; i++)
-        			toFields[i].set(delegate, fromFields[i].get(obj));
+    			for (int i = 0; i < fromFields.length - 3; i++)
+        			toFields[i].set(delegate, fromFields[i].get(orig));
     		}
     		catch (IllegalAccessException e) { throw new RuntimeException(e); }
 
