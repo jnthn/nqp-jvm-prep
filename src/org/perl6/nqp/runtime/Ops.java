@@ -1244,6 +1244,27 @@ public final class Ops {
     public static void invokeArgless(ThreadContext tc, SixModelObject invokee) {
     	invokeInternal(tc, invokee, emptyCallSite);
     }
+    public static void invokeMain(ThreadContext tc, SixModelObject invokee, String prog, String[] argv) {
+    	/* Build argument list from argv. */
+    	SixModelObject Str = ((CodeRef)invokee).staticInfo.compUnit.hllConfig.strBoxType;
+    	SixModelObject[] oArg = new SixModelObject[argv.length + 1];
+    	byte[] callsite = new byte[argv.length + 1];
+    	oArg[0] = box_s(prog, Str, tc);
+    	callsite[0] = CallSiteDescriptor.ARG_OBJ;
+    	for (int i = 0; i < argv.length; i++) {
+    		oArg[i + 1] = box_s(argv[i], Str, tc);
+    		callsite[i + 1] = CallSiteDescriptor.ARG_OBJ;
+    	}
+    	
+    	/* Create a fake frame for passing the args. */
+    	CallFrame fake = new CallFrame();
+    	fake.oArg = oArg;
+    	fake.codeRef = new CodeRef(null, 0, "", "", null, null, null, null, 
+    			(short)oArg.length, (short)0, (short)0, (short)0, null);
+    	tc.curFrame = fake;
+    	
+    	invokeInternal(tc, invokee, new CallSiteDescriptor(callsite, null));
+    }
     private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) {
     	// Otherwise, get the code ref.
     	CodeRef cr;

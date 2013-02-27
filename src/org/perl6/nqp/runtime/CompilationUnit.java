@@ -40,7 +40,7 @@ public abstract class CompilationUnit {
             throws Exception {
         ThreadContext tc = (new GlobalContext()).mainThread;
         CompilationUnit cu = setupCompilationUnit(tc, cuType);
-        Ops.invoke(cu.codeRefs[entryCodeRefIdx], -1, tc);
+        Ops.invokeMain(tc, cu.codeRefs[entryCodeRefIdx], cuType.getName(), argv);
     }
     
     /**
