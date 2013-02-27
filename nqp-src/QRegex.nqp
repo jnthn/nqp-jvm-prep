@@ -1120,7 +1120,7 @@ class NQPMatch is NQPCapture {
                         !! dump_match($_.key, $_.value);
                 }
             }
-            return nqp::join('', @chunks);
+            return join('', @chunks);
         }
         else {
             return nqp::x(' ', $indent) ~ "- NO MATCH\n";

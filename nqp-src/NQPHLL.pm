@@ -276,7 +276,7 @@ of the match.
         @args.push(', near "');
         @args.push(nqp::escape(nqp::substr($target, $pos, 10)));
         @args.push('"');
-        nqp::die(nqp::join('', @args))
+        nqp::die(join('', @args))
     }
     
     method FAILGOAL($goal, $dba?) {
@@ -1096,7 +1096,7 @@ class HLL::Compiler does HLL::Backend::Default {
     }
 
     method panic(*@args) {
-        nqp::die(nqp::join('', @args))
+        nqp::die(join('', @args))
     }
 
     method stages(@value?) {
@@ -1249,14 +1249,14 @@ class HLL::Compiler does HLL::Backend::Default {
         my $target := nqp::lc(%adverbs<target>);
         my $encoding := %adverbs<encoding>;
         my @files := nqp::islist($files) ?? $files !! [$files];
-        $!user_progname := nqp::join(',', @files);
+        $!user_progname := join(',', @files);
         my @codes;
         for @files {
             my $err := 0;
             try {
                 my $in-handle := nqp::open($_, 'r');
                 nqp::setencoding($in-handle, $encoding);
-                nqp::push_s(@codes, nqp::readallfh($in-handle));
+                nqp::push(@codes, nqp::readallfh($in-handle));
                 nqp::closefh($in-handle);
                 CATCH {
                     $err := "Error while reading from file: $_";
@@ -1264,8 +1264,8 @@ class HLL::Compiler does HLL::Backend::Default {
             }
             nqp::die($err) if $err;
         }
-        my $code := nqp::join('', @codes);
-        my $?FILES := nqp::join(' ', @files);
+        my $code := join('', @codes);
+        my $?FILES := join(' ', @files);
         my $r := self.eval($code, |@args, |%adverbs);
         if $target eq '' || $!backend.is_textual_stage($target) || %adverbs<output> {
             return $r;
@@ -1421,7 +1421,7 @@ class HLL::Compiler does HLL::Backend::Default {
             $position := 'after';
         } else {
             my @new-stages := nqp::clone(self.stages);
-            nqp::push_s(@new-stages, $stagename);
+            nqp::push(@new-stages, $stagename);
             self.stages(@new-stages);
             return 1;
         }
@@ -1429,14 +1429,14 @@ class HLL::Compiler does HLL::Backend::Default {
         for self.stages {
             if $_ eq $where {
                 if $position eq 'before' {
-                    nqp::push_s(@new-stages, $stagename);
-                    nqp::push_s(@new-stages, $_);
+                    nqp::push(@new-stages, $stagename);
+                    nqp::push(@new-stages, $_);
                 } else {
-                    nqp::push_s(@new-stages, $_);
-                    nqp::push_s(@new-stages, $stagename);
+                    nqp::push(@new-stages, $_);
+                    nqp::push(@new-stages, $stagename);
                 }
             } else {
-                nqp::push_s(@new-stages, $_)
+                nqp::push(@new-stages, $_)
             }
         }
         self.stages(@new-stages);
@@ -1457,7 +1457,7 @@ class HLL::Compiler does HLL::Backend::Default {
         # maybe replace with a grep() once we have the setting for sure
         my @actual_ns;
         for @ns {
-            nqp::push_s(@actual_ns, $_) unless $_ eq '';
+            nqp::push(@actual_ns, $_) unless $_ eq '';
         }
         @actual_ns;
     }
