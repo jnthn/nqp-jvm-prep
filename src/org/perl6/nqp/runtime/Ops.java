@@ -3077,4 +3077,12 @@ public final class Ops {
     public static String coerce_n2s(double in) {
         return in == (long)in ? Long.toString((long)in) : Double.toString(in);
     }
+    
+    /* Long literal workaround. */
+    public static String join_literal(String[] parts) {
+    	StringBuilder retval = new StringBuilder(parts.length * 65535);
+        for (int i = 0; i < parts.length; i++)
+            retval.append(parts[i]);
+        return retval.toString();
+    }
 }

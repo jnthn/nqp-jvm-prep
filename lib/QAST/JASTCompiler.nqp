@@ -3119,7 +3119,31 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::SVal $node, :$want) {
-        result(JAST::PushSVal.new( :value($node.value) ), $RT_STR)
+        if nqp::chars($node.value) <= 65535 {
+            result(JAST::PushSVal.new( :value($node.value) ), $RT_STR)
+        }
+        else {
+            my @chunks;
+            my $value := $node.value;
+            while nqp::chars($value) > 65535 {
+                nqp::push(@chunks, nqp::substr($value, 0, 65535));
+                $value := nqp::substr($value, 65535);
+            }
+            nqp::push(@chunks, $value);
+            my $il := JAST::InstructionList.new();
+            $il.append(JAST::PushIndex.new( :value(nqp::elems(@chunks)) ));
+            $il.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+            my int $i := 0;
+            for @chunks {
+                $il.append(JAST::Instruction.new( :op('dup') ));
+                $il.append(JAST::PushIndex.new( :value($i++) ));
+                $il.append(JAST::PushSVal.new( :value($_) ));
+                $il.append(JAST::Instruction.new( :op('aastore') ));
+            }
+            $il.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_OPS, 'join_literal', $TYPE_STR, "[$TYPE_STR" ));
+            result($il, $RT_STR)
+        }
     }
     
     multi method as_jast(QAST::BVal $node, :$want) {
