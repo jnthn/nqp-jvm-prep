@@ -37,4 +37,9 @@ public class HLLConfig {
      * The type to construct for exceptions (should have VMException REPR).
      */
     public SixModelObject exceptionType;
+    
+    /**
+     * The type to construct for IO handles.
+     */
+    public SixModelObject ioType;
 }

@@ -74,6 +74,11 @@ public class GlobalContext {
     public SixModelObject BOOTException;
     
     /**
+     * BOOTIO type; a basic, method-less type with the IOHandle REPR.
+     */
+    public SixModelObject BOOTIO;
+    
+    /**
      * Typed VMArrays.
      */
     public SixModelObject BOOTIntArray;
@@ -154,5 +159,6 @@ public class GlobalContext {
         config.arrayIteratorType = BOOTIter;
         config.hashIteratorType = BOOTIter;
         config.exceptionType = BOOTException;
+        config.ioType = BOOTIO;
     }
 }

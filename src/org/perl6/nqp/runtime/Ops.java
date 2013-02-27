@@ -1,7 +1,15 @@
 package org.perl6.nqp.runtime;
 
 import java.math.BigInteger;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -202,6 +210,263 @@ public final class Ops {
         }
 
         return rval;
+    }
+    
+    public static SixModelObject open(String path, String mode, ThreadContext tc) {
+    	SixModelObject IOType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.ioType; 
+    	IOHandleInstance h = (IOHandleInstance)IOType.st.REPR.allocate(tc, IOType.st);
+    	h.initialize(tc);
+    	
+    	try {
+	    	if (mode.equals("r")) {
+	    		h.is = new FileInputStream(path);
+	    	}
+	    	else if (mode.equals("w")) {
+	    		h.os = new FileOutputStream(path);
+	    	}
+	    	else if (mode.equals("wa")) {
+	    		h.os = new FileOutputStream(path, true);
+	    	}
+	    	else {
+	    		die_s("Unhandled file open mode '" + mode + "'", tc);
+	    	}
+    	}
+    	catch (FileNotFoundException e) {
+    		die_s(e.getMessage(), tc);
+    	}
+    	
+    	return h;
+    }
+    
+    public static SixModelObject getstdin(ThreadContext tc) {
+    	SixModelObject IOType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.ioType; 
+    	IOHandleInstance h = (IOHandleInstance)IOType.st.REPR.allocate(tc, IOType.st);
+    	h.initialize(tc);
+    	h.is = System.in;
+    	return h;
+    }
+    
+    public static SixModelObject getstdout(ThreadContext tc) {
+    	SixModelObject IOType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.ioType; 
+    	IOHandleInstance h = (IOHandleInstance)IOType.st.REPR.allocate(tc, IOType.st);
+    	h.initialize(tc);
+    	h.os = System.out;
+    	return h;
+    }
+    
+    public static SixModelObject getstderr(ThreadContext tc) {
+    	SixModelObject IOType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.ioType; 
+    	IOHandleInstance h = (IOHandleInstance)IOType.st.REPR.allocate(tc, IOType.st);
+    	h.initialize(tc);
+    	h.os = System.err;
+    	return h;
+    }
+    
+    public static SixModelObject setencoding(SixModelObject obj, String encoding, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.isr != null || h.osw != null)
+    			die_s("Too late to set file handle encoding", tc);
+    		
+    		String charset = null;
+    		if (encoding.equals("ascii"))
+    			charset = "US-ASCII";
+    		else if (encoding.equals("iso-8859-1"))
+    			charset = "ISO-8859-1";
+    		else if (encoding.equals("utf8"))
+    			charset = "UTF-8";
+    		else if (encoding.equals("utf16"))
+    			charset = "UTF-16";
+    		else if (encoding.equals("binary"))
+    			charset = "ISO-8859-1"; /* Byte oriented... */
+    		else
+    			die_s("Unsupported encoding " + encoding, tc);
+    		
+    		try {
+	    		if (h.is != null)
+	    			h.isr = new InputStreamReader(h.is, charset);
+	    		if (h.os != null)
+	    			h.osw = new OutputStreamWriter(h.os, charset);
+    		}
+    		catch (UnsupportedEncodingException e) {
+    			die_s(e.getMessage(), tc);
+    		}
+    	}
+    	else {
+    		die_s("setencoding requires an object with the IOHandle REPR", tc);
+    	}
+		return obj;
+    }
+    
+    public static long tellfh(SixModelObject obj, String data, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		/* TODO */
+    		return 0;
+    	}
+    	else {
+    		die_s("printfh requires an object with the IOHandle REPR", tc);
+    		return 0; /* Unreachable */
+    	}
+    }
+    
+    public static String printfh(SixModelObject obj, String data, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.os == null)
+    			die_s("File handle is not opened for write", tc);
+    		try {
+	    		if (h.osw == null)
+	    			h.osw = new OutputStreamWriter(h.os, "UTF-8");
+	    		if (h.bw == null)
+	    			h.bw = new BufferedWriter(h.osw);
+	    		h.bw.write(data);
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    		}
+    	}
+    	else {
+    		die_s("printfh requires an object with the IOHandle REPR", tc);
+    	}
+		return data;
+    }
+    
+    public static String sayfh(SixModelObject obj, String data, ThreadContext tc) {
+    	printfh(obj, data, tc);
+    	printfh(obj, "\n", tc);
+    	return data;
+    }
+    
+    public static String readlinefh(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.is == null)
+    			die_s("File handle is not opened for read", tc);
+    		try {
+	    		if (h.isr == null)
+	    			h.isr = new InputStreamReader(h.is, "UTF-8");
+	    		if (h.br == null)
+	    			h.br = new BufferedReader(h.isr);
+	    		return h.br.readLine();
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    			return null; /* Unreachable */
+    		}
+    	}
+    	else {
+    		die_s("readlinefh requires an object with the IOHandle REPR", tc);
+    		return null; /* Unreachable */
+    	}
+    }
+    
+    /* We don't have proper readline support yet. */
+    public static String readlineintfh(SixModelObject obj, String prompt, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.is == null)
+    			die_s("File handle is not opened for read", tc);
+    		try {
+	    		if (h.isr == null)
+	    			h.isr = new InputStreamReader(h.is, "UTF-8");
+	    		if (h.br == null)
+	    			h.br = new BufferedReader(h.isr);
+	    		System.out.print(prompt);
+	    		return h.br.readLine();
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    			return null; /* Unreachable */
+    		}
+    	}
+    	else {
+    		die_s("readlineintfh requires an object with the IOHandle REPR", tc);
+    		return null; /* Unreachable */
+    	}
+    }
+    
+    public static String readallfh(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.is == null)
+    			die_s("File handle is not opened for read", tc);
+    		try {
+	    		if (h.isr == null)
+	    			h.isr = new InputStreamReader(h.is, "UTF-8");
+	    		if (h.br == null)
+	    			h.br = new BufferedReader(h.isr);
+	    		
+	    		StringBuffer data = new StringBuffer();
+	            char[] buf = new char[4096];
+	            int read = 0;
+	            while((read = h.br.read(buf)) != -1)
+	                data.append(String.valueOf(buf, 0, read));
+	            return data.toString();
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    			return null; /* Unreachable */
+    		}
+    	}
+    	else {
+    		die_s("readallfh requires an object with the IOHandle REPR", tc);
+    		return null; /* Unreachable */
+    	}
+    }
+    
+    public static long eoffh(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		if (h.is == null)
+    			die_s("File handle is not opened for read", tc);
+    		try {
+	    		if (h.isr == null)
+	    			h.isr = new InputStreamReader(h.is, "UTF-8");
+	    		if (h.br == null)
+	    			h.br = new BufferedReader(h.isr);
+	    		
+	    		char[] buf = new char[1];
+	    		h.br.mark(1);
+	    		int res = h.br.read(buf);
+	    		h.br.reset();
+	    		return res == 1 ? 1 : 0;
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    			return 0; /* Unreachable */
+    		}
+    	}
+    	else {
+    		die_s("eoffh requires an object with the IOHandle REPR", tc);
+    		return 0; /* Unreachable */
+    	}
+    }
+    
+    public static SixModelObject closefh(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof IOHandleInstance) {
+    		IOHandleInstance h = (IOHandleInstance)obj;
+    		try {
+	    		if (h.br != null)
+	    			h.br.close();
+	    		else if (h.bw != null)
+	    			h.bw.close();
+	    		else if (h.isr != null)
+	    			h.isr.close();
+	    		else if (h.osw != null)
+	    			h.osw.close();
+	    		else if (h.is != null)
+	    			h.is.close();
+	    		else if (h.os != null)
+	    			h.os.close();
+    		}
+    		catch (IOException e) {
+    			die_s(e.getMessage(), tc);
+    		}
+    	}
+    	else {
+    		die_s("closefh requires an object with the IOHandle REPR", tc);
+    	}
+		return obj;
     }
     
     /* Lexical lookup in current scope. */

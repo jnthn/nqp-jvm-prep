@@ -70,6 +70,9 @@ public class ExceptionHandling {
 	/* Unahndled exception. */
 	private static SixModelObject panic(ThreadContext tc, long category,
 			VMExceptionInstance exObj) {
-		throw new RuntimeException("Unhandled exception; category = " + category);
+		if (exObj.message != null)
+			throw new RuntimeException("Unhandled exception: " + exObj.message);
+		else
+			throw new RuntimeException("Unhandled exception; category = " + category);
 	}
 }

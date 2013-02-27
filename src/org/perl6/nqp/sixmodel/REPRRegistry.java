@@ -45,5 +45,6 @@ public class REPRRegistry {
         addREPR("CallCapture", new CallCapture());
         addREPR("NFA", new NFA());
         addREPR("VMException", new VMException());
+        addREPR("IOHandle", new IOHandle());
     }
 }
