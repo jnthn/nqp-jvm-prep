@@ -38,7 +38,9 @@ public class KnowHOWMethods extends CompilationUnit {
             ((KnowHOWREPRInstance)HOW).name = name_arg;
         
         /* Set .WHO to an empty hash. */
-        // XXX TODO
+        SixModelObject Hash = tc.gc.BOOTHash;
+        type_object.st.WHO = Hash.st.REPR.allocate(tc, Hash.st);
+        type_object.st.WHO.initialize(tc);
 
         /* Return the type object. */
         Ops.return_o(type_object, tc.curFrame);
