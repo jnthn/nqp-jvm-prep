@@ -1454,6 +1454,12 @@ public final class Ops {
     public static SixModelObject boothash(ThreadContext tc) {
         return tc.gc.BOOTHash;
     }
+    public static SixModelObject hlllist(ThreadContext tc) {
+        return tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.listType;
+    }
+    public static SixModelObject hllhash(ThreadContext tc) {
+        return tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.hashType;
+    }
     public static SixModelObject findmethod(ThreadContext tc, SixModelObject invocant, String name) {
         SixModelObject meth = invocant.st.MethodCache.get(name);
         if (meth == null)
@@ -2744,6 +2750,10 @@ public final class Ops {
             config.numBoxType = configHash.at_key_boxed(tc, "num_box");
         if (configHash.exists_key(tc, "str_box") != 0)
             config.strBoxType = configHash.at_key_boxed(tc, "str_box");
+        if (configHash.exists_key(tc, "list") != 0)
+            config.listType = configHash.at_key_boxed(tc, "list");
+        if (configHash.exists_key(tc, "hash") != 0)
+            config.hashType = configHash.at_key_boxed(tc, "hash");
         if (configHash.exists_key(tc, "slurpy_array") != 0)
             config.slurpyArrayType = configHash.at_key_boxed(tc, "slurpy_array");
         if (configHash.exists_key(tc, "slurpy_hash") != 0)

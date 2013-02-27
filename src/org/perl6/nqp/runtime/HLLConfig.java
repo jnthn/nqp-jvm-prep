@@ -14,6 +14,16 @@ public class HLLConfig {
     public SixModelObject strBoxType;
     
     /**
+     * The type to use for nqp::list(...)
+     */
+    public SixModelObject listType;
+    
+    /**
+     * The type to use for nqp::hash(...)
+     */
+    public SixModelObject hashType;
+    
+    /**
      * The type to use for slurpy arrays.
      */
     public SixModelObject slurpyArrayType;

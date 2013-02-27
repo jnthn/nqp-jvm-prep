@@ -154,6 +154,8 @@ public class GlobalContext {
         config.intBoxType = BOOTInt;
         config.numBoxType = BOOTNum;
         config.strBoxType = BOOTStr;
+        config.listType = BOOTArray;
+        config.hashType = BOOTHash;
         config.slurpyArrayType = BOOTArray;
         config.slurpyHashType = BOOTHash;
         config.arrayIteratorType = BOOTIter;

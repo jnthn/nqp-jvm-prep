@@ -295,7 +295,7 @@ QAST::OperationsJAST.add_core_op('list', -> $qastcomp, $op {
     # Just desugar to create the empty list.
     my $arr := $qastcomp.as_jast(QAST::Op.new(
         :op('create'),
-        QAST::Op.new( :op('bootarray') )
+        QAST::Op.new( :op('hlllist') )
     ));
     if +$op.list {
         # Put list into a temporary so we can push to it.
@@ -433,7 +433,7 @@ QAST::OperationsJAST.add_core_op('list_b', -> $qastcomp, $op {
     # Just desugar to create the empty list.
     my $arr := $qastcomp.as_jast(QAST::Op.new(
         :op('create'),
-        QAST::Op.new( :op('bootarray') )
+        QAST::Op.new( :op('hlllist') )
     ));
     if +$op.list {
         my $il := JAST::InstructionList.new();
@@ -467,7 +467,7 @@ QAST::OperationsJAST.add_core_op('hash', -> $qastcomp, $op {
     # Just desugar to create the empty hash.
     my $hash := $qastcomp.as_jast(QAST::Op.new(
         :op('create'),
-        QAST::Op.new( :op('boothash') )
+        QAST::Op.new( :op('hllhash') )
     ));
     if +$op.list {
         # Put hash into a temporary so we can add the items to it.
@@ -1747,6 +1747,8 @@ QAST::OperationsJAST.map_classlib_core_op('bootintarray', $TYPE_OPS, 'bootintarr
 QAST::OperationsJAST.map_classlib_core_op('bootnumarray', $TYPE_OPS, 'bootnumarray', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bootstrarray', $TYPE_OPS, 'bootstrarray', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('boothash', $TYPE_OPS, 'boothash', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('hlllist', $TYPE_OPS, 'hlllist', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('hllhash', $TYPE_OPS, 'hllhash', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('create', $TYPE_OPS, 'create', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('clone', $TYPE_OPS, 'clone', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('isconcrete', $TYPE_OPS, 'isconcrete', [$RT_OBJ], $RT_INT, :tc);
