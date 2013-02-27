@@ -24,7 +24,10 @@ role QAST::SpecialArg {
     has str $!named;
     has int $!flat;
     
-    method named(*@value) { $!named := @value[0] if @value; $!named || "" }
+    method named(*@value) {
+        $!named := @value[0] if @value;
+        !nqp::isnull_s($!named) ?? $!named !! ""
+    }
     method flat(*@value)  { $!flat := @value[0] if @value; $!flat }
 }
 # From src\QAST\Node.nqp
@@ -159,9 +162,18 @@ class QAST::Regex is QAST::Node {
     has int $!max;
 
     method name(*@value)      { $!name := @value[0] if @value; $!name }
-    method rxtype(*@value)    { $!rxtype := @value[0] if @value; $!rxtype || "" }
-    method subtype(*@value)   { $!subtype := @value[0] if @value; $!subtype || "" }
-    method backtrack(*@value) { $!backtrack := @value[0] if @value; $!backtrack || "" }
+    method rxtype(*@value)    {
+        $!rxtype := @value[0] if @value;
+        !nqp::isnull_s($!rxtype) ?? $!rxtype !! ""
+    }
+    method subtype(*@value)   {
+        $!subtype := @value[0] if @value;
+        !nqp::isnull_s($!subtype) ?? $!subtype !! "" 
+    }
+    method backtrack(*@value) {
+        $!backtrack := @value[0] if @value;
+        !nqp::isnull_s($!backtrack) ?? $!backtrack !! ""
+    }
     method negate(*@value)    { $!negate := @value[0] if @value; $!negate }
     method min(*@value)       { $!min := @value[0] if @value; $!min }
     method max(*@value)       { $!max := @value[0] if @value; $!max }
@@ -290,9 +302,18 @@ class QAST::Var is QAST::Node {
     has int $!slurpy;
     has $!default;
     
-    method name(*@value)    { $!name := @value[0] if @value; $!name || "" }
-    method scope(*@value)   { $!scope := @value[0] if @value; $!scope }
-    method decl(*@value)    { $!decl := @value[0] if @value; $!decl }
+    method name(*@value) {
+        $!name := @value[0] if @value;
+        !nqp::isnull_s($!name) ?? $!name !! ""
+    }
+    method scope(*@value) {
+        $!scope := @value[0] if @value;
+        !nqp::isnull_s($!scope) ?? $!scope !! ""
+    }
+    method decl(*@value) {
+        $!decl := @value[0] if @value;
+        !nqp::isnull_s($!decl) ?? $!decl !! ""
+    }
     method slurpy(*@value)  { $!slurpy := @value[0] if @value; $!slurpy }
     method default(*@value) { $!default := @value[0] if @value; $!default }
     
