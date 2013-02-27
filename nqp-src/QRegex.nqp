@@ -664,15 +664,15 @@ role NQPCursorRole is export {
     }
 
     method !reduce(str $name) {
-#        my $actions := nqp::getlexdyn('$*ACTIONS');
-#        nqp::findmethod($actions, $name)($actions, self.MATCH)
-#            if !nqp::isnull($actions) && nqp::can($actions, $name);
+        my $actions := nqp::getlexdyn('$*ACTIONS');
+        nqp::findmethod($actions, $name)($actions, self.MATCH)
+            if !nqp::isnull($actions) && nqp::can($actions, $name);
     }
 
     method !reduce_with_match($name, $key, $match) {
-#        my $actions := nqp::getlexdyn('$*ACTIONS');
-#        nqp::findmethod($actions, $name)($actions, $match, $key)
-#            if !nqp::isnull($actions) && nqp::can($actions, $name);
+        my $actions := nqp::getlexdyn('$*ACTIONS');
+        nqp::findmethod($actions, $name)($actions, $match, $key)
+            if !nqp::isnull($actions) && nqp::can($actions, $name);
     }
     
     method !shared() { $!shared }
