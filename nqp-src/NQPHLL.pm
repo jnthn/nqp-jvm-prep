@@ -1206,9 +1206,9 @@ class HLL::Compiler does HLL::Backend::Default {
         if ($has_error) {
             if %adverbs<ll-exception> || !nqp::can(self, 'handle-exception') {
                 my $err := nqp::getstderr();
-                nqp::printfh($err, $error);
+                nqp::printfh($err, nqp::getmessage($error));
                 nqp::printfh($err, "\n");
-                nqp::printfh($err, nqp::join("\n", $error.backtrace_strings));
+#                nqp::printfh($err, nqp::join("\n", $error.backtrace_strings));
                 nqp::exit(1);
             } else {
                 self.handle-exception($error);
