@@ -1535,6 +1535,8 @@ public final class Ops {
     }
     public static long istype(SixModelObject obj, SixModelObject type, ThreadContext tc) {
     	/* Just the basic case so far. */
+    	if (obj == null)
+    		return 0;
     	SixModelObject[] cache = obj.st.TypeCheckCache;
     	if (cache != null) {
     		for (int i = 0; i < cache.length; i++)
@@ -1877,6 +1879,35 @@ public final class Ops {
             iter.hashKeyIter = ((VMHashInstance)agg).storage.keySet().iterator();
             iter.iterMode = VMIterInstance.MODE_HASH;
             return iter;
+        }
+        else if (agg.st.REPR instanceof ContextRef) {
+        	/* Fake up a VMHash and then get its iterator. */
+        	SixModelObject BOOTHash = tc.gc.BOOTHash;
+        	SixModelObject hash = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+        	hash.initialize(tc);
+        	
+        	/* TODO: don't cheat and just shove the nulls in. It's enough for
+        	 * the initial use case of this, though.
+        	 */
+        	StaticCodeInfo sci = ((ContextRefInstance)agg).context.codeRef.staticInfo;
+        	if (sci.oLexicalNames != null) {
+        		for (int i = 0; i < sci.oLexicalNames.length; i++)
+        			hash.bind_key_boxed(tc, sci.oLexicalNames[i], null);
+        	}
+        	if (sci.iLexicalNames != null) {
+        		for (int i = 0; i < sci.iLexicalNames.length; i++)
+        			hash.bind_key_boxed(tc, sci.iLexicalNames[i], null);
+        	}
+        	if (sci.nLexicalNames != null) {
+        		for (int i = 0; i < sci.nLexicalNames.length; i++)
+        			hash.bind_key_boxed(tc, sci.nLexicalNames[i], null);
+        	}
+        	if (sci.sLexicalNames != null) {
+        		for (int i = 0; i < sci.sLexicalNames.length; i++)
+        			hash.bind_key_boxed(tc, sci.sLexicalNames[i], null);
+        	}
+        	
+        	return iter(hash, tc);
         }
         else {
             throw new RuntimeException("Can only use iter with representation VMArray and VMHash");
