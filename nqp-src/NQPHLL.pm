@@ -910,10 +910,11 @@ class HLL::Backend::JVM {
     }
     
     method jast($qast, *%adverbs) {
-        QAST::CompilerJAST.jast($qast, :classname(%*COMPILING<%?OPTIONS><javaclass>));
+        nqp::getcomp('qast').jast($qast, :classname(%*COMPILING<%?OPTIONS><javaclass>));
     }
     
     method classfile($jast, *%adverbs) {
+        say($jast.dump());
         nqp::die("NYI");
     }
     
@@ -922,7 +923,7 @@ class HLL::Backend::JVM {
     }
     
     method is_compunit($cuish) {
-        nqp::die("NYI");
+        0
     }
     
     method compunit_mainline($cu) {

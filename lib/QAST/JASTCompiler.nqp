@@ -276,12 +276,12 @@ class QAST::OperationsJAST {
 
     # Generates instructions to box what's currently on the stack top.
     method box($qastcomp, $hll, $type) {
-        (%hll_box{$hll}{$type} // %hll_box{''}{$type})($qastcomp)
+        (%hll_box{$hll} // %hll_box{''}){$type}($qastcomp)
     }
 
     # Generates instructions to unbox what's currently on the stack top.
     method unbox($qastcomp, $hll, $type) {
-        (%hll_unbox{$hll}{$type} // %hll_unbox{''}{$type})($qastcomp)
+        (%hll_unbox{$hll} // %hll_unbox{''}){$type}($qastcomp)
     }
 }
 
@@ -1916,7 +1916,7 @@ class QAST::CompilerJAST {
         }
         
         method get_callsite_idx(@arg_types, @arg_names) {
-            my $key := nqp::join("-", @arg_types) ~ ';' ~ nqp::join("\0", @arg_names);
+            my $key := join("-", @arg_types) ~ ';' ~ join("\0", @arg_names);
             if nqp::existskey(%!callsite_map, $key) {
                 return %!callsite_map{$key};
             }
@@ -4503,3 +4503,6 @@ class QAST::CompilerJAST {
     
     method operations() { QAST::OperationsJAST }
 }
+
+# Register as the QAST compiler.
+nqp::bindcomp('qast', QAST::CompilerJAST);
