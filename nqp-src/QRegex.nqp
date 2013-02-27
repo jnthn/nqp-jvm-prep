@@ -451,7 +451,7 @@ INIT {
 # From src\QRegex\Cursor.nqp
 
 # Some things that all cursors involved in a given parse share.
-my class ParseShared {
+class ParseShared {
     has $!orig;
     has str $!target;
     has int $!highwater;
