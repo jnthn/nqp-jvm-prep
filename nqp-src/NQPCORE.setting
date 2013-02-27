@@ -558,9 +558,9 @@ my class NQPMu {
 # Parrot-supplied things.
 my class NQPArray is repr('VMArray') {
     method push($value) { nqp::push(self, $value) }
-    method pop($value) { nqp::pop(self) }
+    method pop() { nqp::pop(self) }
     method unshift($value) { nqp::unshift(self, $value) }
-    method shift($value) { nqp::shift(self) }
+    method shift() { nqp::shift(self) }
 }
 nqp::setboolspec(NQPArray, 8, nqp::null());
 my class NQPArrayIter is repr('VMIter') { }
