@@ -456,6 +456,7 @@ my class ParseShared {
     has str $!target;
     has int $!highwater;
     has @!highexpect;
+    has %!marks;
 }
 
 role NQPCursorRole is export {
@@ -534,6 +535,7 @@ role NQPCursorRole is export {
                 $orig);
             nqp::bindattr_i($shared, ParseShared, '$!highwater', 0);
             nqp::bindattr($shared, ParseShared, '@!highexpect', nqp::list());
+            nqp::bindattr($shared, ParseShared, '%!marks', nqp::hash());
         }
         nqp::bindattr($new, $?CLASS, '$!shared', $shared);
         if nqp::defined($c) {
