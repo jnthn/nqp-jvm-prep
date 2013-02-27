@@ -1117,8 +1117,16 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # Return callsite index (which may create it if needed).
     return $*CODEREFS.get_callsite_idx(@callsite, @argnames);
 }
-QAST::OperationsJAST.add_core_op('call', -> $qastcomp, $node {
+QAST::OperationsJAST.add_core_op('call', sub ($qastcomp, $node) {
     my $il := JAST::InstructionList.new();
+    
+    # Small hack for JVM-specific ops until we have a better way.
+    if $node.name ne "" && nqp::substr($node.name, 0, 8) eq '&__JVM__' {
+        return $qastcomp.as_jast(QAST::Op.new(
+            :op(nqp::substr($node.name, 8)),
+            |$node.list
+        ));
+    }
     
     # Get thing to call.
     my $invokee;
@@ -1852,6 +1860,12 @@ QAST::OperationsJAST.map_classlib_core_op('nfarunalt', $TYPE_OPS, 'nfarunalt', [
 # process related opcodes
 QAST::OperationsJAST.map_classlib_core_op('exit', $TYPE_OPS, 'exit', [$RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('sleep', $TYPE_OPS, 'sleep', [$RT_NUM], $RT_NUM);
+
+# JVM-specific ops for compilation unit handling
+QAST::OperationsJAST.map_classlib_core_op('compilejast', $TYPE_OPS, 'compilejast', [$RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('loadcompunit', $TYPE_OPS, 'loadcompunit', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('iscompunit', $TYPE_OPS, 'iscompunit', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('compunitmainline', $TYPE_OPS, 'compunitmainline', [$RT_OBJ], $RT_OBJ, :tc);
 
 class QAST::CompilerJAST {
     # Responsible for handling issues around code references, building the

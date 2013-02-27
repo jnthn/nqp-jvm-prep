@@ -910,24 +910,23 @@ class HLL::Backend::JVM {
     }
     
     method jast($qast, *%adverbs) {
-        nqp::getcomp('qast').jast($qast, :classname(%*COMPILING<%?OPTIONS><javaclass>));
+        nqp::getcomp('qast').jast($qast, :classname(nqp::sha1('eval-at-' ~ nqp::time_n())));
     }
     
     method classfile($jast, *%adverbs) {
-        say($jast.dump());
-        nqp::die("NYI");
+        __JVM__compilejast($jast.dump());
     }
     
-    method jvm($class, *%adverbs) {
-        nqp::die("NYI");
+    method jvm($cu, *%adverbs) {
+        __JVM__loadcompunit($cu)
     }
     
     method is_compunit($cuish) {
-        0
+        __JVM__iscompunit($cuish)
     }
     
     method compunit_mainline($cu) {
-        nqp::die("NYI");
+        __JVM__compunitmainline($cu)
     }
     
     method compunit_coderefs($cu) {
@@ -1072,8 +1071,9 @@ class HLL::Compiler does HLL::Backend::Default {
 
         if $!backend.is_compunit($output) && %adverbs<target> eq '' {
             my $outer_ctx := %adverbs<outer_ctx>;
+            $output := $!backend.compunit_mainline($output);
             if nqp::defined($outer_ctx) {
-                nqp::forceouterctx($!backend.compunit_mainline($output), $outer_ctx);
+                nqp::forceouterctx($output, $outer_ctx);
             }
 
             if (%adverbs<profile>) {
