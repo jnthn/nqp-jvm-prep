@@ -246,7 +246,7 @@ public class VMArrayInstance extends SixModelObject {
         for (int i = 0; i < n; i++)
             temp[i] = slots[(int)src_start + i];
         for (int i = 0; i < n; i++)
-            temp[(int)dest_start + i] = temp[i];
+            slots[(int)dest_start + i] = temp[i];
     }
     
     public SixModelObject clone(ThreadContext tc) {
