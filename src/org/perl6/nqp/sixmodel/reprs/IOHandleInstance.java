@@ -17,9 +17,8 @@ public class IOHandleInstance extends SixModelObject {
 	public OutputStreamWriter osw;
 	
 	/*
-	 * These further wrap the input stream reader and output stream
-	 * writer for the case of doing line-based I/O.
+	 * This further wraps the input stream reader for the case of doing
+	 * line-based I/O.
 	 */
 	public BufferedReader br;
-	public BufferedWriter bw;
 }

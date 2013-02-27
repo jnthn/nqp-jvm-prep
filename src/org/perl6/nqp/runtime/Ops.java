@@ -2,7 +2,6 @@ package org.perl6.nqp.runtime;
 
 import java.math.BigInteger;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -317,9 +316,8 @@ public final class Ops {
     		try {
 	    		if (h.osw == null)
 	    			h.osw = new OutputStreamWriter(h.os, "UTF-8");
-	    		if (h.bw == null)
-	    			h.bw = new BufferedWriter(h.osw);
-	    		h.bw.write(data);
+	    		h.osw.write(data);
+	    		h.osw.flush();
     		}
     		catch (IOException e) {
     			die_s(e.getMessage(), tc);
@@ -372,6 +370,7 @@ public final class Ops {
 	    		if (h.br == null)
 	    			h.br = new BufferedReader(h.isr);
 	    		System.out.print(prompt);
+	    		System.out.flush();
 	    		return h.br.readLine();
     		}
     		catch (IOException e) {
@@ -448,8 +447,6 @@ public final class Ops {
     		try {
 	    		if (h.br != null)
 	    			h.br.close();
-	    		else if (h.bw != null)
-	    			h.bw.close();
 	    		else if (h.isr != null)
 	    			h.isr.close();
 	    		else if (h.osw != null)
