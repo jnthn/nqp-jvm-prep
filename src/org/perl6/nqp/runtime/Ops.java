@@ -2347,7 +2347,11 @@ public final class Ops {
     }
     public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj) {
     	if (scRef instanceof SCRefInstance) {
-    		((SCRefInstance)scRef).referencedSC.root_objects.set((int)idx, obj);
+    		ArrayList<SixModelObject> roots = ((SCRefInstance)scRef).referencedSC.root_objects; 
+    		if (roots.size() == idx)
+    			roots.add(obj);
+    		else
+    			roots.set((int)idx, obj);
     		return obj;
     	}
     	else {
@@ -2357,7 +2361,11 @@ public final class Ops {
     public static SixModelObject scsetcode(SixModelObject scRef, long idx, SixModelObject obj) {
     	if (scRef instanceof SCRefInstance) {
     		if (obj instanceof CodeRef) {
-    			((SCRefInstance)scRef).referencedSC.root_codes.set((int)idx, (CodeRef)obj);
+    			ArrayList<CodeRef> roots = ((SCRefInstance)scRef).referencedSC.root_codes; 
+    			if (roots.size() == idx)
+    				roots.add((CodeRef)obj);
+    			else
+    				roots.set((int)idx, (CodeRef)obj);
     			return obj;
     		}
     		else {
