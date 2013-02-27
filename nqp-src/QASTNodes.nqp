@@ -348,7 +348,7 @@ class QAST::Op is QAST::Node {
     }
 
     method dump_extra_node_info() {
-        nqp::chars($!name)
+        !nqp::isnull_s($!name) && nqp::chars($!name)
             ?? "$!op $!name"
             !! $!op;
     }
