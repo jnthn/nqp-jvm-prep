@@ -1276,6 +1276,7 @@ QAST::OperationsJAST.map_classlib_core_op('die_s', $TYPE_OPS, 'die_s', [$RT_STR]
 QAST::OperationsJAST.map_classlib_core_op('die', $TYPE_OPS, 'die_s', [$RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('exception', $TYPE_OPS, 'exception', [], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getextype', $TYPE_OPS, 'getextype', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getmessage', $TYPE_OPS, 'getmessage', [$RT_OBJ], $RT_STR, :tc);
 my %handler_names := nqp::hash(
     'CATCH',   $EX_CAT_CATCH,
     'CONTROL', $EX_CAT_CONTROL,

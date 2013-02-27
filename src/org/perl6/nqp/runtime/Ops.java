@@ -2771,6 +2771,12 @@ public final class Ops {
     	else
     		throw new RuntimeException("getextype needs an object with VMException representation");
     }
+    public static String getmessage(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof VMExceptionInstance)
+    		return ((VMExceptionInstance)obj).message;
+    	else
+    		throw new RuntimeException("getmessage needs an object with VMException representation");
+    }
 
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
