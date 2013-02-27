@@ -253,7 +253,21 @@ class JAST::PushSVal is JAST::Node {
     }
     
     method value() { $!value }
-    method dump() { ".push_sc " ~ nqp::escape($!value) }
+    method dump() {
+        my @chars := nqp::split('', $!value);
+        my int $i := 0;
+        my int $n := nqp::elems(@chars);
+        my $c;
+        while $i < $n {
+            $c := nqp::atpos(@chars, $i);
+            if    $c eq "\\" { @chars[$i] := "\\\\"; }
+            elsif $c eq "\n" { @chars[$i] := "\\n"; }
+            elsif $c eq "\r" { @chars[$i] := "\\r"; }
+            elsif $c eq "\t" { @chars[$i] := "\\t"; }
+            $i++;
+        }
+        ".push_sc " ~ nqp::join('', @chars)
+    }
 }
 
 class JAST::PushCVal is JAST::Node {
