@@ -2615,6 +2615,12 @@ public final class Ops {
             throw new RuntimeException("setcodename can only be used with a CodeRef");
         }
     }
+    public static String getcodecuid(SixModelObject code, ThreadContext tc) {
+    	if (code instanceof CodeRef)
+            return ((CodeRef)code).staticInfo.uniqueId;
+        else
+            throw new RuntimeException("getcodename can only be used with a CodeRef");
+    }
     public static SixModelObject forceouterctx(SixModelObject code, SixModelObject ctx, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
     		throw new RuntimeException("forceouterctx first operand must be a CodeRef");

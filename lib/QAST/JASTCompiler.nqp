@@ -1806,6 +1806,7 @@ QAST::OperationsJAST.map_classlib_core_op('getcodeobj', $TYPE_OPS, 'getcodeobj',
 QAST::OperationsJAST.map_classlib_core_op('setcodeobj', $TYPE_OPS, 'setcodeobj', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getcodename', $TYPE_OPS, 'getcodename', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('setcodename', $TYPE_OPS, 'setcodename', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('getcodecuid', $TYPE_OPS, 'getcodecuid', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.add_core_op('setstaticlex', -> $qastcomp, $op {
     if +@($op) != 3 {
         nqp::die('setstaticlex requires three operands');
