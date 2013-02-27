@@ -4,8 +4,10 @@ import java.util.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 
 import org.apache.bcel.Constants;
+import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.*;
 
 public class JASTToJVMBytecode {
@@ -27,6 +29,18 @@ public class JASTToJVMBytecode {
             System.err.println("Error: " + e.getMessage());
         }
         
+    }
+    
+    public static JavaClass buildClassFromString(String in) {
+    	try {
+	    	BufferedReader br = new BufferedReader(new StringReader(in));
+	    	ClassGen c = buildClassFrom(br);
+	        c.setMajor(49);
+	        return c.getJavaClass();
+    	}
+    	catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
     }
     
     private static ClassGen buildClassFrom(BufferedReader in) throws Exception

@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
+import org.perl6.nqp.jast2bc.JASTToJVMBytecode;
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.*;
 
@@ -3163,5 +3163,32 @@ public final class Ops {
         for (int i = 0; i < parts.length; i++)
             retval.append(parts[i]);
         return retval.toString();
+    }
+    
+    /* Evaluation of code; JVM-specific ops. */
+    public static SixModelObject compilejast(String dump, ThreadContext tc) {
+    	EvalResult res = new EvalResult();
+    	res.jc = JASTToJVMBytecode.buildClassFromString(dump);
+    	return res;
+    }
+    public static SixModelObject loadcompunit(SixModelObject obj, ThreadContext tc) {
+    	try {
+	    	EvalResult res = (EvalResult)obj;
+	    	ByteClassLoader cl = new ByteClassLoader(res.jc.getBytes());
+	    	res.cu = (CompilationUnit)cl.findClass(res.jc.getClassName()).newInstance();
+	    	res.cu.initializeCompilationUnit(tc);
+	    	res.jc = null;
+	    	return obj;
+    	}
+    	catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+    public static long iscompunit(SixModelObject obj, ThreadContext tc) {
+    	return obj instanceof EvalResult ? 1 : 0;
+    }
+    public static SixModelObject compunitmainline(SixModelObject obj, ThreadContext tc) {
+    	EvalResult res = (EvalResult)obj;
+    	return res.cu.codeRefs[0];
     }
 }
