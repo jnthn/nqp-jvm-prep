@@ -174,7 +174,7 @@ knowhow NQPConcreteRoleHOW {
     has $!instance_of;
 
     # Attributes and methods.
-    has %!attributes;
+    has @!attributes;
     has %!methods;
     has @!multi_methods_to_incorporate;
     has @!collisions;
@@ -207,7 +207,7 @@ knowhow NQPConcreteRoleHOW {
     method BUILD(:$name!, :$instance_of!) {
         $!name := $name;
         $!instance_of := $instance_of;
-        %!attributes := nqp::hash();
+        @!attributes := nqp::list();
         %!methods := nqp::hash();
         @!multi_methods_to_incorporate := nqp::list();
         @!collisions := nqp::list();
@@ -240,10 +240,12 @@ knowhow NQPConcreteRoleHOW {
 
     method add_attribute($obj, $meta_attr) {
         my $name := $meta_attr.name;
-        if nqp::existskey(%!attributes, $name) {
-            nqp::die("This role already has an attribute named " ~ $name);
+        for @!attributes {
+            if $_.name eq $name {
+                nqp::die("This role already has an attribute named " ~ $name);
+            }
         }
-        %!attributes{$name} := $meta_attr;
+        nqp::push(@!attributes, $meta_attr);
     }
 
     method add_parent($obj, $parent) {
@@ -305,8 +307,8 @@ knowhow NQPConcreteRoleHOW {
 
     method attributes($obj, :$local) {
         my @attrs;
-        for %!attributes {
-            nqp::push(@attrs, nqp::iterval($_));
+        for @!attributes {
+            nqp::push(@attrs, $_);
         }
         @attrs
     }
@@ -448,7 +450,7 @@ knowhow NQPParametricRoleHOW {
     has $!name;
 
     # Attributes and methods.
-    has %!attributes;
+    has @!attributes;
     has %!methods;
     has @!multi_methods_to_incorporate;
 
@@ -481,7 +483,7 @@ knowhow NQPParametricRoleHOW {
 
     method BUILD(:$name!) {
         $!name := $name;
-        %!attributes := nqp::hash();
+        @!attributes := nqp::list();
         %!methods := nqp::hash();
         @!multi_methods_to_incorporate := nqp::list();
         @!roles := nqp::list();
@@ -516,10 +518,12 @@ knowhow NQPParametricRoleHOW {
 
     method add_attribute($obj, $meta_attr) {
         my $name := $meta_attr.name;
-        if nqp::existskey(%!attributes, $name) {
-            nqp::die("This role already has an attribute named " ~ $name);
+        for @!attributes {
+            if $_.name eq $name {
+                nqp::die("This role already has an attribute named " ~ $name);
+            }
         }
-        %!attributes{$name} := $meta_attr;
+        nqp::push(@!attributes, $meta_attr);
     }
 
     method add_parent($obj, $parent) {
@@ -566,8 +570,8 @@ knowhow NQPParametricRoleHOW {
 
         # Copy attributes. (Nothing to reify in NQP as we don't currently
         # have parametric types that may end up in the signature.)
-        for %!attributes {
-            $irole.HOW.add_attribute($irole, nqp::iterval($_));
+        for @!attributes {
+            $irole.HOW.add_attribute($irole, $_);
         }
 
         # Capture methods in the correct lexical context.
@@ -619,8 +623,8 @@ knowhow NQPParametricRoleHOW {
 
     method attributes($obj, :$local) {
         my @attrs;
-        for %!attributes {
-            nqp::push(@attrs, nqp::iterval($_));
+        for @!attributes {
+            nqp::push(@attrs, $_);
         }
         @attrs
     }
@@ -644,7 +648,7 @@ knowhow NQPClassHOW {
     has $!name;
 
     # Attributes, methods, parents and roles directly added.
-    has %!attributes;
+    has @!attributes;
     has %!methods;
     has @!method_order;
     has @!multi_methods_to_incorporate;
@@ -698,7 +702,7 @@ knowhow NQPClassHOW {
 
     method BUILD(:$name = '<anon>') {
         $!name := $name;
-        %!attributes := nqp::hash();
+        @!attributes := nqp::list();
         %!methods := nqp::hash();
         @!method_order := nqp::list();
         @!multi_methods_to_incorporate := nqp::list();
@@ -752,10 +756,12 @@ knowhow NQPClassHOW {
 
     method add_attribute($obj, $meta_attr) {
         my $name := $meta_attr.name;
-        if nqp::existskey(%!attributes, $name) {
-            nqp::die("This class already has an attribute named " ~ $name);
+        for @!attributes {
+            if $_.name eq $name {
+                nqp::die("This class already has an attribute named " ~ $name);
+            }
         }
-        %!attributes{$name} := $meta_attr;
+        nqp::push(@!attributes, $meta_attr);
     }
 
     method add_parent($obj, $parent) {
@@ -1263,8 +1269,8 @@ knowhow NQPClassHOW {
     method attributes($obj, :$local = 0) {
         my @attrs;
         if $local {
-            for %!attributes {
-                nqp::push(@attrs, nqp::iterval($_));
+            for @!attributes {
+                nqp::push(@attrs, $_);
             }
         }
         else {
@@ -1392,6 +1398,7 @@ knowhow NQPClassHOW {
             nqp::push(@!mixin_cache, $role);
             nqp::push(@!mixin_cache, $new_type);
             nqp::scwbenable();
+            1;
         }
         
         # If the original object was concrete, change its type by calling a
