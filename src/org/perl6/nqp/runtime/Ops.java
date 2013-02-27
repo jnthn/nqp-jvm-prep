@@ -3043,12 +3043,8 @@ public final class Ops {
              * future, we'll want to factor in longest literal prefix too. */
             int charFates = fates.size() - prevFates;
             if (charFates > 1) {
-                /* XXX Busted... */
-            	/*List<Integer> charFateList = fates.subList(prevFates, fates.size());
-            	Collections.sort(charFateList);
-            	int insertPos = prevFates;
-            	for (int i = charFates - 1; i >= 0; i--)
-                    fates.set(insertPos++, charFateList.get(i));*/
+            	List<Integer> charFateList = fates.subList(prevFates, fates.size());
+            	Collections.sort(charFateList, Collections.reverseOrder());
             }
         }
         
