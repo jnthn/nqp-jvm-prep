@@ -2288,7 +2288,7 @@ public final class Ops {
         	return test == '_' || Character.isLetterOrDigit(test) ? 1 : 0;
         case CCLASS_NEWLINE:
         	return (Character.getType(test) == Character.LINE_SEPARATOR) ||
-        			(test == '\n')
+        			(test == '\n' || test == '\r')
         			? 1 : 0;
         case CCLASS_ALPHABETIC:
         	return Character.isAlphabetic(test) ? 1 : 0;
