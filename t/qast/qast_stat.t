@@ -32,10 +32,12 @@ qast_test(
             );
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "0\n1\n",
     "stat (exists)");
@@ -52,10 +54,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 1), "\n"),
     "stat (filesize)");
@@ -80,10 +84,12 @@ qast_test(
             );
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "0\n1\n",
     "stat (isdir)");
@@ -108,10 +114,12 @@ qast_test(
             );
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "1\n0\n",
     "stat (isreg)");
@@ -136,10 +144,12 @@ qast_test(
             );
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "0\n1\n",
     "stat (isdev)");
@@ -156,10 +166,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 5), "\n"),
     "stat (createtime)");
@@ -176,10 +188,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 6), "\n"),
     "stat (accesstime)");
@@ -196,10 +210,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 7), "\n"),
     "stat (modifytime)");
@@ -216,10 +232,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 8), "\n"),
     "stat (changetime)");
@@ -236,10 +254,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 9), "\n"),
     "stat (backuptime) - checks that both are broken!");
@@ -256,10 +276,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 10), "\n"),
     "stat (uid)");
@@ -276,10 +298,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, 11), "\n"),
     "stat (gid)");
@@ -296,10 +320,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "0\n",
     "stat (islnk)");
@@ -316,10 +342,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, -1), "\n"),
     "stat (platform dev)");
@@ -336,10 +364,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, -2), "\n"),
     "stat (platform inode)");
@@ -356,10 +386,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, -3), "\n"),
     "stat (platform mode)");
@@ -376,10 +408,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "1\n",
     "stat (platform nlinks)");
@@ -396,10 +430,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     nqp::concat(nqp::stat($file, -5), "\n"),
     "stat (platform devtype)");

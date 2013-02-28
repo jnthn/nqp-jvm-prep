@@ -16,10 +16,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "100\n200\n",
     "QAST::Stmts evalutes to the last value");
@@ -38,10 +40,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "Yeti\nModus Hoperandi\n",
     "QAST::Stmt evalutes to the last value");
@@ -75,10 +79,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "Cucumber\nHummus\n",
     "for");
@@ -123,10 +129,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "1\n3\n4\n",
     "for with control exceptions");
@@ -165,10 +173,12 @@ qast_test(
                 ));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "5\n4\n3\n2\n1\ndone\n0\n",
     "while");
@@ -207,10 +217,12 @@ qast_test(
                 ));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "-1\n0\ndone\n1\n",
     "repeat_until");
@@ -264,10 +276,12 @@ qast_test(
                 ));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "5\n3\n2\ndone\n",
     "while with control exceptionx");
@@ -284,10 +298,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "7\n",
     "num and str coercion to int");
@@ -304,10 +320,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "8.2\n",
     "int and str coercion to num");
@@ -324,10 +342,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "53.9\n",
     "int and num coercion to str");
@@ -373,10 +393,12 @@ qast_test(
                     ))));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "100\n3.3\nGangnam Style\n",
     "automatic boxing");
@@ -428,10 +450,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "200\n8.8\nOppan Gangnam Style\n",
     "automatic boxing and unboxing");
@@ -465,10 +489,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "badger\n",
     "lexotic works");
@@ -502,10 +528,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "potato\nspud\n",
     "getcodename/setcodename");

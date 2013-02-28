@@ -13,10 +13,12 @@ qast_test(
                 )));
         QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )))
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))))
     },
     "2DE6BA12D336DD56ABE5B163DDF836B951A2CA7C\n",
     "sha1");

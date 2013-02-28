@@ -12,10 +12,12 @@ plan(2);
             ));
     my $qast := QAST::CompUnit.new(
         $block,
-        :main(QAST::Op.new(
-            :op('call'),
-            QAST::BVal.new( :value($block) )
-        )));
+        :main(QAST::Stmts.new(
+            QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+            QAST::Op.new(
+                :op('call'),
+                QAST::BVal.new( :value($block) )
+            ))));
 
     my $exit   := run_qast($qast).status;
 
@@ -42,10 +44,12 @@ plan(2);
                 )));
         my $qast := QAST::CompUnit.new(
             $block,
-            :main(QAST::Op.new(
-                :op('call'),
-                QAST::BVal.new( :value($block) )
-            )));
+            :main(QAST::Stmts.new(
+                QAST::Var.new( :name('ARGS'), :scope('local'), :decl('param'), :slurpy(1) ),
+                QAST::Op.new(
+                    :op('call'),
+                    QAST::BVal.new( :value($block) )
+                ))));
         run_qast($qast).duration;
     }
 
