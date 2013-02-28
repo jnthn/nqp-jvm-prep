@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.perl6.nqp.runtime.*;
@@ -147,7 +148,15 @@ public class KnowHOWMethods extends CompilationUnit {
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw new RuntimeException("KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
         
-        throw new RuntimeException("NYI");
+        SixModelObject BOOTArray = tc.gc.BOOTArray;
+        SixModelObject result = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
+        result.initialize(tc);
+        
+        List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
+        for (SixModelObject attr : attributes)
+        	result.push_boxed(tc, attr);
+        
+        Ops.return_o(result, tc.curFrame);
     }
 
     public void methods(ThreadContext tc) {
@@ -157,7 +166,15 @@ public class KnowHOWMethods extends CompilationUnit {
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw new RuntimeException("KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
         
-        throw new RuntimeException("NYI");
+        SixModelObject BOOTHash = tc.gc.BOOTHash;
+        SixModelObject result = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+        result.initialize(tc);
+        
+        HashMap<String, SixModelObject> methods = ((KnowHOWREPRInstance)self).methods;
+        for (String name : methods.keySet())
+        	result.bind_key_boxed(tc, name, methods.get(name));
+        
+        Ops.return_o(result, tc.curFrame);
     }
     
     public void name(ThreadContext tc) {
@@ -175,7 +192,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         String name_arg = Ops.namedparam_s(tc.curFrame, "name");
-        SixModelObject type_arg = Ops.namedparam_o(tc.curFrame, "type");
+        SixModelObject type_arg = Ops.namedparam_opt_o(tc.curFrame, "type");
         long bt_arg = Ops.namedparam_opt_i(tc.curFrame, "box_target");
 
         /* Allocate attribute object. */
@@ -185,7 +202,7 @@ public class KnowHOWMethods extends CompilationUnit {
         
         /* Populate it. */
         obj.name = name_arg;
-        obj.type = type_arg;
+        obj.type = type_arg != null ? type_arg : tc.gc.KnowHOW;
         obj.box_target = bt_arg == 0 ? 0 : 1;
         
         /* Return produced object. */
