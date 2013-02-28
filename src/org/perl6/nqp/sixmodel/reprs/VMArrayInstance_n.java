@@ -257,7 +257,8 @@ public class VMArrayInstance_n extends SixModelObject {
     public SixModelObject clone(ThreadContext tc) {
 		try {
 			VMArrayInstance_n clone = (VMArrayInstance_n)this.clone();
-			clone.slots = this.slots.clone();
+			if (clone.slots != null)
+				clone.slots = this.slots.clone();
 			return clone;
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e);
