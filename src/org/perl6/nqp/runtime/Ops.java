@@ -3186,7 +3186,7 @@ public final class Ops {
     }
     public static SixModelObject compunitmainline(SixModelObject obj, ThreadContext tc) {
     	EvalResult res = (EvalResult)obj;
-    	return res.cu.codeRefs[0];
+    	return res.cu.codeRefs[res.cu.mainlineIdx()];
     }
     public static SixModelObject compunitcodes(SixModelObject obj, ThreadContext tc) {
     	EvalResult res = (EvalResult)obj;

@@ -171,4 +171,11 @@ public abstract class CompilationUnit {
     public int loadIdx() {
     	return -1;
     }
+    
+    /**
+     * Code generation overrides this with the mainline blcok.
+     */
+    public int mainlineIdx() {
+    	return -1;
+    }
 }

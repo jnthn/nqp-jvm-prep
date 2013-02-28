@@ -2484,6 +2484,12 @@ class QAST::CompilerJAST {
         $hll_meth.append(JAST::Instruction.new( :op('areturn') ));
         $*JCLASS.add_method($hll_meth);
         
+        # Add method that returns the mainline block.
+        my $mainline_meth := JAST::Method.new( :name('mainlineIdx'), :returns('Integer'), :static(0) );
+        $mainline_meth.append(JAST::PushIndex.new( :value($*CODEREFS.cuid_to_idx($cu[0].cuid)) ));
+        $mainline_meth.append(JAST::Instruction.new( :op('ireturn') ));
+        $*JCLASS.add_method($mainline_meth);
+        
         return $*JCLASS;
     }
     
