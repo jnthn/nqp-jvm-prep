@@ -1419,7 +1419,7 @@ public final class Ops {
         return obj.clone(tc);
     }
     public static long isconcrete(SixModelObject obj, ThreadContext tc) {
-        return obj instanceof TypeObject ? 0 : 1;
+        return obj == null || obj instanceof TypeObject ? 0 : 1;
     }
     public static SixModelObject knowhow(ThreadContext tc) {
         return tc.gc.KnowHOW;
