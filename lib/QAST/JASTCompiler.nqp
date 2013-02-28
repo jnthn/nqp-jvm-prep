@@ -4006,7 +4006,7 @@ class QAST::CompilerJAST {
             $il.append(JAST::Instruction.new( :op('invokevirtual'),
                 $TYPE_STR, 'equals', 'Z', $TYPE_OBJ ));
         }
-        $il.append(JAST::Instruction.new( :op('ifeq'), %*REG<fail> ));
+        $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifne' !! 'ifeq'), %*REG<fail> ));
         
         $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
         $il.append(JAST::PushIVal.new( :value($litlen) ));
