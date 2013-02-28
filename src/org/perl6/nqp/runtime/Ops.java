@@ -3188,4 +3188,13 @@ public final class Ops {
     	EvalResult res = (EvalResult)obj;
     	return res.cu.codeRefs[0];
     }
+    public static SixModelObject compunitcodes(SixModelObject obj, ThreadContext tc) {
+    	EvalResult res = (EvalResult)obj;
+    	SixModelObject Array = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.listType;
+    	SixModelObject result = Array.st.REPR.allocate(tc, Array.st);
+    	result.initialize(tc);
+    	for (int i = 0; i < res.cu.codeRefs.length; i++)
+    		result.bind_pos_boxed(tc, i, res.cu.codeRefs[i]);
+    	return result;
+    }
 }

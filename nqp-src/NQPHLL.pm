@@ -930,7 +930,7 @@ class HLL::Backend::JVM {
     }
     
     method compunit_coderefs($cu) {
-        nqp::die("NYI");
+        __JVM__compunitcodes($cu)
     }
 }
 
