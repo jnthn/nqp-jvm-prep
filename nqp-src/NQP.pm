@@ -3437,7 +3437,7 @@ my @clo := $nqpcomp.commandline_options();
 sub MAIN(*@ARGS) {
     # Enter the compiler.
     $nqpcomp.command_line(@ARGS, :encoding('utf8'), :transcode('ascii iso-8859-1'),
-        :setting('NQPCOREJVM'), :no-regex-lib(1));
+        :setting('NQPCOREJVM'), :custom-regex-lib('NQPP6QRegexJVM'));
 
     # Close event logging
     $nqpcomp.nqpevent();
