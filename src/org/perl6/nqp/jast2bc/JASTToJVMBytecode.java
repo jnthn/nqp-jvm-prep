@@ -197,10 +197,25 @@ public class JASTToJVMBytecode {
                 }
                 else if (curLine.startsWith(".push_sc ")) {
                     String value = curLine.substring(".push_sc ".length());
-                    value = value.replace("\\n", "\n");
-                    value = value.replace("\\r", "\r");
-                    value = value.replace("\\t", "\t");
-                    il.append(new PUSH(cp, value));
+                    StringBuilder sb = new StringBuilder(value.length());
+                    for (int i = 0; i < value.length(); i++) {
+                    	char ch = value.charAt(i);
+                    	if (ch == '\\') {
+                    		i++;
+                    		switch (value.charAt(i)) {
+                    		case '\\': sb.append('\\'); break;
+                    		case 'n': sb.append('\n'); break;
+                    		case 'r': sb.append('\r'); break;
+                    		case 't': sb.append('\t'); break;
+                    		default:
+                    			throw new RuntimeException("Invalid string literal");
+                    		}
+                    	}
+                    	else {
+                    		sb.append(ch);
+                    	}
+                    }
+                    il.append(new PUSH(cp, sb.toString()));
                 }
                 else if (curLine.startsWith(".push_cc ")) {
                     String className = curLine.substring(".push_sc ".length());
