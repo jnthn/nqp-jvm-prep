@@ -51,7 +51,10 @@ public class CodeRef extends SixModelObject {
         CodeRef clone = new CodeRef();
         clone.st = this.st;
         clone.staticInfo = this.staticInfo;
-        clone.outer = this.outer;
+        if (this.outer != null)
+        	clone.outer = this.outer;
+        else
+        	clone.outer = staticInfo.outerStaticInfo.priorInvocation;
         return clone;
     }
     
