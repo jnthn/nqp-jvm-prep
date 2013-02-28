@@ -1296,7 +1296,8 @@ public final class Ops {
             if (wanted != null) {
                 CallFrame checkFrame = tc.curFrame;
                 while (checkFrame != null) {
-                    if (checkFrame.codeRef.staticInfo == wanted) {
+                    if (checkFrame.codeRef.staticInfo.idx == wanted.idx &&
+                    		checkFrame.codeRef.staticInfo.compUnit == wanted.compUnit) {
                         cf.outer = checkFrame;
                         break;
                     }
