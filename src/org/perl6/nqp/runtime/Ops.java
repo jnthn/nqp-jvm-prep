@@ -2701,13 +2701,13 @@ public final class Ops {
     }
     public static SixModelObject markcodestatic(SixModelObject code, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    		throw new RuntimeException("markcodestatic must be used on a CodeRef");
     	((CodeRef)code).isStaticCodeRef = true;
     	return code;
     }
     public static SixModelObject markcodestub(SixModelObject code, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    		throw new RuntimeException("markcodestub must be used on a CodeRef");
     	((CodeRef)code).isCompilerStub = true;
     	return code;
     }
