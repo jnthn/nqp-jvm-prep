@@ -2975,7 +2975,7 @@ class QAST::CompilerJAST {
                 nqp::die("Cannot reference undeclared local '$name'");
             }
         }
-        elsif $scope eq 'lexical' {
+        elsif $scope eq 'lexical' || $scope eq 'contextual' {
             # See if it's declared in the local scope.
             my int $local  := 0;
             my int $scopes := 0;
@@ -2985,7 +2985,7 @@ class QAST::CompilerJAST {
                 # It is. Nothing more to do.
                 $local := 1;
             }
-            else {
+            elsif $scope eq 'lexical' {
                 # Try to find it in an outer scope.
                 my int $i := 1;
                 my $cur_block := $*BLOCK.outer();
@@ -3007,12 +3007,30 @@ class QAST::CompilerJAST {
             # lexical. Take the type from .returns and rewrite to a more dynamic
             # lookup.
             unless $local || $scopes {
-                $type := rttype_from_typeobj($node.returns);
-                my $char := $type == $RT_OBJ ?? '' !! '_' ~ typechar($type);
-                my $name_sval := QAST::SVal.new( :value($name) );
-                return self.as_jast($*BINDVAL
-                    ?? QAST::Op.new( :op("bindlex$char"), $name_sval, $*BINDVAL )
-                    !! QAST::Op.new( :op("getlex$char"), $name_sval ));
+                if $scope eq 'lexical' {
+                    $type := rttype_from_typeobj($node.returns);
+                    my $char := $type == $RT_OBJ ?? '' !! '_' ~ typechar($type);
+                    my $name_sval := QAST::SVal.new( :value($name) );
+                    return self.as_jast($*BINDVAL
+                        ?? QAST::Op.new( :op("bindlex$char"), $name_sval, $*BINDVAL )
+                        !! QAST::Op.new( :op("getlex$char"), $name_sval ));
+                }
+                else {
+                    my $il := JAST::InstructionList.new();
+                    if $*BINDVAL {
+                        my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($RT_OBJ));
+                        $il.append($valres.jast);
+                        $*STACK.obtain($valres);
+                    }
+                    $il.append(JAST::PushSVal.new( :value($name) ));
+                    $il.append(JAST::Instruction.new( :op('aload_1') ));
+                    $il.append($*BINDVAL
+                        ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                                "bindlexdyn", $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC )
+                        !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                                "getlexdyn", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
+                    return result($il, $RT_OBJ);
+                }
             }
             
             # Map type in a couple of ways we'll need.
@@ -3051,22 +3069,6 @@ class QAST::CompilerJAST {
             }
 
             return result($il, $type);
-        }
-        elsif $scope eq 'contextual' {
-            my $il := JAST::InstructionList.new();
-            if $*BINDVAL {
-                my $valres := self.as_jast_clear_bindval($*BINDVAL, :want($RT_OBJ));
-                $il.append($valres.jast);
-                $*STACK.obtain($valres);
-            }
-            $il.append(JAST::PushSVal.new( :value($name) ));
-            $il.append(JAST::Instruction.new( :op('aload_1') ));
-            $il.append($*BINDVAL
-                ?? JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "bindlexdyn", $TYPE_SMO, $TYPE_SMO, $TYPE_STR, $TYPE_TC )
-                !! JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                        "getlexdyn", $TYPE_SMO, $TYPE_STR, $TYPE_TC ));
-            return result($il, $RT_OBJ);
         }
         elsif $scope eq 'attribute' {
             # Ensure we have object and class handle.
