@@ -1950,45 +1950,11 @@ class QAST::CompilerJAST {
         }
         
         method jastify() {
-            self.invoker();
             self.coderef_array();
             self.outer_map_array();
             self.callsites();
         }
-        
-        # Emits the invocation switch statement.
-        method invoker() {
-            my $inv := JAST::Method.new( :name('InvokeCode'), :returns('Void'), :static(0) );
-            $inv.add_argument('tc', $TYPE_TC);
-            $inv.add_argument('idx', 'Integer');
-            
-            # Load this and ThreadContext onto the stack for passing, and index
-            # for the dispatch.
-            $inv.append(JAST::Instruction.new( :op('aload_0') ));
-            $inv.append(JAST::Instruction.new( :op('aload_1') ));
-            $inv.append(JAST::Instruction.new( :op('iload_2') ));
-            
-            # Build dispatch table.
-            my $fail_lab := JAST::Label.new( :name('fail') );
-            my $ts := JAST::Instruction.new( :op('tableswitch'), $fail_lab );
-            $inv.append($ts);
-            for @!jastmeth_names {
-                my $lab := JAST::Label.new( :name("l_$_") );
-                $ts.push($lab);
-                $inv.append($lab);
-                $inv.append(JAST::Instruction.new( :op('invokespecial'),
-                    'L' ~ $*JCLASS.name ~ ';', $_, 'Void', $TYPE_TC));
-                $inv.append(JAST::Instruction.new( :op('return') ));
-            }
-            
-            # Add default failure handling.
-            $inv.append($fail_lab);
-            emit_throw($inv);
-            
-            # Add to class.
-            $*JCLASS.add_method($inv);
-        }
-        
+
         # Emits the code-ref array construction.
         method coderef_array() {
             my $cra := JAST::Method.new( :name('getCodeRefs'), :returns("[$TYPE_CR;"), :static(0) );
@@ -2034,10 +2000,7 @@ class QAST::CompilerJAST {
                 $cra.append(JAST::Instruction.new( :op('aload_0') ));
                 $cra.append(JAST::Instruction.new( :op('invokevirtual'),
                     $TYPE_MH, 'bindTo', $TYPE_MH, $TYPE_OBJ ));
-                
-                # Index (going away in a bit...)
-                $cra.append(JAST::PushIndex.new( :value($i) ));
-                
+
                 # Name and comp-unit unique ID.
                 $cra.append(JAST::PushSVal.new( :value(@!names[$i]) ));
                 $cra.append(JAST::PushSVal.new( :value(@!cuids[$i]) ));
@@ -2084,7 +2047,7 @@ class QAST::CompilerJAST {
                 
                 $cra.append(JAST::Instruction.new( :op('invokespecial'),
                     $TYPE_CR, '<init>',
-                    'Void', $TYPE_CU, $TYPE_MH, 'Integer', $TYPE_STR, $TYPE_STR,
+                    'Void', $TYPE_CU, $TYPE_MH, $TYPE_STR, $TYPE_STR,
                     $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR,
                     'Short', 'Short', 'Short', 'Short', "[[J"));
                 $cra.append(JAST::Instruction.new( :op('aastore') )); # Push to the array

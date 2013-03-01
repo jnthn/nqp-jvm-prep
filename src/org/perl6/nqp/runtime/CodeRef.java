@@ -36,13 +36,13 @@ public class CodeRef extends SixModelObject {
     /**
      * Sets up the code-ref data structure.
      */
-    public CodeRef(CompilationUnit compUnit, MethodHandle mh, int idx,
+    public CodeRef(CompilationUnit compUnit, MethodHandle mh,
     		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
             short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
-        staticInfo = new StaticCodeInfo(compUnit, mh, idx, name,uniqueId,
+        staticInfo = new StaticCodeInfo(compUnit, mh, name,uniqueId,
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
                 oMaxArgs, iMaxArgs, nMaxArgs, sMaxArgs, handlers);
     }

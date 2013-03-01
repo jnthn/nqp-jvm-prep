@@ -123,16 +123,6 @@ public abstract class CompilationUnit {
     	cr.staticInfo.oLexStatic[idx] = value;
     	return value;
     }
-
-    /**
-     * The JVM doesn't have first-class delegate types. Using the anonymous
-     * class pattern to fake that won't fly too well as we'll end up with many
-     * thousands of them. Instead, a code reference identifies a compilation
-     * unit and an index, and the compilation unit overrides InvokeCode and
-     * does a switch to delegate to the Right Thing. This is a virtual
-     * invocation, but the next call along can be non-virtual.
-     */
-    public abstract void InvokeCode(ThreadContext tc, int idx);
     
     /**
      * Code generation emits this to build up the various CodeRef related

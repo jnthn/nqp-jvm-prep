@@ -1256,7 +1256,7 @@ public final class Ops {
     	/* Create a fake frame for passing the args. */
     	CallFrame fake = new CallFrame();
     	fake.oArg = oArg;
-    	fake.codeRef = new CodeRef(null, null, 0, "", "", null, null, null, null, 
+    	fake.codeRef = new CodeRef(null, null, "", "", null, null, null, null, 
     			(short)oArg.length, (short)0, (short)0, (short)0, null);
     	tc.curFrame = fake;
     	
@@ -1296,7 +1296,7 @@ public final class Ops {
             if (wanted != null) {
                 CallFrame checkFrame = tc.curFrame;
                 while (checkFrame != null) {
-                    if (checkFrame.codeRef.staticInfo.idx == wanted.idx &&
+                    if (checkFrame.codeRef.staticInfo.mh == wanted.mh &&
                     		checkFrame.codeRef.staticInfo.compUnit == wanted.compUnit) {
                         cf.outer = checkFrame;
                         break;

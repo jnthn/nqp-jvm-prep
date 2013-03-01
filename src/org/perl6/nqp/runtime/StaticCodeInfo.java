@@ -17,11 +17,6 @@ public class StaticCodeInfo implements Cloneable {
     MethodHandle mh;
     
     /**
-     * The index of the code reference in the compilation unit.
-     */
-    public int idx;
-    
-    /**
      * The (human-readable) name of the code-ref.
      */
     public String name;
@@ -123,7 +118,7 @@ public class StaticCodeInfo implements Cloneable {
     /**
      * Initializes the static code info data structure.
      */
-    public StaticCodeInfo(CompilationUnit compUnit, MethodHandle mh, int idx,
+    public StaticCodeInfo(CompilationUnit compUnit, MethodHandle mh,
     		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
@@ -131,7 +126,6 @@ public class StaticCodeInfo implements Cloneable {
             long[][] handlers) {
         this.compUnit = compUnit;
         this.mh = mh;
-        this.idx = idx;
         this.name = name;
         this.uniqueId = uniqueId;
         this.oLexicalNames = oLexicalNames;
