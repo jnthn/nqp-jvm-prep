@@ -50,11 +50,49 @@ public class P6OpaqueBaseInstance extends SixModelObject {
         throw new RuntimeException("Cannot access a native attribute as a reference attribute");
     }
     
+    public SixModelObject get_attribute_boxed(ThreadContext tc, SixModelObject class_handle,
+    		String name, long hint) {
+    	if (this.delegate != null)
+    		return this.delegate.get_attribute_boxed(tc, class_handle, name, hint);
+    	else
+    		return super.get_attribute_boxed(tc, class_handle, name, hint);
+    }
+    public void get_attribute_native(ThreadContext tc, SixModelObject class_handle, String name, long hint) {
+    	if (this.delegate != null)
+    		this.delegate.get_attribute_native(tc, class_handle, name, hint);
+    	else
+    		super.get_attribute_native(tc, class_handle, name, hint);
+    }
+    public void bind_attribute_boxed(ThreadContext tc,SixModelObject class_handle,
+    		String name, long hint, SixModelObject value) {
+    	if (this.delegate != null)
+    		this.delegate.bind_attribute_boxed(tc, class_handle, name, hint, value);
+    	else
+    		super.bind_attribute_boxed(tc, class_handle, name, hint, value);
+    }
+    public void bind_attribute_native(ThreadContext tc,SixModelObject class_handle, String name, long hint) {
+    	if (this.delegate != null)
+    		this.delegate.bind_attribute_native(tc, class_handle, name, hint);
+    	else
+    		super.bind_attribute_native(tc, class_handle, name, hint);
+    }
+    public long is_attribute_initialized(ThreadContext tc, SixModelObject class_handle,
+    		String name, long hint) {
+    	if (this.delegate != null)
+    		return this.delegate.is_attribute_initialized(tc, class_handle, name, hint);
+    	else
+    		return super.is_attribute_initialized(tc, class_handle, name, hint);
+    }
+    
     public SixModelObject posDelegate() {
+    	if (this.delegate != null)
+    		return ((P6OpaqueBaseInstance)this.delegate).posDelegate();
     	throw new RuntimeException("This type does not support positional operations");
     }
     
     public SixModelObject assDelegate() {
+    	if (this.delegate != null)
+    		return ((P6OpaqueBaseInstance)this.delegate).assDelegate();
     	throw new RuntimeException("This type does not support associative operations");
     }
     

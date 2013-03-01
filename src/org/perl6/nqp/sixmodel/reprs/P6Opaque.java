@@ -96,8 +96,12 @@ public class P6Opaque extends REPR {
         ((P6OpaqueREPRData)st.REPRData).flattenedSTables = flattenedSTables.toArray(new STable[0]);
         ((P6OpaqueREPRData)st.REPRData).mi = mi;
         
-        /* Generate the JVM backing type. */
-        generateJVMType(tc, st, attrInfoList);
+        /* Provided we have attributes, generate the JVM backing type. If not,
+         * P6OpaqueBaseInstance will do. */
+        if (attrInfoList.size() > 0)
+        	generateJVMType(tc, st, attrInfoList);
+        else
+        	((P6OpaqueREPRData)st.REPRData).jvmClass = P6OpaqueBaseInstance.class;
     }
     
     /* Adds delegation, needed for mixin support. */
