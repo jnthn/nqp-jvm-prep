@@ -1336,8 +1336,17 @@ public final class Ops {
         
         try {
         	// Do the invocation.
-        	sci.compUnit.InvokeCode(tc, sci.idx);
+        	sci.mh.invokeExact(tc);
         }
+        catch (UnwindException e) {
+        	throw e;
+        }
+        catch (LexoticException e) {
+        	throw e;
+        }
+        catch (Throwable e) {
+			ExceptionHandling.dieInternal(tc, e.getMessage());
+		}
         finally {
         	// Set curFrame back to caller.
         	cr.staticInfo.priorInvocation = cf;
