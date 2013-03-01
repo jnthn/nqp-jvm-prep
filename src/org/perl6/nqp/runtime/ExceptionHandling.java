@@ -1,5 +1,8 @@
 package org.perl6.nqp.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.perl6.nqp.sixmodel.*;
 import org.perl6.nqp.sixmodel.reprs.VMExceptionInstance;
 
@@ -90,27 +93,26 @@ public class ExceptionHandling {
 			message.append("Unhandled exception: " + exObj.message + "\n");
 		else
 			message.append("Unhandled exception; category = " + category + "\n");
-		message.append(backtraceString(tc.curFrame));
+		
+		for (String line : backtraceStrings(tc.curFrame)) {
+			message.append(line);
+			message.append("\n");
+		}
 		
 		System.err.println(message.toString());
 		System.exit(1);
-		
 		return exObj;
 	}
 	
-	public static String backtraceString(CallFrame curFrame) {
-		StringBuilder trace = new StringBuilder();
-		
+	public static List<String> backtraceStrings(CallFrame curFrame) {
+		List<String> result = new ArrayList<String>();
 		while (curFrame != null) {
 			String name = curFrame.codeRef.staticInfo.name;
-			if (name == null)
+			if (name == null || name == "")
 				name = "<anon>";
-			trace.append("  in ");
-			trace.append(name);
-			trace.append("\n");
+			result.add("  in " + name);
 			curFrame = curFrame.caller;
 		}
-		
-		return trace.toString();
+		return result;
 	}
 }

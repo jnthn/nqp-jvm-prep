@@ -2775,6 +2775,23 @@ public final class Ops {
     	else
     		throw ExceptionHandling.dieInternal(tc, "getmessage needs an object with VMException representation");
     }
+    public static SixModelObject backtracestrings(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof VMExceptionInstance) {
+    		SixModelObject Array = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.listType;
+    		SixModelObject Str = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType;
+        	SixModelObject result = Array.st.REPR.allocate(tc, Array.st);
+        	result.initialize(tc);
+        	
+        	List<String> lines = ExceptionHandling.backtraceStrings(((VMExceptionInstance)obj).origin);
+        	for (int i = 0; i < lines.size(); i++)
+        		result.bind_pos_boxed(tc, i, box_s(lines.get(i), Str, tc));
+        	
+        	return result;
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "backtracestring needs an object with VMException representation");
+    	}
+    }
 
     /* HLL configuration and compiler related options. */
     public static SixModelObject sethllconfig(String language, SixModelObject configHash, ThreadContext tc) {
