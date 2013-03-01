@@ -2031,6 +2031,9 @@ class QAST::CompilerJAST {
                 $cra.append(JAST::Instruction.new( :op('aload'), 'mt' ));
                 $cra.append(JAST::Instruction.new( :op('invokevirtual'),
                     $TYPE_MHL, 'findVirtual', $TYPE_MH, $TYPE_CLASS, $TYPE_STR, $TYPE_MT ));
+                $cra.append(JAST::Instruction.new( :op('aload_0') ));
+                $cra.append(JAST::Instruction.new( :op('invokevirtual'),
+                    $TYPE_MH, 'bindTo', $TYPE_MH, $TYPE_OBJ ));
                 
                 # Index (going away in a bit...)
                 $cra.append(JAST::PushIndex.new( :value($i) ));
