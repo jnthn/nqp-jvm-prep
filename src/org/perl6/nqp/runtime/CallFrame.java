@@ -90,4 +90,62 @@ public class CallFrame {
      * Current working copy of the named arguments data.
      */
     public HashMap<String, Integer> workingNameMap;
+    
+    // Empty constructor for things that want to fake one up.
+    public CallFrame()
+    {
+    }
+    
+    // Normal constructor.
+    public CallFrame(ThreadContext tc, CodeRef cr) {
+    	this.tc = tc;
+    	this.codeRef = cr;
+    	this.caller = tc.curFrame;
+    	
+    	// Set outer; if it's explicitly in the code ref, use that. If not,
+        // go hunting for one. Fall back to outer's prior invocation.
+    	StaticCodeInfo sci = cr.staticInfo;
+        if (cr.outer != null) {
+            this.outer = cr.outer;
+        }
+        else {
+            StaticCodeInfo wanted = sci.outerStaticInfo;
+            if (wanted != null) {
+                CallFrame checkFrame = tc.curFrame;
+                while (checkFrame != null) {
+                    if (checkFrame.codeRef.staticInfo.mh == wanted.mh &&
+                    		checkFrame.codeRef.staticInfo.compUnit == wanted.compUnit) {
+                        this.outer = checkFrame;
+                        break;
+                    }
+                    checkFrame = checkFrame.caller;
+                }
+                if (this.outer == null)
+                	this.outer = wanted.priorInvocation;
+                if (this.outer == null)
+                    throw ExceptionHandling.dieInternal(tc, "Could not locate an outer for code reference " +
+                        cr.staticInfo.uniqueId);
+            }
+        }
+        
+        // Set up lexical storage.
+        if (sci.oLexicalNames != null)
+            this.oLex = sci.oLexStatic.clone();
+        if (sci.iLexicalNames != null)
+            this.iLex = new long[sci.iLexicalNames.length];
+        if (sci.nLexicalNames != null)
+            this.nLex = new double[sci.nLexicalNames.length];
+        if (sci.sLexicalNames != null)
+            this.sLex = new String[sci.sLexicalNames.length];
+
+        // Set up argument buffers. */
+        if (sci.oMaxArgs > 0)
+            this.oArg = new SixModelObject[sci.oMaxArgs];
+        if (sci.iMaxArgs > 0)
+            this.iArg = new long[sci.iMaxArgs];
+        if (sci.nMaxArgs > 0)
+            this.nArg = new double[sci.nMaxArgs];
+        if (sci.sMaxArgs > 0)
+            this.sArg = new String[sci.sMaxArgs];
+    }
 }

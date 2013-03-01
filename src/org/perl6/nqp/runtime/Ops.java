@@ -1277,66 +1277,17 @@ public final class Ops {
     		else
     			cr = (CodeRef)is.InvocationHandler;
     	}
-        StaticCodeInfo sci = cr.staticInfo;
         
         // Create a new call frame and set caller and callsite.
-        CallFrame cf = new CallFrame();
-        cf.tc = tc;
-        cf.codeRef = cr;
-        cf.caller = tc.curFrame;
+        CallFrame cf = new CallFrame(tc, cr);
         cf.callSite = csd;
-        
-        // Set outer; if it's explicitly in the code ref, use that. If not,
-        // go hunting for one. Fall back to outer's prior invocation.
-        if (cr.outer != null) {
-            cf.outer = cr.outer;
-        }
-        else {
-            StaticCodeInfo wanted = cr.staticInfo.outerStaticInfo;
-            if (wanted != null) {
-                CallFrame checkFrame = tc.curFrame;
-                while (checkFrame != null) {
-                    if (checkFrame.codeRef.staticInfo.mh == wanted.mh &&
-                    		checkFrame.codeRef.staticInfo.compUnit == wanted.compUnit) {
-                        cf.outer = checkFrame;
-                        break;
-                    }
-                    checkFrame = checkFrame.caller;
-                }
-                if (cf.outer == null)
-                	cf.outer = wanted.priorInvocation;
-                if (cf.outer == null)
-                    throw ExceptionHandling.dieInternal(tc, "Could not locate an outer for code reference " +
-                        cr.staticInfo.uniqueId);
-            }
-        }
-        
-        // Set up lexical storage.
-        if (sci.oLexicalNames != null)
-            cf.oLex = sci.oLexStatic.clone();
-        if (sci.iLexicalNames != null)
-            cf.iLex = new long[sci.iLexicalNames.length];
-        if (sci.nLexicalNames != null)
-            cf.nLex = new double[sci.nLexicalNames.length];
-        if (sci.sLexicalNames != null)
-            cf.sLex = new String[sci.sLexicalNames.length];
-
-        // Set up argument buffers. */
-        if (sci.oMaxArgs > 0)
-            cf.oArg = new SixModelObject[sci.oMaxArgs];
-        if (sci.iMaxArgs > 0)
-            cf.iArg = new long[sci.iMaxArgs];
-        if (sci.nMaxArgs > 0)
-            cf.nArg = new double[sci.nMaxArgs];
-        if (sci.sMaxArgs > 0)
-            cf.sArg = new String[sci.sMaxArgs];
         
         // Current call frame becomes this new one.
         tc.curFrame = cf;
         
         try {
         	// Do the invocation.
-        	sci.mh.invokeExact(tc);
+        	cr.staticInfo.mh.invokeExact(tc);
         }
         catch (UnwindException e) {
         	throw e;
