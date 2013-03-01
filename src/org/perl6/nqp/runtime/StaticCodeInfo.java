@@ -1,5 +1,6 @@
 package org.perl6.nqp.runtime;
 
+import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
@@ -9,6 +10,11 @@ public class StaticCodeInfo implements Cloneable {
      * The compilation unit where the code lives.
      */
     public CompilationUnit compUnit;
+    
+    /**
+     * Method handle for the code ref.
+     */
+    MethodHandle mh;
     
     /**
      * The index of the code reference in the compilation unit.
@@ -117,12 +123,14 @@ public class StaticCodeInfo implements Cloneable {
     /**
      * Initializes the static code info data structure.
      */
-    public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
+    public StaticCodeInfo(CompilationUnit compUnit, MethodHandle mh, int idx,
+    		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
             short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
         this.compUnit = compUnit;
+        this.mh = mh;
         this.idx = idx;
         this.name = name;
         this.uniqueId = uniqueId;

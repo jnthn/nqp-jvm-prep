@@ -1256,7 +1256,7 @@ public final class Ops {
     	/* Create a fake frame for passing the args. */
     	CallFrame fake = new CallFrame();
     	fake.oArg = oArg;
-    	fake.codeRef = new CodeRef(null, 0, "", "", null, null, null, null, 
+    	fake.codeRef = new CodeRef(null, null, 0, "", "", null, null, null, null, 
     			(short)oArg.length, (short)0, (short)0, (short)0, null);
     	tc.curFrame = fake;
     	

@@ -15,6 +15,11 @@ my $TYPE_SMO       := 'Lorg/perl6/nqp/sixmodel/SixModelObject;';
 my $TYPE_STR       := 'Ljava/lang/String;';
 my $TYPE_OBJ       := 'Ljava/lang/Object;';
 my $TYPE_MATH      := 'Ljava/lang/Math;';
+my $TYPE_MH        := 'Ljava/lang/invoke/MethodHandle;';
+my $TYPE_MT        := 'Ljava/lang/invoke/MethodType;';
+my $TYPE_MHS       := 'Ljava/lang/invoke/MethodHandles;';
+my $TYPE_MHL       := 'Ljava/lang/invoke/MethodHandles$Lookup;';
+my $TYPE_CLASS     := 'Ljava/lang/Class;';
 my $TYPE_EX_LEX    := 'Lorg/perl6/nqp/runtime/LexoticException;';
 my $TYPE_EX_UNWIND := 'Lorg/perl6/nqp/runtime/UnwindException;';
 
@@ -1988,6 +1993,21 @@ class QAST::CompilerJAST {
         method coderef_array() {
             my $cra := JAST::Method.new( :name('getCodeRefs'), :returns("[$TYPE_CR;"), :static(0) );
             
+            # Get method handle lookup object.
+            $cra.add_local('mhl', $TYPE_MHL);
+            $cra.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_MHS, 'lookup', $TYPE_MHL ));
+            $cra.append(JAST::Instruction.new( :op('astore'), 'mhl' ));
+            
+            # Everything is same type at the moment; construct MethodType.
+            $cra.add_local('mt', $TYPE_MT);
+            $cra.append(JAST::Instruction.new( :op('getstatic'),
+                'Ljava/lang/Void;', 'TYPE', $TYPE_CLASS ));
+            $cra.append(JAST::PushCVal.new( :value($TYPE_TC) ));
+            $cra.append(JAST::Instruction.new( :op('invokestatic'),
+                $TYPE_MT, 'methodType', $TYPE_MT, $TYPE_CLASS, $TYPE_CLASS ));
+            $cra.append(JAST::Instruction.new( :op('astore'), 'mt' ));
+            
             # Create array.
             $cra.append(JAST::PushIndex.new( :value($!cur_idx) ));
             $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CR ));
@@ -2000,8 +2020,22 @@ class QAST::CompilerJAST {
                 $cra.append(JAST::PushIndex.new( :value($i) ));  # The array index
                 $cra.append(JAST::Instruction.new( :op('new'), $TYPE_CR ));
                 $cra.append(JAST::Instruction.new( :op('dup') ));
+                
+                # Compilation unit.
                 $cra.append(JAST::Instruction.new( :op('aload_0') ));
+                
+                # Method handle.
+                $cra.append(JAST::Instruction.new( :op('aload'), 'mhl' ));
+                $cra.append(JAST::PushCVal.new( :value('L' ~ $*JCLASS.name ~ ';') ));
+                $cra.append(JAST::PushSVal.new( :value(@!jastmeth_names[$i]) ));
+                $cra.append(JAST::Instruction.new( :op('aload'), 'mt' ));
+                $cra.append(JAST::Instruction.new( :op('invokevirtual'),
+                    $TYPE_MHL, 'findVirtual', $TYPE_MH, $TYPE_CLASS, $TYPE_STR, $TYPE_MT ));
+                
+                # Index (going away in a bit...)
                 $cra.append(JAST::PushIndex.new( :value($i) ));
+                
+                # Name and comp-unit unique ID.
                 $cra.append(JAST::PushSVal.new( :value(@!names[$i]) ));
                 $cra.append(JAST::PushSVal.new( :value(@!cuids[$i]) ));
                 
@@ -2047,7 +2081,7 @@ class QAST::CompilerJAST {
                 
                 $cra.append(JAST::Instruction.new( :op('invokespecial'),
                     $TYPE_CR, '<init>',
-                    'Void', $TYPE_CU, 'Integer', $TYPE_STR, $TYPE_STR,
+                    'Void', $TYPE_CU, $TYPE_MH, 'Integer', $TYPE_STR, $TYPE_STR,
                     $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR, $TYPE_STRARR,
                     'Short', 'Short', 'Short', 'Short', "[[J"));
                 $cra.append(JAST::Instruction.new( :op('aastore') )); # Push to the array
