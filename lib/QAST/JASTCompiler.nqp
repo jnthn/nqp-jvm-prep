@@ -2388,7 +2388,7 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::CompUnit $cu, :$want) {
-        # Also, a compilation-unit-wide source of IDs for handlers.
+        # A compilation-unit-wide source of IDs for handlers.
         my $*EH_IDX := 1;
         
         # Set HLL.
