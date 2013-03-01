@@ -67,6 +67,7 @@ public class ExceptionHandling {
 		switch ((int)handlerInfo[3]) {
 		case EX_UNWIND_SIMPLE:
 			tc.unwinder.unwindTarget = handlerInfo[0];
+			tc.unwinder.unwindCompUnit = handlerFrame.codeRef.staticInfo.compUnit;
 			tc.unwinder.category = category;
 			throw tc.unwinder;
 		case EX_BLOCK:
@@ -78,6 +79,7 @@ public class ExceptionHandling {
 				tc.handlers.remove(tc.handlers.size() - 1);
 			}
 			tc.unwinder.unwindTarget = handlerInfo[0];
+			tc.unwinder.unwindCompUnit = handlerFrame.codeRef.staticInfo.compUnit;
 			tc.unwinder.result = Ops.result_o(tc.curFrame);
 			throw tc.unwinder;
 		default:
@@ -89,7 +91,7 @@ public class ExceptionHandling {
 	private static SixModelObject panic(ThreadContext tc, long category,
 			VMExceptionInstance exObj) {
 		StringBuilder message = new StringBuilder();
-		if (exObj.message != null)
+		if (exObj != null && exObj.message != null)
 			message.append("Unhandled exception: " + exObj.message + "\n");
 		else
 			message.append("Unhandled exception; category = " + category + "\n");

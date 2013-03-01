@@ -2388,11 +2388,8 @@ class QAST::CompilerJAST {
     }
     
     multi method as_jast(QAST::CompUnit $cu, :$want) {
-        # A unique ID for this compilation unit. Used for prefixing exception
-        # handler unwind indexes. Also, a compilation-unit-wide source of IDs
-        # for handlers.
-        my $*EH_PREFIX := nqp::floor_n(nqp::time_n() * 10) * 10000;
-        my $*EH_IDX := 0;
+        # Also, a compilation-unit-wide source of IDs for handlers.
+        my $*EH_IDX := 1;
         
         # Set HLL.
         my $*HLL := '';
@@ -2577,15 +2574,13 @@ class QAST::CompilerJAST {
             my @handlers;
             my $*HANDLER_IDX := 0;
             my &*REGISTER_UNWIND_HANDLER := sub ($outer, $category, :$ex_obj) {
-                $*EH_IDX++;
-                my $unwind := $*EH_PREFIX + $*EH_IDX;
+                my $unwind := $*EH_IDX++;
                 nqp::push(@handlers, [$unwind, $outer, $category,
                     $ex_obj ?? $EX_UNWIND_OBJECT !! $EX_UNWIND_SIMPLE]);
                 $unwind
             }
             my &*REGISTER_BLOCK_HANDLER := sub ($outer, $category, $lexidx) {
-                $*EH_IDX++;
-                my $unwind := $*EH_PREFIX + $*EH_IDX;
+                my $unwind := $*EH_IDX++;
                 nqp::push(@handlers, [$unwind, $outer, $category,
                     $EX_BLOCK, $lexidx]);
                 $unwind
@@ -3281,14 +3276,21 @@ class QAST::CompilerJAST {
     # and that we will not swallow it.
     my $unwind_lbl := 0;
     method unwind_check($il, $desired) {
-        my $lbl := JAST::Label.new( :name('unwind_' ~ $unwind_lbl++) );
+        my $lbl_i := JAST::Label.new( :name('unwind_' ~ $unwind_lbl++) );
+        my $lbl_c := JAST::Label.new( :name('unwind_' ~ $unwind_lbl++) );
         $il.append(JAST::Instruction.new( :op('dup') ));
         $il.append(JAST::Instruction.new( :op('getfield'), $TYPE_EX_UNWIND, 'unwindTarget', 'Long' ));
         $il.append(JAST::PushIVal.new( :value($desired) ));
         $il.append(JAST::Instruction.new( :op('lcmp') ));
-        $il.append(JAST::Instruction.new( :op('ifeq'), $lbl ));
+        $il.append(JAST::Instruction.new( :op('ifeq'), $lbl_i ));
         $il.append(JAST::Instruction.new( :op('athrow') ));
-        $il.append($lbl);
+        $il.append($lbl_i);
+        $il.append(JAST::Instruction.new( :op('dup') ));
+        $il.append(JAST::Instruction.new( :op('getfield'), $TYPE_EX_UNWIND, 'unwindCompUnit', $TYPE_CU ));
+        $il.append(JAST::Instruction.new( :op('aload_0') ));
+        $il.append(JAST::Instruction.new( :op('if_acmpeq'), $lbl_c ));
+        $il.append(JAST::Instruction.new( :op('athrow') ));
+        $il.append($lbl_c);
     }
     
     # Wraps a handler with code to set/clear the current handler.
