@@ -3,6 +3,7 @@ package org.perl6.nqp.sixmodel;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.Instruction;
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 
 /**
@@ -58,7 +59,7 @@ public abstract class REPR {
      * For aggregate types, gets the storage type of values in the aggregate.
      */
     public StorageSpec get_value_storage_spec(ThreadContext tc, STable st) {
-        throw new RuntimeException("This representation does not implement get_value_storage_spec");
+        throw ExceptionHandling.dieInternal(tc, "This representation does not implement get_value_storage_spec");
     }
     
     /**
@@ -71,7 +72,7 @@ public abstract class REPR {
      * thread safety requirements.
      */
     public void change_type(ThreadContext tc, SixModelObject Object, SixModelObject NewType) {
-        throw new RuntimeException("This representation does not support type changes.");
+        throw ExceptionHandling.dieInternal(tc, "This representation does not support type changes.");
     }
     
     /* Object serialization. Writes the objects body out using the passed
@@ -109,20 +110,20 @@ public abstract class REPR {
      * Flattening related functions.
      */
     public void inlineStorage(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        throw new RuntimeException("This representation cannot inline itself into another");
+        throw ExceptionHandling.dieInternal(tc, "This representation cannot inline itself into another");
     }
     public Instruction[] inlineBind(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        throw new RuntimeException("This representation cannot inline itself into another");
+        throw ExceptionHandling.dieInternal(tc, "This representation cannot inline itself into another");
     }
     public Instruction[] inlineGet(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        throw new RuntimeException("This representation cannot inline itself into another");
+        throw ExceptionHandling.dieInternal(tc, "This representation cannot inline itself into another");
     }
     public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        throw new RuntimeException("This representation does not support being a box target");        
+        throw ExceptionHandling.dieInternal(tc, "This representation does not support being a box target");        
     }
     public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
     		String prefix, SixModelObject obj) {
-    	throw new RuntimeException("This representation cannot deserialize an inlined representation of itself");
+    	throw ExceptionHandling.dieInternal(tc, "This representation cannot deserialize an inlined representation of itself");
     }
 }
 

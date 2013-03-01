@@ -208,7 +208,7 @@ public class JASTToJVMBytecode {
                     		case 'r': sb.append('\r'); break;
                     		case 't': sb.append('\t'); break;
                     		default:
-                    			throw new RuntimeException("Invalid string literal");
+                    			new RuntimeException("Invalid string literal");
                     		}
                     	}
                     	else {

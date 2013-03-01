@@ -1,6 +1,7 @@
 package org.perl6.nqp.sixmodel.reprs;
 
 import org.perl6.nqp.runtime.CallFrame;
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.StaticCodeInfo;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
@@ -32,7 +33,7 @@ public class ContextRefInstance extends SixModelObject {
         	tc.native_type = ThreadContext.NATIVE_STR;
         	return;
         }
-        throw new RuntimeException("No lexical " + key + " in this lexpad");
+        throw ExceptionHandling.dieInternal(tc, "No lexical " + key + " in this lexpad");
     }
 	
 	public long exists_key(ThreadContext tc, String key) {

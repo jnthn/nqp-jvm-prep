@@ -88,7 +88,7 @@ public class CallSiteDescriptor {
                 hasFlattening = true;
                 break;
             default:
-                throw new RuntimeException("Unhandld argument flag: " + af);
+            	new RuntimeException("Unhandld argument flag: " + af);
             }
         }
     }
@@ -126,7 +126,7 @@ public class CallSiteDescriptor {
                     }
                 }
                 else {
-                    throw new RuntimeException("Flattening named argument must have VMHash REPR");
+                    throw ExceptionHandling.dieInternal(cf.tc, "Flattening named argument must have VMHash REPR");
                 }
                 break;
             case ARG_OBJ:

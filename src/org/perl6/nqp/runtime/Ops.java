@@ -535,7 +535,7 @@ public final class Ops {
     			return curFrame.oLex[found];
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static long getlex_i(String name, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -545,7 +545,7 @@ public final class Ops {
     			return curFrame.iLex[found];
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static double getlex_n(String name, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -555,7 +555,7 @@ public final class Ops {
     			return curFrame.nLex[found];
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static String getlex_s(String name, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -565,7 +565,7 @@ public final class Ops {
     			return curFrame.sLex[found];
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     
     /* Lexical binding by name. */
@@ -577,7 +577,7 @@ public final class Ops {
     			return curFrame.oLex[found] = value;
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static long bindlex_i(String name, long value, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -587,7 +587,7 @@ public final class Ops {
     			return curFrame.iLex[found] = value;
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static double bindlex_n(String name, double value, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -597,7 +597,7 @@ public final class Ops {
     			return curFrame.nLex[found] = value;
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     public static String bindlex_s(String name, String value, ThreadContext tc) {
     	CallFrame curFrame = tc.curFrame;
@@ -607,7 +607,7 @@ public final class Ops {
     			return curFrame.sLex[found] = value;
     		curFrame = curFrame.outer;
     	}
-    	throw new RuntimeException("Lexical '" + name + "' not found");
+    	throw ExceptionHandling.dieInternal(tc, "Lexical '" + name + "' not found");
     }
     
     /* Dynamic lexicals. */
@@ -621,7 +621,7 @@ public final class Ops {
             }
             curFrame = curFrame.caller;
         }
-        throw new RuntimeException("Dyanmic variable '" + name + "' not found");
+        throw ExceptionHandling.dieInternal(tc, "Dyanmic variable '" + name + "' not found");
     }
     public static SixModelObject getlexdyn(String name, ThreadContext tc) {
         CallFrame curFrame = tc.curFrame.caller;
@@ -653,7 +653,7 @@ public final class Ops {
         	return wrap;
     	}
     	else {
-    		throw new RuntimeException("ctxouter requires an operand with REPR ContextRef");
+    		throw ExceptionHandling.dieInternal(tc, "ctxouter requires an operand with REPR ContextRef");
     	}
     }
     public static SixModelObject ctxcaller(SixModelObject ctx, ThreadContext tc) {
@@ -668,7 +668,7 @@ public final class Ops {
         	return wrap;
     	}
     	else {
-    		throw new RuntimeException("ctxcaller requires an operand with REPR ContextRef");
+    		throw ExceptionHandling.dieInternal(tc, "ctxcaller requires an operand with REPR ContextRef");
     	}
     }
     public static SixModelObject ctxlexpad(SixModelObject ctx, ThreadContext tc) {
@@ -678,7 +678,7 @@ public final class Ops {
     		return ctx;
     	}
     	else {
-    		throw new RuntimeException("ctxlexpad requires an operand with REPR ContextRef");
+    		throw ExceptionHandling.dieInternal(tc, "ctxlexpad requires an operand with REPR ContextRef");
     	}
     }
     public static SixModelObject curcode(ThreadContext tc) {
@@ -695,10 +695,10 @@ public final class Ops {
     		if (sci.iTryGetLexicalIdx(key) != null) return StorageSpec.BP_INT;
     		if (sci.nTryGetLexicalIdx(key) != null) return StorageSpec.BP_NUM;
     		if (sci.sTryGetLexicalIdx(key) != null) return StorageSpec.BP_STR;
-    		throw new RuntimeException("Invalid lexical name passed to lexprimspec");
+    		throw ExceptionHandling.dieInternal(tc, "Invalid lexical name passed to lexprimspec");
     	}
     	else {
-    		throw new RuntimeException("lexprimspec requires an operand with REPR ContextRef");
+    		throw ExceptionHandling.dieInternal(tc, "lexprimspec requires an operand with REPR ContextRef");
     	}
     }
     
@@ -716,7 +716,7 @@ public final class Ops {
             cf.callSite.explodeFlattening(cf);
         int positionals = cf.callSite.numPositionals;
         if (positionals < required || positionals > accepted && accepted != -1)
-            throw new RuntimeException("Wrong number of arguments passed; expected " +
+            throw ExceptionHandling.dieInternal(cf.tc, "Wrong number of arguments passed; expected " +
                 required + ".." + accepted + ", but got " + positionals);
     }
     
@@ -733,7 +733,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_STR:
             return box_s(cf.caller.sArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
         default:
-            throw new RuntimeException("Error in argument processing");
+            throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
     public static long posparam_i(CallFrame cf, int idx) {
@@ -748,7 +748,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_OBJ:
             return cf.proc_oArg[cs.argIdx[idx]].get_int(cf.tc);
         default:
-            throw new RuntimeException("Error in argument processing");
+            throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
     public static double posparam_n(CallFrame cf, int idx) {
@@ -763,7 +763,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_OBJ:
             return cf.proc_oArg[cs.argIdx[idx]].get_num(cf.tc);
         default:
-            throw new RuntimeException("Error in argument processing");
+            throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
     public static String posparam_s(CallFrame cf, int idx) {
@@ -778,7 +778,7 @@ public final class Ops {
         case CallSiteDescriptor.ARG_OBJ:
             return cf.proc_oArg[cs.argIdx[idx]].get_str(cf.tc);
         default:
-            throw new RuntimeException("Error in argument processing");
+            throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
     
@@ -876,11 +876,11 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else
-            throw new RuntimeException("Required named argument '" + name + "' not passed");
+            throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
     public static long namedparam_i(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
@@ -898,11 +898,11 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else
-            throw new RuntimeException("Required named argument '" + name + "' not passed");
+            throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
     public static double namedparam_n(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
@@ -920,11 +920,11 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else
-            throw new RuntimeException("Required named argument '" + name + "' not passed");
+            throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
     public static String namedparam_s(CallFrame cf, String name) {
         CallSiteDescriptor cs = cf.callSite;
@@ -942,11 +942,11 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else
-            throw new RuntimeException("Required named argument '" + name + "' not passed");
+            throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
     
     /* Optional named parameter getting. */
@@ -967,7 +967,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_STR:
                 return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else {
@@ -992,7 +992,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else {
@@ -1017,7 +1017,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else {
@@ -1042,7 +1042,7 @@ public final class Ops {
             case CallSiteDescriptor.ARG_OBJ:
                 return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
             default:
-                throw new RuntimeException("Error in argument processing");
+                throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
         }
         else {
@@ -1131,17 +1131,17 @@ public final class Ops {
     public static long result_i(CallFrame cf) {
         if (cf.retType == CallFrame.RET_INT)
             return cf.iRet;
-        throw new RuntimeException("Return value coercion NYI");
+        throw ExceptionHandling.dieInternal(cf.tc, "Return value coercion NYI");
     }
     public static double result_n(CallFrame cf) {
         if (cf.retType == CallFrame.RET_NUM)
             return cf.nRet;
-        throw new RuntimeException("Return value coercion NYI");
+        throw ExceptionHandling.dieInternal(cf.tc, "Return value coercion NYI");
     }
     public static String result_s(CallFrame cf) {
         if (cf.retType == CallFrame.RET_STR)
             return cf.sRet;
-        throw new RuntimeException("Return value coercion NYI");
+        throw ExceptionHandling.dieInternal(cf.tc, "Return value coercion NYI");
     }
     
     /* Capture related operations. */
@@ -1174,7 +1174,7 @@ public final class Ops {
     	if (obj instanceof CallCaptureInstance)
     		return ((CallCaptureInstance)obj).descriptor.numPositionals;
     	else
-    		throw new RuntimeException("captureposelems requires a CallCapture");
+    		throw ExceptionHandling.dieInternal(tc, "captureposelems requires a CallCapture");
     }
     public static SixModelObject captureposarg(SixModelObject obj, long idx, ThreadContext tc) {
     	if (obj instanceof CallCaptureInstance) {
@@ -1193,11 +1193,11 @@ public final class Ops {
     			return box_s(cc.sArg[cc.descriptor.argIdx[i]],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     		default:
-    			throw new RuntimeException("Invalid positional argument access from capture");
+    			throw ExceptionHandling.dieInternal(tc, "Invalid positional argument access from capture");
     		}
     	}
     	else {
-    		throw new RuntimeException("captureposarg requires a CallCapture");
+    		throw ExceptionHandling.dieInternal(tc, "captureposarg requires a CallCapture");
     	}
     }
     
@@ -1227,7 +1227,7 @@ public final class Ops {
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     			break;
     		default:
-    			throw new RuntimeException("Invalid lexotic invocation argument");
+    			throw ExceptionHandling.dieInternal(tc, "Invalid lexotic invocation argument");
     		}
     		throw throwee;
     	}
@@ -1271,7 +1271,7 @@ public final class Ops {
     	else {
     		InvocationSpec is = invokee.st.InvocationSpec;
     		if (is == null)
-    			throw new RuntimeException("Can not invoke this object");
+    			throw ExceptionHandling.dieInternal(tc, "Can not invoke this object");
     		if (is.ClassHandle != null)
     			cr = (CodeRef)invokee.get_attribute_boxed(tc, is.ClassHandle, is.AttrName, is.Hint);
     		else
@@ -1306,7 +1306,7 @@ public final class Ops {
                 if (cf.outer == null)
                 	cf.outer = wanted.priorInvocation;
                 if (cf.outer == null)
-                    throw new RuntimeException("Could not locate an outer for code reference " +
+                    throw ExceptionHandling.dieInternal(tc, "Could not locate an outer for code reference " +
                         cr.staticInfo.uniqueId);
             }
         }
@@ -1369,7 +1369,7 @@ public final class Ops {
     		}
     	}
     	else {
-    		throw new RuntimeException("invokewithcapture requires a CallCapture");
+    		throw ExceptionHandling.dieInternal(tc, "invokewithcapture requires a CallCapture");
     	}
     }
     
@@ -1461,7 +1461,7 @@ public final class Ops {
     public static SixModelObject findmethod(ThreadContext tc, SixModelObject invocant, String name) {
         SixModelObject meth = invocant.st.MethodCache.get(name);
         if (meth == null)
-            throw new RuntimeException("Method '" + name + "' not found"); 
+            throw ExceptionHandling.dieInternal(tc, "Method '" + name + "' not found"); 
         return meth;
     }
     public static SixModelObject findmethod(SixModelObject invocant, String name, ThreadContext tc) {
@@ -1582,21 +1582,21 @@ public final class Ops {
         if (tc.native_type == ThreadContext.NATIVE_INT)
             return tc.native_i;
         else
-            throw new RuntimeException("Attribute '" + name + "' is not a native int");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native int");
     }
     public static double getattr_n(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
         obj.get_attribute_native(tc, ch, name, STable.NO_HINT);
         if (tc.native_type == ThreadContext.NATIVE_NUM)
             return tc.native_n;
         else
-            throw new RuntimeException("Attribute '" + name + "' is not a native num");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native num");
     }
     public static String getattr_s(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
         obj.get_attribute_native(tc, ch, name, STable.NO_HINT);
         if (tc.native_type == ThreadContext.NATIVE_STR)
             return tc.native_s;
         else
-            throw new RuntimeException("Attribute '" + name + "' is not a native str");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native str");
     }
     public static SixModelObject bindattr(SixModelObject obj, SixModelObject ch, String name, SixModelObject value, ThreadContext tc) {
         obj.bind_attribute_boxed(tc, ch, name, STable.NO_HINT, value);
@@ -1606,21 +1606,21 @@ public final class Ops {
         tc.native_i = value;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
         if (tc.native_type != ThreadContext.NATIVE_INT)
-            throw new RuntimeException("Attribute '" + name + "' is not a native int");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native int");
         return value;
     }
     public static double bindattr_n(SixModelObject obj, SixModelObject ch, String name, double value, ThreadContext tc) {
         tc.native_n = value;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
         if (tc.native_type != ThreadContext.NATIVE_NUM)
-            throw new RuntimeException("Attribute '" + name + "' is not a native num");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native num");
         return value;
     }
     public static String bindattr_s(SixModelObject obj, SixModelObject ch, String name, String value, ThreadContext tc) {
         tc.native_s = value;
         obj.bind_attribute_native(tc, ch, name, STable.NO_HINT);
         if (tc.native_type != ThreadContext.NATIVE_STR)
-            throw new RuntimeException("Attribute '" + name + "' is not a native str");
+            throw ExceptionHandling.dieInternal(tc, "Attribute '" + name + "' is not a native str");
         return value;
     }
     public static long attrinited(SixModelObject obj, SixModelObject ch, String name, ThreadContext tc) {
@@ -1634,19 +1634,19 @@ public final class Ops {
     public static long atpos_i(SixModelObject arr, long idx, ThreadContext tc) {
     	arr.at_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
     	return tc.native_i; 
     }
     public static double atpos_n(SixModelObject arr, long idx, ThreadContext tc) {
     	arr.at_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
     	return tc.native_n;
     }
     public static String atpos_s(SixModelObject arr, long idx, ThreadContext tc) {
     	arr.at_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
     	return tc.native_s;
     }
     public static SixModelObject bindpos(SixModelObject arr, long idx, SixModelObject value, ThreadContext tc) {
@@ -1657,21 +1657,21 @@ public final class Ops {
         tc.native_i = value;
     	arr.bind_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
         return value;
     }
     public static double bindpos_n(SixModelObject arr, long idx, double value, ThreadContext tc) {
         tc.native_n = value;
     	arr.bind_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
         return value;
     }
     public static String bindpos_s(SixModelObject arr, long idx, String value, ThreadContext tc) {
         tc.native_s = value;
     	arr.bind_pos_native(tc, idx);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
         return value;
     }
     public static SixModelObject push(SixModelObject arr, SixModelObject value, ThreadContext tc) {
@@ -1682,21 +1682,21 @@ public final class Ops {
     	tc.native_i = value;
     	arr.push_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
         return value;
     }
     public static double push_n(SixModelObject arr, double value, ThreadContext tc) {
     	tc.native_n = value;
     	arr.push_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
         return value;
     }
     public static String push_s(SixModelObject arr, String value, ThreadContext tc) {
     	tc.native_s = value;
     	arr.push_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
         return value;
     }
     public static SixModelObject pop(SixModelObject arr, ThreadContext tc) {
@@ -1705,19 +1705,19 @@ public final class Ops {
     public static long pop_i(SixModelObject arr, ThreadContext tc) {
         arr.pop_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
         return tc.native_i;
     }
     public static double pop_n(SixModelObject arr, ThreadContext tc) {
         arr.pop_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
         return tc.native_n;
     }
     public static String pop_s(SixModelObject arr, ThreadContext tc) {
         arr.pop_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
         return tc.native_s;
     }
     public static SixModelObject unshift(SixModelObject arr, SixModelObject value, ThreadContext tc) {
@@ -1728,21 +1728,21 @@ public final class Ops {
     	tc.native_i = value;
     	arr.unshift_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
         return value;
     }
     public static double unshift_n(SixModelObject arr, double value, ThreadContext tc) {
     	tc.native_n = value;
     	arr.unshift_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
         return value;
     }
     public static String unshift_s(SixModelObject arr, String value, ThreadContext tc) {
     	tc.native_s = value;
     	arr.unshift_native(tc);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
         return value;
     }
     public static SixModelObject shift(SixModelObject arr, ThreadContext tc) {
@@ -1751,19 +1751,19 @@ public final class Ops {
     public static long shift_i(SixModelObject arr, ThreadContext tc) {
         arr.shift_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int array");
         return tc.native_i;
     }
     public static double shift_n(SixModelObject arr, ThreadContext tc) {
         arr.shift_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num array");
         return tc.native_n;
     }
     public static String shift_s(SixModelObject arr, ThreadContext tc) {
         arr.shift_native(tc);
         if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str array");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str array");
         return tc.native_s;
     }
     public static SixModelObject splice(SixModelObject arr, SixModelObject from, long offset, long count, ThreadContext tc) {
@@ -1778,19 +1778,19 @@ public final class Ops {
     public static long atkey_i(SixModelObject hash, String key, ThreadContext tc) {
     	hash.at_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int hash");
     	return tc.native_i; 
     }
     public static double atkey_n(SixModelObject hash, String key, ThreadContext tc) {
     	hash.at_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num hash");
     	return tc.native_n; 
     }
     public static String atkey_s(SixModelObject hash, String key, ThreadContext tc) {
     	hash.at_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str hash");
     	return tc.native_s; 
     }
     public static SixModelObject bindkey(SixModelObject hash, String key, SixModelObject value, ThreadContext tc) {
@@ -1801,21 +1801,21 @@ public final class Ops {
     	tc.native_i = value;
     	hash.bind_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_INT)
-    		throw new RuntimeException("This is not a native int hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native int hash");
         return value;
     }
     public static double bindkey_n(SixModelObject hash, String key, double value, ThreadContext tc) {
     	tc.native_n = value;
     	hash.bind_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_NUM)
-    		throw new RuntimeException("This is not a native num hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native num hash");
         return value;
     }
     public static String bindkey_s(SixModelObject hash, String key, String value, ThreadContext tc) {
     	tc.native_s = value;
     	hash.bind_key_native(tc, key);
     	if (tc.native_type != ThreadContext.NATIVE_STR)
-    		throw new RuntimeException("This is not a native str hash");
+    		throw ExceptionHandling.dieInternal(tc, "This is not a native str hash");
         return value;
     }
     public static long existskey(SixModelObject hash, String key, ThreadContext tc) {
@@ -1856,7 +1856,7 @@ public final class Ops {
     public static SixModelObject decont(SixModelObject obj, ThreadContext tc) {
     	if (obj.st.ContainerSpec == null)
     		return obj;
-    	throw new RuntimeException("Decontainerization NYI");
+    	throw ExceptionHandling.dieInternal(tc, "Decontainerization NYI");
     }
     
     /* Iteration. */
@@ -1908,7 +1908,7 @@ public final class Ops {
         	return iter(hash, tc);
         }
         else {
-            throw new RuntimeException("Can only use iter with representation VMArray and VMHash");
+            throw ExceptionHandling.dieInternal(tc, "Can only use iter with representation VMArray and VMHash");
         }
     }
     public static String iterkey_s(SixModelObject obj, ThreadContext tc) {
@@ -1951,7 +1951,7 @@ public final class Ops {
         case BoolificationSpec.MODE_HAS_ELEMS:
         	return obj.elems(tc) == 0 ? 0 : 1;
         default:
-            throw new RuntimeException("Invalid boolification spec mode used");
+            throw ExceptionHandling.dieInternal(tc, "Invalid boolification spec mode used");
         }
     }
     public static long isfalse(SixModelObject obj, ThreadContext tc) {
@@ -1993,7 +1993,7 @@ public final class Ops {
     		return coerce_n2s(obj.get_num(tc));
     	
     	// If anything else, we can't do it.
-    	throw new RuntimeException("Cannot stringify this");
+    	throw ExceptionHandling.dieInternal(tc, "Cannot stringify this");
     }
     public static double smart_numify(SixModelObject obj, ThreadContext tc) {
     	// If it has a Num method, that wins.
@@ -2022,7 +2022,7 @@ public final class Ops {
     		return obj.elems(tc);
     	
     	// If anything else, we can't do it.
-    	throw new RuntimeException("Cannot numify this");
+    	throw ExceptionHandling.dieInternal(tc, "Cannot numify this");
     }
     
     /* Math operations. */
@@ -2058,7 +2058,7 @@ public final class Ops {
         boolean neg = false;
 
         if (radix > 36) {
-        	throw new RuntimeException("Cannot convert radix of " + radix + " (max 36)");
+        	throw ExceptionHandling.dieInternal(tc, "Cannot convert radix of " + radix + " (max 36)");
         }
 
         ch = (zpos < chars) ? str.charAt((int)zpos) : 0;
@@ -2368,7 +2368,7 @@ public final class Ops {
     }
     public static SixModelObject createsc(String handle, ThreadContext tc) {
     	if (tc.gc.scs.containsKey(handle))
-    		throw new RuntimeException("SC with handle " + handle + "already exists");
+    		throw ExceptionHandling.dieInternal(tc, "SC with handle " + handle + "already exists");
     	
     	SerializationContext sc = new SerializationContext(handle);
     	tc.gc.scs.put(handle, sc);
@@ -2380,7 +2380,7 @@ public final class Ops {
     	
     	return ref;
     }
-    public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj) {
+    public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		ArrayList<SixModelObject> roots = ((SCRefInstance)scRef).referencedSC.root_objects; 
     		if (roots.size() == idx)
@@ -2390,10 +2390,10 @@ public final class Ops {
     		return obj;
     	}
     	else {
-    		throw new RuntimeException("scsetobj can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scsetobj can only operate on an SCRef");
     	}
     }
-    public static SixModelObject scsetcode(SixModelObject scRef, long idx, SixModelObject obj) {
+    public static SixModelObject scsetcode(SixModelObject scRef, long idx, SixModelObject obj, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		if (obj instanceof CodeRef) {
     			ArrayList<CodeRef> roots = ((SCRefInstance)scRef).referencedSC.root_codes; 
@@ -2404,64 +2404,64 @@ public final class Ops {
     			return obj;
     		}
     		else {
-    			throw new RuntimeException("scsetcode can only store a CodeRef");
+    			throw ExceptionHandling.dieInternal(tc, "scsetcode can only store a CodeRef");
     		}
     	}
     	else {
-    		throw new RuntimeException("scsetcode can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scsetcode can only operate on an SCRef");
     	}
     }
-    public static SixModelObject scgetobj(SixModelObject scRef, long idx) {
+    public static SixModelObject scgetobj(SixModelObject scRef, long idx, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		return ((SCRefInstance)scRef).referencedSC.root_objects.get((int)idx);
     	}
     	else {
-    		throw new RuntimeException("scgetobj can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scgetobj can only operate on an SCRef");
     	}
     }
-    public static String scgethandle(SixModelObject scRef) {
+    public static String scgethandle(SixModelObject scRef, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		return ((SCRefInstance)scRef).referencedSC.handle;
     	}
     	else {
-    		throw new RuntimeException("scgethandle can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scgethandle can only operate on an SCRef");
     	}
     }
-    public static long scgetobjidx(SixModelObject scRef, SixModelObject find) {
+    public static long scgetobjidx(SixModelObject scRef, SixModelObject find, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		 int idx = ((SCRefInstance)scRef).referencedSC.root_objects.indexOf(find);
     		 if (idx < 0)
-    			 throw new RuntimeException("Object does not exist in this SC");
+    			 throw ExceptionHandling.dieInternal(tc, "Object does not exist in this SC");
     		 return idx;
     	}
     	else {
-    		throw new RuntimeException("scgetobjidx can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scgetobjidx can only operate on an SCRef");
     	}
     }
-    public static String scsetdesc(SixModelObject scRef, String desc) {
+    public static String scsetdesc(SixModelObject scRef, String desc, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		((SCRefInstance)scRef).referencedSC.description = desc;
     		return desc;
     	}
     	else {
-    		throw new RuntimeException("scsetdesc can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scsetdesc can only operate on an SCRef");
     	}
     }
-    public static long scobjcount(SixModelObject scRef) {
+    public static long scobjcount(SixModelObject scRef, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		return ((SCRefInstance)scRef).referencedSC.root_objects.size();
     	}
     	else {
-    		throw new RuntimeException("scobjcount can only operate on an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "scobjcount can only operate on an SCRef");
     	}
     }
-    public static SixModelObject setobjsc(SixModelObject obj, SixModelObject scRef) {
+    public static SixModelObject setobjsc(SixModelObject obj, SixModelObject scRef, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		obj.sc = ((SCRefInstance)scRef).referencedSC;
     		return obj;
     	}
     	else {
-    		throw new RuntimeException("setobjsc requires an SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "setobjsc requires an SCRef");
     	}
     }
     public static SixModelObject getobjsc(SixModelObject obj, ThreadContext tc) {
@@ -2475,7 +2475,7 @@ public final class Ops {
     	return tc.gc.scRefs.get(sc.handle);
     }
     public static String serialize(SixModelObject scRef, SixModelObject sh, ThreadContext tc) {
-    	throw new RuntimeException("Serialization NYI");
+    	throw ExceptionHandling.dieInternal(tc, "Serialization NYI");
     }
     public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
@@ -2499,7 +2499,7 @@ public final class Ops {
     		return blob;
     	}
     	else {
-    		throw new RuntimeException("deserialize was not passed a valid SCRef");
+    		throw ExceptionHandling.dieInternal(tc, "deserialize was not passed a valid SCRef");
     	}
     }
     public static SixModelObject wval(String sc, long idx, ThreadContext tc) {
@@ -2519,12 +2519,12 @@ public final class Ops {
     		return sc;
     	}
     	else {
-    		throw new RuntimeException("Can only push an SCRef with pushcompsc");
+    		throw ExceptionHandling.dieInternal(tc, "Can only push an SCRef with pushcompsc");
     	}
     }
     public static SixModelObject popcompsc(ThreadContext tc) {
     	if (tc.compilingSCs == null)
-    		throw new RuntimeException("No current compiling SC.");
+    		throw ExceptionHandling.dieInternal(tc, "No current compiling SC.");
     	int idx = tc.compilingSCs.size() - 1;
     	SixModelObject result = tc.compilingSCs.get(idx);
     	tc.compilingSCs.remove(idx);
@@ -2646,14 +2646,14 @@ public final class Ops {
             return clone;
         }
         else {
-            throw new RuntimeException("takeclosure can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "takeclosure can only be used with a CodeRef");
         }
     }
     public static SixModelObject getcodeobj(SixModelObject code, ThreadContext tc) {
     	if (code instanceof CodeRef)
             return ((CodeRef)code).codeObject;
         else
-            throw new RuntimeException("getcodeobj can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "getcodeobj can only be used with a CodeRef");
     }
     public static SixModelObject setcodeobj(SixModelObject code, SixModelObject obj, ThreadContext tc) {
     	if (code instanceof CodeRef) {
@@ -2661,14 +2661,14 @@ public final class Ops {
             return code;
     	}
         else {
-            throw new RuntimeException("setcodeobj can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "setcodeobj can only be used with a CodeRef");
         }
     }
     public static String getcodename(SixModelObject code, ThreadContext tc) {
     	if (code instanceof CodeRef)
             return ((CodeRef)code).staticInfo.name;
         else
-            throw new RuntimeException("getcodename can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "getcodename can only be used with a CodeRef");
     }
     public static SixModelObject setcodename(SixModelObject code, String name, ThreadContext tc) {
     	if (code instanceof CodeRef) {
@@ -2676,39 +2676,39 @@ public final class Ops {
             return code;
     	}
         else {
-            throw new RuntimeException("setcodename can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "setcodename can only be used with a CodeRef");
         }
     }
     public static String getcodecuid(SixModelObject code, ThreadContext tc) {
     	if (code instanceof CodeRef)
             return ((CodeRef)code).staticInfo.uniqueId;
         else
-            throw new RuntimeException("getcodename can only be used with a CodeRef");
+            throw ExceptionHandling.dieInternal(tc, "getcodename can only be used with a CodeRef");
     }
     public static SixModelObject forceouterctx(SixModelObject code, SixModelObject ctx, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("forceouterctx first operand must be a CodeRef");
+    		throw ExceptionHandling.dieInternal(tc, "forceouterctx first operand must be a CodeRef");
     	if (!(ctx instanceof ContextRefInstance))
-    		throw new RuntimeException("forceouterctx second operand must be a ContextRef");
+    		throw ExceptionHandling.dieInternal(tc, "forceouterctx second operand must be a ContextRef");
     	((CodeRef)code).outer = ((ContextRefInstance)ctx).context;
     	return code;
     }
     public static SixModelObject freshcoderef(SixModelObject code, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("freshcoderef must be used on a CodeRef");
+    		throw ExceptionHandling.dieInternal(tc, "freshcoderef must be used on a CodeRef");
     	CodeRef clone = (CodeRef)code.clone(tc);
     	clone.staticInfo = clone.staticInfo.clone();
     	return clone;
     }
     public static SixModelObject markcodestatic(SixModelObject code, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("markcodestatic must be used on a CodeRef");
+    		throw ExceptionHandling.dieInternal(tc, "markcodestatic must be used on a CodeRef");
     	((CodeRef)code).isStaticCodeRef = true;
     	return code;
     }
     public static SixModelObject markcodestub(SixModelObject code, ThreadContext tc) {
     	if (!(code instanceof CodeRef))
-    		throw new RuntimeException("markcodestub must be used on a CodeRef");
+    		throw ExceptionHandling.dieInternal(tc, "markcodestub must be used on a CodeRef");
     	((CodeRef)code).isCompilerStub = true;
     	return code;
     }
@@ -2761,19 +2761,19 @@ public final class Ops {
     	if (numHandlers > 0)
     		return tc.handlers.get(numHandlers - 1).exObj;
     	else
-    		throw new RuntimeException("Cannot get exception object ouside of exception handler");
+    		throw ExceptionHandling.dieInternal(tc, "Cannot get exception object ouside of exception handler");
     }
     public static long getextype(SixModelObject obj, ThreadContext tc) {
     	if (obj instanceof VMExceptionInstance)
     		return ((VMExceptionInstance)obj).category;
     	else
-    		throw new RuntimeException("getextype needs an object with VMException representation");
+    		throw ExceptionHandling.dieInternal(tc, "getextype needs an object with VMException representation");
     }
     public static String getmessage(SixModelObject obj, ThreadContext tc) {
     	if (obj instanceof VMExceptionInstance)
     		return ((VMExceptionInstance)obj).message;
     	else
-    		throw new RuntimeException("getmessage needs an object with VMException representation");
+    		throw ExceptionHandling.dieInternal(tc, "getmessage needs an object with VMException representation");
     }
 
     /* HLL configuration and compiler related options. */
@@ -2881,7 +2881,7 @@ public final class Ops {
         return nfa;
     }
     public static SixModelObject nfatostatelist(SixModelObject nfa, ThreadContext tc) {
-    	throw new RuntimeException("nfatostatelist NYI");
+    	throw ExceptionHandling.dieInternal(tc, "nfatostatelist NYI");
     }
     public static SixModelObject nfarunproto(SixModelObject nfa, String target, long pos, ThreadContext tc) {
         /* Run the NFA. */

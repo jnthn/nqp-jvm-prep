@@ -86,8 +86,7 @@ public abstract class CompilationUnit {
         	}
         	catch (Exception e)
         	{
-        		e.printStackTrace(System.err);
-        		throw new RuntimeException(e);
+        		throw ExceptionHandling.dieInternal(tc, e.getMessage());
         	}
     }
     
@@ -102,7 +101,7 @@ public abstract class CompilationUnit {
         	}
         	catch (Exception e)
         	{
-        		throw new RuntimeException(e);
+        		throw ExceptionHandling.dieInternal(tc, e.getMessage());
         	}
     }
     
@@ -120,7 +119,7 @@ public abstract class CompilationUnit {
     	CodeRef cr = cuidToCodeRef.get(uniqueId);
     	Integer idx = cr.staticInfo.oTryGetLexicalIdx(name);
     	if (idx == null)
-    		throw new RuntimeException("Invalid lexical name '" + name + "' in static lexical installation");
+    		new RuntimeException("Invalid lexical name '" + name + "' in static lexical installation");
     	cr.staticInfo.oLexStatic[idx] = value;
     	return value;
     }

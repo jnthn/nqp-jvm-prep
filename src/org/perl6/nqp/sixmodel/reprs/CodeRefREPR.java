@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -17,15 +18,15 @@ public class CodeRefREPR extends REPR {
 	}
 
 	public SixModelObject allocate(ThreadContext tc, STable st) {
-		throw new RuntimeException("CodeRef cannot be allocated directly");
+		throw ExceptionHandling.dieInternal(tc, "CodeRef cannot be allocated directly");
 	}
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
-		throw new RuntimeException("CodeRef does not participate in serialization");
+		throw ExceptionHandling.dieInternal(tc, "CodeRef does not participate in serialization");
 	}
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("CodeRef does not participate in serialization");
+		throw ExceptionHandling.dieInternal(tc, "CodeRef does not participate in serialization");
 	}
 }

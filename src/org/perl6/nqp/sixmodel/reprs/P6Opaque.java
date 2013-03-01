@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.bcel.Constants;
 import org.apache.bcel.generic.*;
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
 
@@ -292,7 +293,7 @@ public class P6Opaque extends REPR {
              */
             if (attr.boxTarget) {
                 if (ss.inlineable == StorageSpec.REFERENCE)
-                    throw new RuntimeException("A box_target must not have a reference type attribute");
+                    throw ExceptionHandling.dieInternal(tc, "A box_target must not have a reference type attribute");
                 attr.st.REPR.generateBoxingMethods(tc, attr.st, c, cp, "field_" + i);
             }
             
@@ -425,16 +426,16 @@ public class P6Opaque extends REPR {
     public void change_type(ThreadContext tc, SixModelObject obj, SixModelObject newType) {
     	// Ensure target type is also P6opaque-based.
     	if (!(newType.st.REPR instanceof P6Opaque))
-    		throw new RuntimeException("P6opaque can only rebless to another P6opaque-based type");
+    		throw ExceptionHandling.dieInternal(tc, "P6opaque can only rebless to another P6opaque-based type");
     	
     	// Ensure that the MROs overlap properly.
     	P6OpaqueREPRData ourREPRData = (P6OpaqueREPRData)obj.st.REPRData;
     	P6OpaqueREPRData targetREPRData = (P6OpaqueREPRData)newType.st.REPRData;
     	if (ourREPRData.classHandles.length > targetREPRData.classHandles.length)
-    		throw new RuntimeException("Incompatible MROs in P6opaque rebless");
+    		throw ExceptionHandling.dieInternal(tc, "Incompatible MROs in P6opaque rebless");
     	for (int i = 0; i < ourREPRData.classHandles.length; i++) {
     		if (ourREPRData.classHandles[i] != targetREPRData.classHandles[i])
-    			throw new RuntimeException("Incompatible MROs in P6opaque rebless");
+    			throw ExceptionHandling.dieInternal(tc, "Incompatible MROs in P6opaque rebless");
     	}
     	
     	// If there's a different number of attributes, need to set up delegate.
@@ -541,7 +542,7 @@ public class P6Opaque extends REPR {
             	}
             }
             else {
-            	throw new RuntimeException("Unexpected hint map representation in deserialize");
+            	throw ExceptionHandling.dieInternal(tc, "Unexpected hint map representation in deserialize");
             }
         }
         REPRData.classHandles = classHandles.toArray(new SixModelObject[0]);

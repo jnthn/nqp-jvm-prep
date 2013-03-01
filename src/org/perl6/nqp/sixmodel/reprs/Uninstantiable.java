@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -17,15 +18,15 @@ public class Uninstantiable extends REPR {
 	}
 
 	public SixModelObject allocate(ThreadContext tc, STable st) {
-		throw new RuntimeException("You cannot create an instance of this type");
+		throw ExceptionHandling.dieInternal(tc, "You cannot create an instance of this type");
 	}
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
-		throw new RuntimeException("Cannot stub an Uninstantiable instance");
+		throw ExceptionHandling.dieInternal(tc, "Cannot stub an Uninstantiable instance");
 	}
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("Cannot stub an Uninstantiable instance");
+		throw ExceptionHandling.dieInternal(tc, "Cannot stub an Uninstantiable instance");
 	}
 }
