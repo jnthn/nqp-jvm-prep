@@ -814,7 +814,6 @@ for ('', 'repeat_') -> $repness {
     }
 }
 
-my $for_array_num := 0;
 QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     my $handler := 1;
     my @operands;
@@ -904,11 +903,7 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     
     # Now do block invocation.
     my $inv_il := JAST::InstructionList.new();
-    my $for_array := '__FOR_ARRAY__' ~ $for_array_num++;
-    $*JMETH.add_local($for_array, "[$TYPE_OBJ");
-    $inv_il.append(JAST::PushIndex.new( :value(+@val_temps) ));
-    $inv_il.append(JAST::Instruction.new( :op('newarray'), $TYPE_OBJ ));
-    $inv_il.append(JAST::Instruction.new( :op('astore'), $for_array ));
+    my $for_array := &*GET_ARG_ARRAY(+@val_temps);
     my @callsite;
     my int $i := 0;
     for @val_temps {
@@ -922,6 +917,7 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     $inv_il.append(JAST::Instruction.new( :op('aload'), $for_array ));
     $inv_il.append(JAST::Instruction.new( :op('putfield'),
         $TYPE_CF, 'args', "[$TYPE_OBJ" ));
+    &*FREE_ARG_ARRAY($for_array);
     my $cs_idx := $*CODEREFS.get_callsite_idx(@callsite, []);
     $inv_il.append(JAST::Instruction.new( :op('aload'), $block_tmp ));
     $inv_il.append(JAST::PushIndex.new( :value($cs_idx) ));
@@ -1032,7 +1028,6 @@ QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
 });
 
 # Calling
-my $arg_array_num := 0;
 sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # Make sure we do positionals before nameds.
     my @pos;
@@ -1043,12 +1038,8 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     my @order := @pos;
     for @named { nqp::push(@order, $_) }
     
-    # Create argument array.
-    my $arg_array := '__ARG_ARRAY__' ~ $arg_array_num++;
-    $*JMETH.add_local($arg_array, "[$TYPE_OBJ");
-    $il.append(JAST::PushIndex.new( :value(+@order - $first) ));
-    $il.append(JAST::Instruction.new( :op('newarray'), $TYPE_OBJ ));
-    $il.append(JAST::Instruction.new( :op('astore'), $arg_array ));
+    # Get an argument array.
+    my $arg_array := &*GET_ARG_ARRAY(+@order - $first);
     
     # Process the arguments, computing each of them and placing them into
     # the arguments array.
@@ -1105,6 +1096,9 @@ sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     $il.append(JAST::Instruction.new( :op('aload'), $arg_array ));
     $il.append(JAST::Instruction.new( :op('putfield'),
         $TYPE_CF, 'args', "[$TYPE_OBJ" ));
+
+    # Mark us done with the arg array (call will consume it right away).
+    &*FREE_ARG_ARRAY($arg_array);
     
     # Return callsite index (which may create it if needed).
     return $*CODEREFS.get_callsite_idx(@callsite, @argnames);
@@ -2568,6 +2562,29 @@ class QAST::CompilerJAST {
             my $outer     := try $*BLOCK;
             my $block     := BlockInfo.new($node, $outer);
             
+            # We manage sharing of argument arrays.
+            my @free_arg_arrays;
+            my %arg_array_lengths;
+            my &*GET_ARG_ARRAY := sub ($size) {
+                if @free_arg_arrays[$size] {
+                    nqp::pop(@free_arg_arrays[$size]);
+                }
+                else {
+                    my $new_name := '__ARG_ARRAY_' ~ nqp::elems(%arg_array_lengths);
+                    %arg_array_lengths{$new_name} := $size;
+                    $new_name
+                }
+            }
+            my &*FREE_ARG_ARRAY := sub ($name) {
+                my $len := %arg_array_lengths{$name};
+                if nqp::islist(@free_arg_arrays[$len]) {
+                    nqp::push(@free_arg_arrays[$len], $name);
+                }
+                else {
+                    @free_arg_arrays[$len] := [$name];
+                }
+            }
+            
             # This array will contain any catch/control exception handlers the
             # block gets. A contextual lets us track nesting of handlers.
             my @handlers;
@@ -2734,6 +2751,14 @@ class QAST::CompilerJAST {
                 $*JMETH.add_local($_.name, jtype($block.local_type($_.name)));
             }
             $*BLOCK_TA.add_temps_to_method($*JMETH);
+            
+            # Add declarations and setup of arg arrays.
+            for %arg_array_lengths {
+                $*JMETH.add_local($_.key, "[$TYPE_OBJ");
+                $*JMETH.append(JAST::PushIndex.new( :value($_.value) ));
+                $*JMETH.append(JAST::Instruction.new( :op('newarray'), $TYPE_OBJ ));
+                $*JMETH.append(JAST::Instruction.new( :op('astore'), $_.key ));
+            }
             
             # Add method body JAST.
             $il.append($body.jast);
