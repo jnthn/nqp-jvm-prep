@@ -17,235 +17,295 @@ import org.perl6.nqp.sixmodel.reprs.*;
 public class KnowHOWMethods extends CompilationUnit {
     public void new_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
         /* Get arguments. */
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-        SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        String repr_arg = Ops.namedparam_opt_s(tc.curFrame, csd, "repr");
-        String name_arg = Ops.namedparam_opt_s(tc.curFrame, csd, "name");
-        if (self == null || !(self.st.REPR instanceof KnowHOWREPR))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object with REPR KnowHOWREPR");
-        
-        /* We first create a new HOW instance. */
-        SixModelObject HOW = self.st.REPR.allocate(tc, self.st);
-        
-        /* See if we have a representation name; if not default to P6opaque. */
-        String repr_name = repr_arg != null ? repr_arg : "P6opaque";
-            
-        /* Create a new type object of the desired REPR. (Note that we can't
-         * default to KnowHOWREPR here, since it doesn't know how to actually
-         * store attributes, it's just for bootstrapping knowhow's. */
-        REPR repr_to_use = REPRRegistry.getByName(repr_name);
-        SixModelObject type_object = repr_to_use.type_object_for(tc, HOW);
-        
-        /* See if we were given a name; put it into the meta-object if so. */
-        HOW.initialize(tc);
-        if (name_arg != null)
-            ((KnowHOWREPRInstance)HOW).name = name_arg;
-        
-        /* Set .WHO to an empty hash. */
-        SixModelObject Hash = tc.gc.BOOTHash;
-        type_object.st.WHO = Hash.st.REPR.allocate(tc, Hash.st);
-        type_object.st.WHO.initialize(tc);
-
-        /* Return the type object. */
-        Ops.return_o(type_object, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 1, 1);
+	        SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        String repr_arg = Ops.namedparam_opt_s(cf, csd, "repr");
+	        String name_arg = Ops.namedparam_opt_s(cf, csd, "name");
+	        if (self == null || !(self.st.REPR instanceof KnowHOWREPR))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object with REPR KnowHOWREPR");
+	        
+	        /* We first create a new HOW instance. */
+	        SixModelObject HOW = self.st.REPR.allocate(tc, self.st);
+	        
+	        /* See if we have a representation name; if not default to P6opaque. */
+	        String repr_name = repr_arg != null ? repr_arg : "P6opaque";
+	            
+	        /* Create a new type object of the desired REPR. (Note that we can't
+	         * default to KnowHOWREPR here, since it doesn't know how to actually
+	         * store attributes, it's just for bootstrapping knowhow's. */
+	        REPR repr_to_use = REPRRegistry.getByName(repr_name);
+	        SixModelObject type_object = repr_to_use.type_object_for(tc, HOW);
+	        
+	        /* See if we were given a name; put it into the meta-object if so. */
+	        HOW.initialize(tc);
+	        if (name_arg != null)
+	            ((KnowHOWREPRInstance)HOW).name = name_arg;
+	        
+	        /* Set .WHO to an empty hash. */
+	        SixModelObject Hash = tc.gc.BOOTHash;
+	        type_object.st.WHO = Hash.st.REPR.allocate(tc, Hash.st);
+	        type_object.st.WHO.initialize(tc);
+	
+	        /* Return the type object. */
+	        Ops.return_o(type_object, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public void add_method(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 4, 4);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        String name = Ops.posparam_s(tc.curFrame, csd, 2);
-        SixModelObject method = Ops.posparam_o(tc.curFrame, csd, 3);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-        
-        ((KnowHOWREPRInstance)self).methods.put(name, method);
-        
-        Ops.return_o(method, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 4, 4);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        String name = Ops.posparam_s(cf, csd, 2);
+	        SixModelObject method = Ops.posparam_o(cf, csd, 3);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	        
+	        ((KnowHOWREPRInstance)self).methods.put(name, method);
+	        
+	        Ops.return_o(method, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public void add_attribute(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 3, 3);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        SixModelObject attribute = Ops.posparam_o(tc.curFrame, csd, 2);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-        if (attribute == null || !(attribute instanceof KnowHOWAttributeInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW attributes must use KnowHOWAttributeREPR");
-        
-        ((KnowHOWREPRInstance)self).attributes.add(attribute);
-        
-        Ops.return_o(attribute, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 3, 3);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        SixModelObject attribute = Ops.posparam_o(cf, csd, 2);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	        if (attribute == null || !(attribute instanceof KnowHOWAttributeInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW attributes must use KnowHOWAttributeREPR");
+	        
+	        ((KnowHOWREPRInstance)self).attributes.add(attribute);
+	        
+	        Ops.return_o(attribute, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public void compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        SixModelObject type_obj = Ops.posparam_o(tc.curFrame, csd, 1);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-        
-        /* Set method cache. */
-        type_obj.st.MethodCache = ((KnowHOWREPRInstance)self).methods;
-        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
-        
-        /* Set type check cache. */
-        // TODO
-        
-        /* Use any attribute information to produce attribute protocol
-         * data. The protocol consists of an array... */
-        SixModelObject repr_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
-        repr_info.initialize(tc);
-        
-        /* ...which contains an array per MRO entry... */
-        SixModelObject type_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
-        type_info.initialize(tc);
-        repr_info.push_boxed(tc, type_info);
-            
-        /* ...which in turn contains this type... */
-        type_info.push_boxed(tc, type_obj);
-        
-        /* ...then an array of hashes per attribute... */
-        SixModelObject attr_info_list = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
-        attr_info_list.initialize(tc);
-        type_info.push_boxed(tc, attr_info_list);
-        List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
-        for (int i = 0; i < attributes.size(); i++) {
-            KnowHOWAttributeInstance attribute = (KnowHOWAttributeInstance)attributes.get(i);
-            SixModelObject attr_info = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
-            attr_info.initialize(tc);
-            SixModelObject name_obj = tc.gc.BOOTStr.st.REPR.allocate(tc, tc.gc.BOOTStr.st);
-            name_obj.initialize(tc);
-            name_obj.set_str(tc, attribute.name);
-            attr_info.bind_key_boxed(tc, "name", name_obj);
-            attr_info.bind_key_boxed(tc, "type", attribute.type);
-            if (attribute.box_target != 0) {
-                /* Merely having the key serves as a "yes". */
-                attr_info.bind_key_boxed(tc, "box_target", attr_info);
-            }
-            attr_info_list.push_boxed(tc, attr_info);
-        }
-        
-        /* ...followed by a list of parents (none). */
-        SixModelObject parent_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
-        parent_info.initialize(tc);
-        type_info.push_boxed(tc, parent_info);
-        
-        /* All of this goes in a hash. */
-        SixModelObject repr_info_hash = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
-        repr_info_hash.initialize(tc);
-        repr_info_hash.bind_key_boxed(tc, "attribute", repr_info);
-        
-        /* Compose the representation using it. */
-        type_obj.st.REPR.compose(tc, type_obj.st, repr_info_hash);
-        
-        Ops.return_o(type_obj, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 2, 2);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        SixModelObject type_obj = Ops.posparam_o(cf, csd, 1);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	        
+	        /* Set method cache. */
+	        type_obj.st.MethodCache = ((KnowHOWREPRInstance)self).methods;
+	        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+	        
+	        /* Set type check cache. */
+	        // TODO
+	        
+	        /* Use any attribute information to produce attribute protocol
+	         * data. The protocol consists of an array... */
+	        SixModelObject repr_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	        repr_info.initialize(tc);
+	        
+	        /* ...which contains an array per MRO entry... */
+	        SixModelObject type_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	        type_info.initialize(tc);
+	        repr_info.push_boxed(tc, type_info);
+	            
+	        /* ...which in turn contains this type... */
+	        type_info.push_boxed(tc, type_obj);
+	        
+	        /* ...then an array of hashes per attribute... */
+	        SixModelObject attr_info_list = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	        attr_info_list.initialize(tc);
+	        type_info.push_boxed(tc, attr_info_list);
+	        List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
+	        for (int i = 0; i < attributes.size(); i++) {
+	            KnowHOWAttributeInstance attribute = (KnowHOWAttributeInstance)attributes.get(i);
+	            SixModelObject attr_info = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
+	            attr_info.initialize(tc);
+	            SixModelObject name_obj = tc.gc.BOOTStr.st.REPR.allocate(tc, tc.gc.BOOTStr.st);
+	            name_obj.initialize(tc);
+	            name_obj.set_str(tc, attribute.name);
+	            attr_info.bind_key_boxed(tc, "name", name_obj);
+	            attr_info.bind_key_boxed(tc, "type", attribute.type);
+	            if (attribute.box_target != 0) {
+	                /* Merely having the key serves as a "yes". */
+	                attr_info.bind_key_boxed(tc, "box_target", attr_info);
+	            }
+	            attr_info_list.push_boxed(tc, attr_info);
+	        }
+	        
+	        /* ...followed by a list of parents (none). */
+	        SixModelObject parent_info = tc.gc.BOOTArray.st.REPR.allocate(tc, tc.gc.BOOTArray.st);
+	        parent_info.initialize(tc);
+	        type_info.push_boxed(tc, parent_info);
+	        
+	        /* All of this goes in a hash. */
+	        SixModelObject repr_info_hash = tc.gc.BOOTHash.st.REPR.allocate(tc, tc.gc.BOOTHash.st);
+	        repr_info_hash.initialize(tc);
+	        repr_info_hash.bind_key_boxed(tc, "attribute", repr_info);
+	        
+	        /* Compose the representation using it. */
+	        type_obj.st.REPR.compose(tc, type_obj.st, repr_info_hash);
+	        
+	        Ops.return_o(type_obj, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void attributes(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-        
-        SixModelObject BOOTArray = tc.gc.BOOTArray;
-        SixModelObject result = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
-        result.initialize(tc);
-        
-        List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
-        for (SixModelObject attr : attributes)
-        	result.push_boxed(tc, attr);
-        
-        Ops.return_o(result, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 2, 2);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	        
+	        SixModelObject BOOTArray = tc.gc.BOOTArray;
+	        SixModelObject result = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
+	        result.initialize(tc);
+	        
+	        List<SixModelObject> attributes = ((KnowHOWREPRInstance)self).attributes;
+	        for (SixModelObject attr : attributes)
+	        	result.push_boxed(tc, attr);
+	        
+	        Ops.return_o(result, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void methods(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-        
-        SixModelObject BOOTHash = tc.gc.BOOTHash;
-        SixModelObject result = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
-        result.initialize(tc);
-        
-        HashMap<String, SixModelObject> methods = ((KnowHOWREPRInstance)self).methods;
-        for (String name : methods.keySet())
-        	result.bind_key_boxed(tc, name, methods.get(name));
-        
-        Ops.return_o(result, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 2, 2);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	        
+	        SixModelObject BOOTHash = tc.gc.BOOTHash;
+	        SixModelObject result = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
+	        result.initialize(tc);
+	        
+	        HashMap<String, SixModelObject> methods = ((KnowHOWREPRInstance)self).methods;
+	        for (String name : methods.keySet())
+	        	result.bind_key_boxed(tc, name, methods.get(name));
+	        
+	        Ops.return_o(result, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public void name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        
-        if (self == null || !(self instanceof KnowHOWREPRInstance))
-            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
-
-        Ops.return_s(((KnowHOWREPRInstance)self).name, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 2, 2);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        
+	        if (self == null || !(self instanceof KnowHOWREPRInstance))
+	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
+	
+	        Ops.return_s(((KnowHOWREPRInstance)self).name, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public void attr_new(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-        /* Process arguments. */
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        String name_arg = Ops.namedparam_s(tc.curFrame, csd, "name");
-        SixModelObject type_arg = Ops.namedparam_opt_o(tc.curFrame, csd, "type");
-        long bt_arg = Ops.namedparam_opt_i(tc.curFrame, csd, "box_target");
-
-        /* Allocate attribute object. */
-        REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
-        KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.allocate(tc, self.st);
-        obj.initialize(tc);
-        
-        /* Populate it. */
-        obj.name = name_arg;
-        obj.type = type_arg != null ? type_arg : tc.gc.KnowHOW;
-        obj.box_target = bt_arg == 0 ? 0 : 1;
-        
-        /* Return produced object. */
-        Ops.return_o(obj, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	        /* Process arguments. */
+	    	csd = Ops.checkarity(cf, csd, 1, 1);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        String name_arg = Ops.namedparam_s(cf, csd, "name");
+	        SixModelObject type_arg = Ops.namedparam_opt_o(cf, csd, "type");
+	        long bt_arg = Ops.namedparam_opt_i(cf, csd, "box_target");
+	
+	        /* Allocate attribute object. */
+	        REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
+	        KnowHOWAttributeInstance obj = (KnowHOWAttributeInstance)repr.allocate(tc, self.st);
+	        obj.initialize(tc);
+	        
+	        /* Populate it. */
+	        obj.name = name_arg;
+	        obj.type = type_arg != null ? type_arg : tc.gc.KnowHOW;
+	        obj.box_target = bt_arg == 0 ? 0 : 1;
+	        
+	        /* Return produced object. */
+	        Ops.return_o(obj, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void attr_compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        Ops.return_o(self, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 1, 1);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        Ops.return_o(self, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void attr_name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        Ops.return_s(((KnowHOWAttributeInstance)self).name, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+    		csd = Ops.checkarity(cf, csd, 1, 1);
+    		SixModelObject self = Ops.posparam_o(cf, csd, 0);
+        	Ops.return_s(((KnowHOWAttributeInstance)self).name, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void attr_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        Ops.return_o(((KnowHOWAttributeInstance)self).type, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 1, 1);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        Ops.return_o(((KnowHOWAttributeInstance)self).type, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
 
     public void attr_box_target(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
-    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
-        Ops.return_i(((KnowHOWAttributeInstance)self).box_target, tc.curFrame);
-        tc.curFrame.leave();
+    	CallFrame cf = new CallFrame(tc, cr);
+    	try {
+	    	csd = Ops.checkarity(cf, csd, 1, 1);
+	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	        Ops.return_i(((KnowHOWAttributeInstance)self).box_target, cf);
+    	}
+    	finally {
+    		cf.leave();
+    	}
     }
     
     public CodeRef[] getCodeRefs() {

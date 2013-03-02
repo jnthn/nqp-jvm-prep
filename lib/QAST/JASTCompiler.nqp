@@ -2650,8 +2650,12 @@ class QAST::CompilerJAST {
             # Emit prelude. This populates the cf (callframe) field as well as having
             # locals for the argument buffers for easy/fast access later on.
             $*JMETH.add_local('cf', $TYPE_CF);
+            $*JMETH.append(JAST::Instruction.new( :op('new'), $TYPE_CF ));
+            $*JMETH.append(JAST::Instruction.new( :op('dup') ));
             $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
-            $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC, 'curFrame', $TYPE_CF ));
+            $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cr' ));
+            $*JMETH.append(JAST::Instruction.new( :op('invokespecial'), $TYPE_CF, '<init>',
+                'Void', $TYPE_TC, $TYPE_CR ));
             if $*MAX_ARGS_O {
                 $*JMETH.add_local('oArgs', "[$TYPE_SMO");
                 $*JMETH.append(JAST::Instruction.new( :op('dup') ));

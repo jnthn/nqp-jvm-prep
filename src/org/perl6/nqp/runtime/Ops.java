@@ -1260,9 +1260,6 @@ public final class Ops {
     			cr = (CodeRef)is.InvocationHandler;
     	}
         
-        // Create a new call frame.
-        CallFrame cf = new CallFrame(tc, cr);
-        
         try {
         	// Do the invocation.
         	cr.staticInfo.mh.invokeExact(tc, cr, csd);
