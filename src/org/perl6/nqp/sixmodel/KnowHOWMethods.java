@@ -15,7 +15,7 @@ import org.perl6.nqp.sixmodel.reprs.*;
  * for code reference like things.
  */
 public class KnowHOWMethods extends CompilationUnit {
-    public void new_type(ThreadContext tc) {
+    public void new_type(ThreadContext tc, CallSiteDescriptor csd) {
         /* Get arguments. */
     	Ops.checkarity(tc.curFrame, 1, 1);
         SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
@@ -51,7 +51,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
     
-    public void add_method(ThreadContext tc) {
+    public void add_method(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 4, 4);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         String name = Ops.posparam_s(tc.curFrame, 2);
@@ -66,7 +66,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
     
-    public void add_attribute(ThreadContext tc) {
+    public void add_attribute(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 3, 3);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         SixModelObject attribute = Ops.posparam_o(tc.curFrame, 2);
@@ -82,7 +82,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
     
-    public void compose(ThreadContext tc) {
+    public void compose(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 2, 2);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         SixModelObject type_obj = Ops.posparam_o(tc.curFrame, 1);
@@ -148,7 +148,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
 
-    public void attributes(ThreadContext tc) {
+    public void attributes(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 2, 2);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         
@@ -167,7 +167,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
 
-    public void methods(ThreadContext tc) {
+    public void methods(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 2, 2);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         
@@ -186,7 +186,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
     
-    public void name(ThreadContext tc) {
+    public void name(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 2, 2);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         
@@ -197,7 +197,7 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
     
-    public void attr_new(ThreadContext tc) {
+    public void attr_new(ThreadContext tc, CallSiteDescriptor csd) {
         /* Process arguments. */
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
@@ -220,28 +220,28 @@ public class KnowHOWMethods extends CompilationUnit {
         tc.curFrame.leave();
     }
 
-    public void attr_compose(ThreadContext tc) {
+    public void attr_compose(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_o(self, tc.curFrame);
         tc.curFrame.leave();
     }
 
-    public void attr_name(ThreadContext tc) {
+    public void attr_name(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_s(((KnowHOWAttributeInstance)self).name, tc.curFrame);
         tc.curFrame.leave();
     }
 
-    public void attr_type(ThreadContext tc) {
+    public void attr_type(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_o(((KnowHOWAttributeInstance)self).type, tc.curFrame);
         tc.curFrame.leave();
     }
 
-    public void attr_box_target(ThreadContext tc) {
+    public void attr_box_target(ThreadContext tc, CallSiteDescriptor csd) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_i(((KnowHOWAttributeInstance)self).box_target, tc.curFrame);
@@ -253,7 +253,7 @@ public class KnowHOWMethods extends CompilationUnit {
         String[] snull = null;
         long[][] hnull = new long[0][];
         short zero = 0;
-        MethodType mt = MethodType.methodType(void.class, ThreadContext.class);
+        MethodType mt = MethodType.methodType(void.class, ThreadContext.class, CallSiteDescriptor.class);
         Lookup l = MethodHandles.lookup();
         try {
 	        refs[0] = new CodeRef(this, l.findVirtual(KnowHOWMethods.class, "new_type", mt).bindTo(this),

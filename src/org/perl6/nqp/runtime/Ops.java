@@ -1284,7 +1284,7 @@ public final class Ops {
         
         try {
         	// Do the invocation.
-        	cr.staticInfo.mh.invokeExact(tc);
+        	cr.staticInfo.mh.invokeExact(tc, csd);
         }
         catch (UnwindException e) {
         	throw e;
