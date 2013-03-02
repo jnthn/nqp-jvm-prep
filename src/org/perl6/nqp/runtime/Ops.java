@@ -1295,9 +1295,6 @@ public final class Ops {
         catch (Throwable e) {
 			ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
-        finally {
-        	cf.leave();
-        }
     }
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
     	if (capture instanceof CallCaptureInstance) {

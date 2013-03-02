@@ -233,7 +233,11 @@ public class JASTToJVMBytecode {
                 else if (curLine.startsWith(".catch ")) {
                     il.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, null));
                     tryEndStack.push(il.getEnd());
-                    catchTypeStack.push((ObjectType)processType(curLine.substring(".catch ".length())));
+                    String typeName = curLine.substring(".catch ".length());
+                    if (typeName.equals(""))
+                    	catchTypeStack.push(null);
+                    else
+                    	catchTypeStack.push((ObjectType)processType(typeName));
                 }
                 else if (curLine.equals(".endtry")) {
                     InstructionHandle tryStart = tryStartStack.pop().getNext();

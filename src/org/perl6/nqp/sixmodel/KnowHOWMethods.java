@@ -48,6 +48,7 @@ public class KnowHOWMethods extends CompilationUnit {
 
         /* Return the type object. */
         Ops.return_o(type_object, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public void add_method(ThreadContext tc) {
@@ -62,6 +63,7 @@ public class KnowHOWMethods extends CompilationUnit {
         ((KnowHOWREPRInstance)self).methods.put(name, method);
         
         Ops.return_o(method, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public void add_attribute(ThreadContext tc) {
@@ -77,6 +79,7 @@ public class KnowHOWMethods extends CompilationUnit {
         ((KnowHOWREPRInstance)self).attributes.add(attribute);
         
         Ops.return_o(attribute, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public void compose(ThreadContext tc) {
@@ -142,6 +145,7 @@ public class KnowHOWMethods extends CompilationUnit {
         type_obj.st.REPR.compose(tc, type_obj.st, repr_info_hash);
         
         Ops.return_o(type_obj, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void attributes(ThreadContext tc) {
@@ -160,6 +164,7 @@ public class KnowHOWMethods extends CompilationUnit {
         	result.push_boxed(tc, attr);
         
         Ops.return_o(result, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void methods(ThreadContext tc) {
@@ -178,6 +183,7 @@ public class KnowHOWMethods extends CompilationUnit {
         	result.bind_key_boxed(tc, name, methods.get(name));
         
         Ops.return_o(result, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public void name(ThreadContext tc) {
@@ -188,6 +194,7 @@ public class KnowHOWMethods extends CompilationUnit {
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
 
         Ops.return_s(((KnowHOWREPRInstance)self).name, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public void attr_new(ThreadContext tc) {
@@ -210,30 +217,35 @@ public class KnowHOWMethods extends CompilationUnit {
         
         /* Return produced object. */
         Ops.return_o(obj, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void attr_compose(ThreadContext tc) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_o(self, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void attr_name(ThreadContext tc) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_s(((KnowHOWAttributeInstance)self).name, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void attr_type(ThreadContext tc) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_o(((KnowHOWAttributeInstance)self).type, tc.curFrame);
+        tc.curFrame.leave();
     }
 
     public void attr_box_target(ThreadContext tc) {
     	Ops.checkarity(tc.curFrame, 1, 1);
     	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
         Ops.return_i(((KnowHOWAttributeInstance)self).box_target, tc.curFrame);
+        tc.curFrame.leave();
     }
     
     public CodeRef[] getCodeRefs() {

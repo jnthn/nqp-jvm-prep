@@ -2682,10 +2682,11 @@ class QAST::CompilerJAST {
             }
             
             # Emit arity check instruction.
-            $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
-            $*JMETH.append(JAST::PushIndex.new( :value($pos_required) ));
-            $*JMETH.append(JAST::PushIndex.new( :value($pos_slurpy ?? -1 !! $pos_required + $pos_optional) ));
-            $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            my $il := JAST::InstructionList.new();
+            $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+            $il.append(JAST::PushIndex.new( :value($pos_required) ));
+            $il.append(JAST::PushIndex.new( :value($pos_slurpy ?? -1 !! $pos_required + $pos_optional) ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 "checkarity", 'Void', $TYPE_CF, 'Integer', 'Integer' ));
             
             # Emit instructions to load each parameter.
@@ -2694,15 +2695,15 @@ class QAST::CompilerJAST {
                 my $type;
                 if $_.slurpy {
                     $type := $RT_OBJ;
-                    $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
-                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $il.append(JAST::Instruction.new( :op('aload_1') ));
+                    $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
                     if $_.named {
-                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "namedslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF ));
                     }
                     else {
-                        $*JMETH.append(JAST::PushIndex.new( :value($pos_required + $pos_optional) ));
-                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        $il.append(JAST::PushIndex.new( :value($pos_required + $pos_optional) ));
+                        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "posslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF, 'Integer' ));
                     }
                 }
@@ -2711,40 +2712,40 @@ class QAST::CompilerJAST {
                     my $jt   := jtype($type);
                     my $tc   := typechar($type);
                     my $opt  := $_.default ?? "opt_" !! "";
-                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
                     if $_.named {
-                        $*JMETH.append(JAST::PushSVal.new( :value($_.named) ));
-                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        $il.append(JAST::PushSVal.new( :value($_.named) ));
+                        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "namedparam_$opt$tc", $jt, $TYPE_CF, $TYPE_STR ));
                     }
                     else {
-                        $*JMETH.append(JAST::PushIndex.new( :value($param_idx) ));
-                        $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                        $il.append(JAST::PushIndex.new( :value($param_idx) ));
+                        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                             "posparam_$opt$tc", $jt, $TYPE_CF, 'Integer' ));
                     }
                     if $opt {
                         my $lbl := JAST::Label.new( :name(self.unique("opt_param")) );
-                        $*JMETH.append(JAST::Instruction.new( :op('aload_1') ));
-                        $*JMETH.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC,
+                        $il.append(JAST::Instruction.new( :op('aload_1') ));
+                        $il.append(JAST::Instruction.new( :op('getfield'), $TYPE_TC,
                             'lastParameterExisted', "Integer" ));
-                        $*JMETH.append(JAST::Instruction.new( :op('ifne'), $lbl ));
-                        $*JMETH.append(pop_ins($type));
+                        $il.append(JAST::Instruction.new( :op('ifne'), $lbl ));
+                        $il.append(pop_ins($type));
                         my $default := self.as_jast($_.default, :want($type));
-                        $*JMETH.append($default.jast);
+                        $il.append($default.jast);
                         $*STACK.obtain($default);
-                        $*JMETH.append($lbl);
+                        $il.append($lbl);
                     }
                 }
                 if $_.scope eq 'local' {
-                    $*JMETH.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
+                    $il.append(JAST::Instruction.new( :op(store_ins($type)), $_.name ));
                 }
                 else {
                     my $jtype := jtype($type);
-                    $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
-                    $*JMETH.append(JAST::PushIndex.new( :value($block.lexical_idx($_.name)) ));
-                    $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+                    $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $il.append(JAST::PushIndex.new( :value($block.lexical_idx($_.name)) ));
+                    $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                         'bindlex_' ~ typechar($type), $jtype, $jtype, $TYPE_CF, 'Integer' ));
-                    $*JMETH.append(pop_ins($type));
+                    $il.append(pop_ins($type));
                 }
                 $param_idx++;
             }
@@ -2756,12 +2757,24 @@ class QAST::CompilerJAST {
             $*BLOCK_TA.add_temps_to_method($*JMETH);
             
             # Add method body JAST.
-            $*JMETH.append($body.jast);
+            $il.append($body.jast);
             
-            # Emit return instruction.
-            $*JMETH.append(JAST::Instruction.new( :op('aload'), 'cf' ));
-            $*JMETH.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
+            # Store return value.
+            $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+            $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
                 'return_' ~ typechar($body.type), 'Void', jtype($body.type), $TYPE_CF ));
+            
+            # Keep the thread state in sync. Note, JVM doesn't do finally
+            # natively, so we just emit this in a catch as well as at the
+            # end before exit.
+            my $unwind := JAST::InstructionList.new();
+            for ($il, $unwind) {
+                $_.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                $_.append(JAST::Instruction.new( :op('invokevirtual'),
+                    $TYPE_CF, 'leave', 'Void' ));
+            }
+            $unwind.append(JAST::Instruction.new( :op('athrow') ));
+            $*JMETH.append(JAST::TryCatch.new( :try($il), :catch($unwind), :type('') ));
             $*JMETH.append(JAST::Instruction.new( :op('return') ));
             
             # Finalize method and add it to the class.
