@@ -1984,10 +1984,14 @@ class QAST::CompilerJAST {
             $cra.append(JAST::Instruction.new( :op('getstatic'),
                 'Ljava/lang/Void;', 'TYPE', $TYPE_CLASS ));
             $cra.append(JAST::PushCVal.new( :value($TYPE_TC) ));
-            $cra.append(JAST::PushIndex.new( :value(1) ));
+            $cra.append(JAST::PushIndex.new( :value(2) ));
             $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CLASS ));
             $cra.append(JAST::Instruction.new( :op('dup') ));
             $cra.append(JAST::PushIndex.new( :value(0) ));
+            $cra.append(JAST::PushCVal.new( :value($TYPE_CR) ));
+            $cra.append(JAST::Instruction.new( :op('aastore') ));
+            $cra.append(JAST::Instruction.new( :op('dup') ));
+            $cra.append(JAST::PushIndex.new( :value(1) ));
             $cra.append(JAST::PushCVal.new( :value($TYPE_CSD) ));
             $cra.append(JAST::Instruction.new( :op('aastore') ));
             $cra.append(JAST::Instruction.new( :op('invokestatic'),
@@ -2619,6 +2623,7 @@ class QAST::CompilerJAST {
             
             # Always take ThreadContext and callsite descriptor as arguments.
             $*JMETH.add_argument('tc', $TYPE_TC);
+            $*JMETH.add_argument('cr', $TYPE_CR);
             $*JMETH.add_argument('csd', $TYPE_CSD);
             
             # Set up temporaries allocator.
