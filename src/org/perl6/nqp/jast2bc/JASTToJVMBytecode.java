@@ -106,6 +106,7 @@ public class JASTToJVMBytecode {
         List<String> argNames = new ArrayList<String>();
         List<Type> argTypes = new ArrayList<Type>();
         Map<String, Type> localTypes = new HashMap<String, Type>();
+        Map<String, Integer> argIndexes = new HashMap<String, Integer>();
         Map<String, LocalVariableGen> localVariables = new HashMap<String, LocalVariableGen>();
         Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
         Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
@@ -113,6 +114,7 @@ public class JASTToJVMBytecode {
         Stack<InstructionHandle> tryStartStack = new Stack<InstructionHandle>();
         Stack<InstructionHandle> tryEndStack = new Stack<InstructionHandle>();
         Stack<ObjectType> catchTypeStack = new Stack<ObjectType>();
+        int curArgIndex = 1;
         
         MethodGen m = null;
         InstructionFactory f = null;
@@ -135,12 +137,17 @@ public class JASTToJVMBytecode {
                     methodName = curLine.substring("++ name ".length());
                 else if (curLine.startsWith("++ returns "))
                     returnType = curLine.substring("++ returns ".length());
-                else if (curLine.equals("++ static"))
+                else if (curLine.equals("++ static")) {
                     isStatic = true;
+                    curArgIndex = 0; /* No invocant. */
+                }
                 else if (curLine.startsWith("++ arg ")) {
                     String[] bits = curLine.split("\\s", 4);
+                    Type t = processType(bits[3]);
                     argNames.add(bits[2]);
-                    argTypes.add(processType(bits[3]));
+                    argTypes.add(t);
+                    argIndexes.put(bits[2], curArgIndex);
+                    curArgIndex += (t == Type.LONG || t == Type.DOUBLE ? 2 : 1);
                 }
                 else if (curLine.startsWith("++ local ")) {
                     String[] bits = curLine.split("\\s", 4);
@@ -255,7 +262,7 @@ public class JASTToJVMBytecode {
             }
             
             // Process line as an instruction.
-            emitInstruction(il, f, labelFixups, localVariables, tablesToGenerate, curLine);
+            emitInstruction(il, f, labelFixups, argIndexes, localVariables, tablesToGenerate, curLine);
         }
         if (inMethodHeader)
             throw new Exception("Unexpected end of file in method header");
@@ -265,6 +272,7 @@ public class JASTToJVMBytecode {
 
     private static void emitInstruction(InstructionList il, InstructionFactory f,
             Map<String, ArrayList<BranchInstruction>> labelFixups,
+            Map<String, Integer> argIndexes,
             Map<String, LocalVariableGen> localVariables,
             Map<InstructionHandle, String> tablesToGenerate,
             String curLine) throws Exception {
@@ -328,29 +336,44 @@ public class JASTToJVMBytecode {
             il.append(InstructionConstants.DCONST_1);
             break;
         case 0x15: // iload
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createLoad(Type.INT, localVariables.get(rest).getIndex()));
+            if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.INT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.INT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x16: // lload
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createLoad(Type.LONG, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.LONG, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.LONG, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x17: // fload
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createLoad(Type.FLOAT, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.FLOAT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.FLOAT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x18: // dload
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createLoad(Type.DOUBLE, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.DOUBLE, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.DOUBLE, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x19: // aload
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createLoad(Type.OBJECT, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.OBJECT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createLoad(Type.OBJECT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x1a: // iload_0
             il.append(InstructionFactory.createLoad(Type.INT, 0));
@@ -437,29 +460,44 @@ public class JASTToJVMBytecode {
             il.append(InstructionFactory.SALOAD);
             break;
         case 0x36: // istore
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createStore(Type.INT, localVariables.get(rest).getIndex()));
+            if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.INT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.INT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x37: // lstore
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createStore(Type.LONG, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.LONG, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.LONG, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x38: // fstore
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createStore(Type.FLOAT, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.FLOAT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.FLOAT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x39: // dstore
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createStore(Type.DOUBLE, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.DOUBLE, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.DOUBLE, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x3a: // astore
-            if (!localVariables.containsKey(rest))
-                throw new Exception("Undeclared local variable: " + rest);
-            il.append(InstructionFactory.createStore(Type.OBJECT, localVariables.get(rest).getIndex()));
+        	if (localVariables.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.OBJECT, localVariables.get(rest).getIndex()));
+            else if (argIndexes.containsKey(rest))
+            	il.append(InstructionFactory.createStore(Type.OBJECT, argIndexes.get(rest)));
+            else
+            	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x3b: // istore_0
             il.append(InstructionFactory.createStore(Type.INT, 0));
