@@ -96,7 +96,7 @@ public class CallSiteDescriptor {
     /* Explodes any flattening parts. Creates and puts in place a new callsite
      * and enlarged-as-needed argument arrays.
      */
-    public void explodeFlattening(CallFrame cf) {
+    public CallSiteDescriptor explodeFlattening(CallFrame cf) {
         ArrayList<Byte> newFlags = new ArrayList<Byte>();
         ArrayList<SixModelObject> newObjArgs = new ArrayList<SixModelObject>();
         ArrayList<String> newNames = new ArrayList<String>();
@@ -155,11 +155,13 @@ public class CallSiteDescriptor {
         String[] newNamesArr = new String[newNames.size()];
         for (int i = 0; i < newNamesArr.length; i++)
             newNamesArr[i] = newNames.get(i);
-        cf.callSite = new CallSiteDescriptor(newFlagsArr, newNamesArr);
+        CallSiteDescriptor exploded = new CallSiteDescriptor(newFlagsArr, newNamesArr);
         
         if (cf.proc_oArg.length < newObjArgs.size())
             cf.proc_oArg = new SixModelObject[newObjArgs.size()];
         for (int i = 0; i < newObjArgs.size(); i++)
             cf.proc_oArg[i] = newObjArgs.get(i);
+        
+        return exploded;
     }
 }

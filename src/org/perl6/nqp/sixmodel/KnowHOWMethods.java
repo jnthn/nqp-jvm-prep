@@ -17,10 +17,10 @@ import org.perl6.nqp.sixmodel.reprs.*;
 public class KnowHOWMethods extends CompilationUnit {
     public void new_type(ThreadContext tc, CallSiteDescriptor csd) {
         /* Get arguments. */
-    	Ops.checkarity(tc.curFrame, 1, 1);
-        SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-        String repr_arg = Ops.namedparam_opt_s(tc.curFrame, "repr");
-        String name_arg = Ops.namedparam_opt_s(tc.curFrame, "name");
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+        SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
+        String repr_arg = Ops.namedparam_opt_s(tc.curFrame, csd, "repr");
+        String name_arg = Ops.namedparam_opt_s(tc.curFrame, csd, "name");
         if (self == null || !(self.st.REPR instanceof KnowHOWREPR))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object with REPR KnowHOWREPR");
         
@@ -52,10 +52,10 @@ public class KnowHOWMethods extends CompilationUnit {
     }
     
     public void add_method(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 4, 4);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-        String name = Ops.posparam_s(tc.curFrame, 2);
-        SixModelObject method = Ops.posparam_o(tc.curFrame, 3);
+    	csd = Ops.checkarity(tc.curFrame, csd, 4, 4);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
+        String name = Ops.posparam_s(tc.curFrame, csd, 2);
+        SixModelObject method = Ops.posparam_o(tc.curFrame, csd, 3);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -67,9 +67,9 @@ public class KnowHOWMethods extends CompilationUnit {
     }
     
     public void add_attribute(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 3, 3);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-        SixModelObject attribute = Ops.posparam_o(tc.curFrame, 2);
+    	csd = Ops.checkarity(tc.curFrame, csd, 3, 3);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
+        SixModelObject attribute = Ops.posparam_o(tc.curFrame, csd, 2);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -83,9 +83,9 @@ public class KnowHOWMethods extends CompilationUnit {
     }
     
     public void compose(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-        SixModelObject type_obj = Ops.posparam_o(tc.curFrame, 1);
+    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
+        SixModelObject type_obj = Ops.posparam_o(tc.curFrame, csd, 1);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -149,8 +149,8 @@ public class KnowHOWMethods extends CompilationUnit {
     }
 
     public void attributes(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -168,8 +168,8 @@ public class KnowHOWMethods extends CompilationUnit {
     }
 
     public void methods(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -187,8 +187,8 @@ public class KnowHOWMethods extends CompilationUnit {
     }
     
     public void name(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 2, 2);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 2, 2);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         
         if (self == null || !(self instanceof KnowHOWREPRInstance))
             throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -199,11 +199,11 @@ public class KnowHOWMethods extends CompilationUnit {
     
     public void attr_new(ThreadContext tc, CallSiteDescriptor csd) {
         /* Process arguments. */
-    	Ops.checkarity(tc.curFrame, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
-        String name_arg = Ops.namedparam_s(tc.curFrame, "name");
-        SixModelObject type_arg = Ops.namedparam_opt_o(tc.curFrame, "type");
-        long bt_arg = Ops.namedparam_opt_i(tc.curFrame, "box_target");
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
+        String name_arg = Ops.namedparam_s(tc.curFrame, csd, "name");
+        SixModelObject type_arg = Ops.namedparam_opt_o(tc.curFrame, csd, "type");
+        long bt_arg = Ops.namedparam_opt_i(tc.curFrame, csd, "box_target");
 
         /* Allocate attribute object. */
         REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
@@ -221,29 +221,29 @@ public class KnowHOWMethods extends CompilationUnit {
     }
 
     public void attr_compose(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         Ops.return_o(self, tc.curFrame);
         tc.curFrame.leave();
     }
 
     public void attr_name(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         Ops.return_s(((KnowHOWAttributeInstance)self).name, tc.curFrame);
         tc.curFrame.leave();
     }
 
     public void attr_type(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         Ops.return_o(((KnowHOWAttributeInstance)self).type, tc.curFrame);
         tc.curFrame.leave();
     }
 
     public void attr_box_target(ThreadContext tc, CallSiteDescriptor csd) {
-    	Ops.checkarity(tc.curFrame, 1, 1);
-    	SixModelObject self = Ops.posparam_o(tc.curFrame, 0);
+    	csd = Ops.checkarity(tc.curFrame, csd, 1, 1);
+    	SixModelObject self = Ops.posparam_o(tc.curFrame, csd, 0);
         Ops.return_i(((KnowHOWAttributeInstance)self).box_target, tc.curFrame);
         tc.curFrame.leave();
     }

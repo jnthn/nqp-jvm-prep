@@ -709,20 +709,20 @@ public final class Ops {
     public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
     
     /* Invocation arity check. */
-    public static void checkarity(CallFrame cf, int required, int accepted) {
+    public static CallSiteDescriptor checkarity(CallFrame cf, CallSiteDescriptor cs, int required, int accepted) {
         if (cf.caller != null)
         	cf.proc_oArg = cf.caller.oArg;
-    	if (cf.callSite.hasFlattening)
-            cf.callSite.explodeFlattening(cf);
-        int positionals = cf.callSite.numPositionals;
+    	if (cs.hasFlattening)
+            cs = cs.explodeFlattening(cf);
+        int positionals = cs.numPositionals;
         if (positionals < required || positionals > accepted && accepted != -1)
             throw ExceptionHandling.dieInternal(cf.tc, "Wrong number of arguments passed; expected " +
                 required + ".." + accepted + ", but got " + positionals);
+        return cs;
     }
     
     /* Required positional parameter fetching. */
-    public static SixModelObject posparam_o(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static SixModelObject posparam_o(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_OBJ:
             return cf.proc_oArg[cs.argIdx[idx]];
@@ -736,8 +736,7 @@ public final class Ops {
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static long posparam_i(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static long posparam_i(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_INT:
             return cf.caller.iArg[cs.argIdx[idx]];
@@ -751,8 +750,7 @@ public final class Ops {
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static double posparam_n(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static double posparam_n(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_NUM:
             return cf.caller.nArg[cs.argIdx[idx]];
@@ -766,8 +764,7 @@ public final class Ops {
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static String posparam_s(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static String posparam_s(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_STR:
             return cf.caller.sArg[cs.argIdx[idx]];
@@ -783,44 +780,40 @@ public final class Ops {
     }
     
     /* Optional positional parameter fetching. */
-    public static SixModelObject posparam_opt_o(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static SixModelObject posparam_opt_o(CallFrame cf, CallSiteDescriptor cs, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_o(cf, idx);
+            return posparam_o(cf, cs, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return null;
         }
     }
-    public static long posparam_opt_i(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static long posparam_opt_i(CallFrame cf, CallSiteDescriptor cs, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_i(cf, idx);
+            return posparam_i(cf, cs, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return 0;
         }
     }
-    public static double posparam_opt_n(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static double posparam_opt_n(CallFrame cf, CallSiteDescriptor cs, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_n(cf, idx);
+            return posparam_n(cf, cs, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return 0.0;
         }
     }
-    public static String posparam_opt_s(CallFrame cf, int idx) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static String posparam_opt_s(CallFrame cf, CallSiteDescriptor cs, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_s(cf, idx);
+            return posparam_s(cf, cs, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -829,9 +822,7 @@ public final class Ops {
     }
     
     /* Slurpy positional parameter. */
-    public static SixModelObject posslurpy(ThreadContext tc, CallFrame cf, int fromIdx) {
-        CallSiteDescriptor cs = cf.callSite;
-        
+    public static SixModelObject posslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs, int fromIdx) {
         /* Create result. */
         HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
         SixModelObject resType = hllConfig.slurpyArrayType;
@@ -860,8 +851,7 @@ public final class Ops {
     }
     
     /* Required named parameter getting. */
-    public static SixModelObject namedparam_o(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static SixModelObject namedparam_o(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -882,8 +872,7 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static long namedparam_i(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static long namedparam_i(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -904,8 +893,7 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static double namedparam_n(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static double namedparam_n(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -926,8 +914,7 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static String namedparam_s(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static String namedparam_s(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -950,8 +937,7 @@ public final class Ops {
     }
     
     /* Optional named parameter getting. */
-    public static SixModelObject namedparam_opt_o(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static SixModelObject namedparam_opt_o(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -975,8 +961,7 @@ public final class Ops {
             return null;
         }
     }
-    public static long namedparam_opt_i(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static long namedparam_opt_i(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -1000,8 +985,7 @@ public final class Ops {
             return 0;
         }
     }
-    public static double namedparam_opt_n(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static double namedparam_opt_n(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -1025,8 +1009,7 @@ public final class Ops {
             return 0.0;
         }
     }
-    public static String namedparam_opt_s(CallFrame cf, String name) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static String namedparam_opt_s(CallFrame cf, CallSiteDescriptor cs, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -1052,8 +1035,7 @@ public final class Ops {
     }
     
     /* Slurpy named parameter. */
-    public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf) {
-        CallSiteDescriptor cs = cf.callSite;
+    public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs) {
         
         /* Create result. */
         HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
@@ -1145,21 +1127,21 @@ public final class Ops {
     }
     
     /* Capture related operations. */
-    public static SixModelObject usecapture(ThreadContext tc) {
+    public static SixModelObject usecapture(ThreadContext tc, CallSiteDescriptor cs) {
     	CallCaptureInstance cc = tc.savedCC;
     	CallFrame cf = tc.curFrame;
-    	cc.descriptor = tc.curFrame.callSite;
+    	cc.descriptor = cs;
     	cc.oArg = cf.proc_oArg == null ? null : cf.proc_oArg.clone();
     	cc.iArg = cf.caller.iArg == null ? null : cf.caller.iArg.clone();
     	cc.nArg = cf.caller.nArg == null ? null : cf.caller.nArg.clone();
     	cc.sArg = cf.caller.sArg == null ? null : cf.caller.sArg.clone();
     	return cc;
     }
-    public static SixModelObject savecapture(ThreadContext tc) {
+    public static SixModelObject savecapture(ThreadContext tc, CallSiteDescriptor cs) {
     	SixModelObject CallCapture = tc.gc.CallCapture;
     	CallCaptureInstance cc = (CallCaptureInstance)CallCapture.st.REPR.allocate(tc, CallCapture.st);
     	CallFrame cf = tc.curFrame;
-    	cc.descriptor = tc.curFrame.callSite;
+    	cc.descriptor = cs;
     	if (cf.caller.oArg != null)
     		cc.oArg = cf.caller.oArg.clone();
     	if (cf.caller.iArg != null)
@@ -1278,9 +1260,8 @@ public final class Ops {
     			cr = (CodeRef)is.InvocationHandler;
     	}
         
-        // Create a new call frame and set caller and callsite.
+        // Create a new call frame.
         CallFrame cf = new CallFrame(tc, cr);
-        cf.callSite = csd;
         
         try {
         	// Do the invocation.

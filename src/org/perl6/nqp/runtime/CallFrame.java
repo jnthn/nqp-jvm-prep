@@ -16,11 +16,6 @@ public class CallFrame {
     public ThreadContext tc;
     
     /**
-     * Call site descriptor, describing the kinds of arguments being passed.
-     */
-    public CallSiteDescriptor callSite;
-    
-    /**
      * The next entry in the static (lexical) chain.
      */
     public CallFrame outer;

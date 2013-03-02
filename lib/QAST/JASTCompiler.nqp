@@ -1476,8 +1476,22 @@ QAST::OperationsJAST.map_classlib_core_op('lexprimspec', $TYPE_OPS, 'lexprimspec
 
 # Argument capture processing, for writing things like multi-dispatchers in
 # high level languages.
-QAST::OperationsJAST.map_classlib_core_op('usecapture', $TYPE_OPS, 'usecapture', [], $RT_OBJ, :tc);
-QAST::OperationsJAST.map_classlib_core_op('savecapture', $TYPE_OPS, 'savecapture', [], $RT_OBJ, :tc);
+QAST::OperationsJAST.add_core_op('usecapture', -> $qastcomp, $op {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('aload'), 'csd' ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'),
+        $TYPE_OPS, 'usecapture', $TYPE_SMO, $TYPE_TC, $TYPE_CSD ));
+    result($il, $RT_OBJ)
+});
+QAST::OperationsJAST.add_core_op('savecapture', -> $qastcomp, $op {
+    my $il := JAST::InstructionList.new();
+    $il.append(JAST::Instruction.new( :op('aload_1') ));
+    $il.append(JAST::Instruction.new( :op('aload'), 'csd' ));
+    $il.append(JAST::Instruction.new( :op('invokestatic'),
+        $TYPE_OPS, 'savecapture', $TYPE_SMO, $TYPE_TC, $TYPE_CSD ));
+    result($il, $RT_OBJ)
+});
 QAST::OperationsJAST.map_classlib_core_op('captureposelems', $TYPE_OPS, 'captureposelems', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('captureposarg', $TYPE_OPS, 'captureposarg', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('captureposarg_i', $TYPE_OPS, 'captureposarg_i', [$RT_OBJ, $RT_INT], $RT_INT, :tc);
@@ -2691,10 +2705,12 @@ class QAST::CompilerJAST {
             # Emit arity check instruction.
             my $il := JAST::InstructionList.new();
             $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+            $il.append(JAST::Instruction.new( :op('aload'), 'csd' ));
             $il.append(JAST::PushIndex.new( :value($pos_required) ));
             $il.append(JAST::PushIndex.new( :value($pos_slurpy ?? -1 !! $pos_required + $pos_optional) ));
             $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                "checkarity", 'Void', $TYPE_CF, 'Integer', 'Integer' ));
+                "checkarity", $TYPE_CSD, $TYPE_CF, $TYPE_CSD, 'Integer', 'Integer' ));
+            $il.append(JAST::Instruction.new( :op('astore'), 'csd' ));
             
             # Emit instructions to load each parameter.
             my int $param_idx := 0;
@@ -2704,14 +2720,15 @@ class QAST::CompilerJAST {
                     $type := $RT_OBJ;
                     $il.append(JAST::Instruction.new( :op('aload_1') ));
                     $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $il.append(JAST::Instruction.new( :op('aload'), 'csd' ));
                     if $_.named {
                         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                            "namedslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF ));
+                            "namedslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF, $TYPE_CSD ));
                     }
                     else {
                         $il.append(JAST::PushIndex.new( :value($pos_required + $pos_optional) ));
                         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                            "posslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF, 'Integer' ));
+                            "posslurpy", $TYPE_SMO, $TYPE_TC, $TYPE_CF, $TYPE_CSD, 'Integer' ));
                     }
                 }
                 else {
@@ -2720,15 +2737,16 @@ class QAST::CompilerJAST {
                     my $tc   := typechar($type);
                     my $opt  := $_.default ?? "opt_" !! "";
                     $il.append(JAST::Instruction.new( :op('aload'), 'cf' ));
+                    $il.append(JAST::Instruction.new( :op('aload'), 'csd' ));
                     if $_.named {
                         $il.append(JAST::PushSVal.new( :value($_.named) ));
                         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                            "namedparam_$opt$tc", $jt, $TYPE_CF, $TYPE_STR ));
+                            "namedparam_$opt$tc", $jt, $TYPE_CF, $TYPE_CSD, $TYPE_STR ));
                     }
                     else {
                         $il.append(JAST::PushIndex.new( :value($param_idx) ));
                         $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS,
-                            "posparam_$opt$tc", $jt, $TYPE_CF, 'Integer' ));
+                            "posparam_$opt$tc", $jt, $TYPE_CF, $TYPE_CSD, 'Integer' ));
                     }
                     if $opt {
                         my $lbl := JAST::Label.new( :name(self.unique("opt_param")) );
