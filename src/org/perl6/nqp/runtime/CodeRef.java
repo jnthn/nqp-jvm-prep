@@ -40,11 +40,10 @@ public class CodeRef extends SixModelObject {
     		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
         staticInfo = new StaticCodeInfo(compUnit, mh, name,uniqueId,
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
-                oMaxArgs, iMaxArgs, nMaxArgs, sMaxArgs, handlers);
+                handlers);
     }
     
     /**

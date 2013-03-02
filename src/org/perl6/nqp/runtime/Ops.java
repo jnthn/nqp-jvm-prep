@@ -702,16 +702,8 @@ public final class Ops {
     	}
     }
     
-    /* Argument setting. */
-    public static void arg(long v, long[] args, int i) { args[i] = v; }
-    public static void arg(double v, double[] args, int i) { args[i] = v; }
-    public static void arg(String v, String[] args, int i) { args[i] = v; }
-    public static void arg(SixModelObject v, SixModelObject[] args, int i) { args[i] = v; }
-    
     /* Invocation arity check. */
     public static CallSiteDescriptor checkarity(CallFrame cf, CallSiteDescriptor cs, int required, int accepted) {
-        if (cf.caller != null)
-        	cf.proc_oArg = cf.caller.oArg;
     	if (cs.hasFlattening)
             cs = cs.explodeFlattening(cf);
         int positionals = cs.numPositionals;
@@ -725,13 +717,13 @@ public final class Ops {
     public static SixModelObject posparam_o(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.proc_oArg[cs.argIdx[idx]];
+            return (SixModelObject)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return box_i(cf.caller.iArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+            return box_i((long)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
         case CallSiteDescriptor.ARG_NUM:
-            return box_n(cf.caller.nArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+            return box_n((double)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
         case CallSiteDescriptor.ARG_STR:
-            return box_s(cf.caller.sArg[cs.argIdx[idx]], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+            return box_s((String)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
@@ -739,13 +731,13 @@ public final class Ops {
     public static long posparam_i(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_INT:
-            return cf.caller.iArg[cs.argIdx[idx]];
+            return (long)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_NUM:
-            return (long)cf.caller.nArg[cs.argIdx[idx]];
+            return (long)(double)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_STR:
-            return coerce_s2i(cf.caller.sArg[cs.argIdx[idx]]);
+            return coerce_s2i((String)cf.caller.args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.proc_oArg[cs.argIdx[idx]].get_int(cf.tc);
+            return ((SixModelObject)cf.caller.args[idx]).get_int(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
@@ -753,13 +745,13 @@ public final class Ops {
     public static double posparam_n(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_NUM:
-            return cf.caller.nArg[cs.argIdx[idx]];
+            return (double)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return (double)cf.caller.iArg[cs.argIdx[idx]];
+            return (double)(long)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_STR:
-            return coerce_s2n(cf.caller.sArg[cs.argIdx[idx]]);
+            return coerce_s2n((String)cf.caller.args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.proc_oArg[cs.argIdx[idx]].get_num(cf.tc);
+            return ((SixModelObject)cf.caller.args[idx]).get_num(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
@@ -767,13 +759,13 @@ public final class Ops {
     public static String posparam_s(CallFrame cf, CallSiteDescriptor cs, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_STR:
-            return cf.caller.sArg[cs.argIdx[idx]];
+            return (String)cf.caller.args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return coerce_i2s(cf.caller.iArg[cs.argIdx[idx]]);
+            return coerce_i2s((long)cf.caller.args[idx]);
         case CallSiteDescriptor.ARG_NUM:
-            return coerce_n2s(cf.caller.nArg[cs.argIdx[idx]]);
+            return coerce_n2s((double)cf.caller.args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return cf.proc_oArg[cs.argIdx[idx]].get_str(cf.tc);
+            return ((SixModelObject)cf.caller.args[idx]).get_str(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
@@ -833,16 +825,16 @@ public final class Ops {
         for (int i = fromIdx; i < cs.numPositionals; i++) {
             switch (cs.argFlags[i]) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.push_boxed(tc, cf.proc_oArg[cs.argIdx[i]]);
+                result.push_boxed(tc, (SixModelObject)cf.caller.args[i]);
                 break;
             case CallSiteDescriptor.ARG_INT:
-                result.push_boxed(tc, box_i(cf.caller.iArg[cs.argIdx[i]], hllConfig.intBoxType, tc));
+                result.push_boxed(tc, box_i((long)cf.caller.args[i], hllConfig.intBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_NUM:
-                result.push_boxed(tc, box_n(cf.caller.nArg[cs.argIdx[i]], hllConfig.numBoxType, tc));
+                result.push_boxed(tc, box_n((double)cf.caller.args[i], hllConfig.numBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_STR:
-                result.push_boxed(tc, box_s(cf.caller.sArg[cs.argIdx[i]], hllConfig.strBoxType, tc));
+                result.push_boxed(tc, box_s((String)cf.caller.args[i], hllConfig.strBoxType, tc));
                 break;
             }
         }
@@ -858,13 +850,13 @@ public final class Ops {
         if (lookup != null) {
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3];
+                return (SixModelObject)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+                return box_i((long)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
-                return box_n(cf.caller.nArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+                return box_n((double)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
             case CallSiteDescriptor.ARG_STR:
-                return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+                return box_s((String)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -879,13 +871,13 @@ public final class Ops {
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_INT:
-                return cf.caller.iArg[lookup >> 3];
+                return (long)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_NUM:
-                return (long)cf.caller.nArg[lookup >> 3];
+                return (long)(double)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2i(cf.caller.sArg[lookup >> 3]);
+                return coerce_s2i((String)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_int(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -900,13 +892,13 @@ public final class Ops {
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_NUM:
-                return cf.caller.nArg[lookup >> 3];
+                return (double)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return (double)cf.caller.iArg[lookup >> 3];
+                return (double)(long)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2n(cf.caller.sArg[lookup >> 3]);
+                return coerce_s2n((String)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_num(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -921,13 +913,13 @@ public final class Ops {
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_STR:
-                return cf.caller.sArg[lookup >> 3];
+                return (String)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return coerce_i2s(cf.caller.iArg[lookup >> 3]);
+                return coerce_i2s((long)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_NUM:
-                return coerce_n2s(cf.caller.nArg[lookup >> 3]);
+                return coerce_n2s((double)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_str(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -945,13 +937,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3];
+                return (SixModelObject)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return box_i(cf.caller.iArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+                return box_i((long)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
-                return box_n(cf.caller.nArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+                return box_n((double)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
             case CallSiteDescriptor.ARG_STR:
-                return box_s(cf.caller.sArg[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+                return box_s((String)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -969,13 +961,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_INT:
-                return cf.caller.iArg[lookup >> 3];
+                return (long)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_NUM:
-                return (long)cf.caller.nArg[lookup >> 3];
+                return (long)(double)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2i(cf.caller.sArg[lookup >> 3]);
+                return coerce_s2i((String)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_int(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_int(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -993,13 +985,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_NUM:
-                return cf.caller.nArg[lookup >> 3];
+                return (double)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return (double)cf.caller.iArg[lookup >> 3];
+                return (double)(long)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2n(cf.caller.sArg[lookup >> 3]);
+                return coerce_s2n((String)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_num(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_num(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -1017,13 +1009,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_STR:
-                return cf.caller.sArg[lookup >> 3];
+                return (String)cf.caller.args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return coerce_i2s(cf.caller.iArg[lookup >> 3]);
+                return coerce_i2s((long)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_NUM:
-                return coerce_n2s(cf.caller.nArg[lookup >> 3]);
+                return coerce_n2s((double)cf.caller.args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return cf.proc_oArg[lookup >> 3].get_str(cf.tc);
+                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_str(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -1036,7 +1028,6 @@ public final class Ops {
     
     /* Slurpy named parameter. */
     public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs) {
-        
         /* Create result. */
         HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
         SixModelObject resType = hllConfig.slurpyHashType;
@@ -1050,16 +1041,16 @@ public final class Ops {
             Integer lookup = cf.workingNameMap.get(name);
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.bind_key_boxed(tc, name, cf.proc_oArg[lookup >> 3]);
+                result.bind_key_boxed(tc, name, (SixModelObject)cf.caller.args[lookup >> 3]);
                 break;
             case CallSiteDescriptor.ARG_INT:
-                result.bind_key_boxed(tc, name, box_i(cf.caller.iArg[lookup >> 3], hllConfig.intBoxType, tc));
+                result.bind_key_boxed(tc, name, box_i((long)cf.caller.args[lookup >> 3], hllConfig.intBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_NUM:
-                result.bind_key_boxed(tc, name, box_n(cf.caller.nArg[lookup >> 3], hllConfig.numBoxType, tc));
+                result.bind_key_boxed(tc, name, box_n((double)cf.caller.args[lookup >> 3], hllConfig.numBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_STR:
-                result.bind_key_boxed(tc, name, box_s(cf.caller.sArg[lookup >> 3], hllConfig.strBoxType, tc));
+                result.bind_key_boxed(tc, name, box_s((String)cf.caller.args[lookup >> 3], hllConfig.strBoxType, tc));
                 break;
             }
         }
@@ -1131,10 +1122,7 @@ public final class Ops {
     	CallCaptureInstance cc = tc.savedCC;
     	CallFrame cf = tc.curFrame;
     	cc.descriptor = cs;
-    	cc.oArg = cf.proc_oArg == null ? null : cf.proc_oArg.clone();
-    	cc.iArg = cf.caller.iArg == null ? null : cf.caller.iArg.clone();
-    	cc.nArg = cf.caller.nArg == null ? null : cf.caller.nArg.clone();
-    	cc.sArg = cf.caller.sArg == null ? null : cf.caller.sArg.clone();
+    	cc.args = cf.caller.args == null ? null : cf.caller.args.clone();
     	return cc;
     }
     public static SixModelObject savecapture(ThreadContext tc, CallSiteDescriptor cs) {
@@ -1142,14 +1130,8 @@ public final class Ops {
     	CallCaptureInstance cc = (CallCaptureInstance)CallCapture.st.REPR.allocate(tc, CallCapture.st);
     	CallFrame cf = tc.curFrame;
     	cc.descriptor = cs;
-    	if (cf.caller.oArg != null)
-    		cc.oArg = cf.caller.oArg.clone();
-    	if (cf.caller.iArg != null)
-    		cc.iArg = cf.caller.iArg.clone();
-    	if (cf.caller.nArg != null)
-    		cc.nArg = cf.caller.nArg.clone();
-    	if (cf.caller.sArg != null)
-    		cc.sArg = cf.caller.sArg.clone();
+    	if (cf.caller.args != null)
+    		cc.args = cf.caller.args.clone();
     	return cc;
     }
     public static long captureposelems(SixModelObject obj, ThreadContext tc) {
@@ -1164,15 +1146,15 @@ public final class Ops {
     		int i = (int)idx;
     		switch (cc.descriptor.argFlags[i]) {
     		case CallSiteDescriptor.ARG_OBJ:
-    			return cc.oArg[cc.descriptor.argIdx[i]];
+    			return (SixModelObject)cc.args[i];
     		case CallSiteDescriptor.ARG_INT:
-    			return box_i(cc.iArg[cc.descriptor.argIdx[i]],
+    			return box_i((long)cc.args[i],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
     		case CallSiteDescriptor.ARG_NUM:
-    			return box_n(cc.nArg[cc.descriptor.argIdx[i]],
+    			return box_n((double)cc.args[i],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
     		case CallSiteDescriptor.ARG_STR:
-    			return box_s(cc.sArg[cc.descriptor.argIdx[i]],
+    			return box_s((String)cc.args[i],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     		default:
     			throw ExceptionHandling.dieInternal(tc, "Invalid positional argument access from capture");
@@ -1194,18 +1176,18 @@ public final class Ops {
     		CallSiteDescriptor csd = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
     		switch (csd.argFlags[0]) {
     		case CallSiteDescriptor.ARG_OBJ:
-    			throwee.payload = tc.curFrame.oArg[0];
+    			throwee.payload = (SixModelObject)tc.curFrame.args[0];
     			break;
     		case CallSiteDescriptor.ARG_INT:
-    			throwee.payload = box_i(tc.curFrame.iArg[0],
+    			throwee.payload = box_i((long)tc.curFrame.args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
     			break;
     		case CallSiteDescriptor.ARG_NUM:
-    			throwee.payload = box_n(tc.curFrame.nArg[0],
+    			throwee.payload = box_n((double)tc.curFrame.args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
     			break;
     		case CallSiteDescriptor.ARG_STR:
-    			throwee.payload = box_s(tc.curFrame.sArg[0],
+    			throwee.payload = box_s((String)tc.curFrame.args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     			break;
     		default:
@@ -1226,20 +1208,19 @@ public final class Ops {
     public static void invokeMain(ThreadContext tc, SixModelObject invokee, String prog, String[] argv) {
     	/* Build argument list from argv. */
     	SixModelObject Str = ((CodeRef)invokee).staticInfo.compUnit.hllConfig.strBoxType;
-    	SixModelObject[] oArg = new SixModelObject[argv.length + 1];
+    	Object[] args = new Object[argv.length + 1];
     	byte[] callsite = new byte[argv.length + 1];
-    	oArg[0] = box_s(prog, Str, tc);
+    	args[0] = box_s(prog, Str, tc);
     	callsite[0] = CallSiteDescriptor.ARG_OBJ;
     	for (int i = 0; i < argv.length; i++) {
-    		oArg[i + 1] = box_s(argv[i], Str, tc);
+    		args[i + 1] = box_s(argv[i], Str, tc);
     		callsite[i + 1] = CallSiteDescriptor.ARG_OBJ;
     	}
     	
     	/* Create a fake frame for passing the args. */
     	CallFrame fake = new CallFrame();
-    	fake.oArg = oArg;
-    	fake.codeRef = new CodeRef(null, null, "", "", null, null, null, null, 
-    			(short)oArg.length, (short)0, (short)0, (short)0, null);
+    	fake.args = args;
+    	fake.codeRef = new CodeRef(null, null, "", "", null, null, null, null, null);
     	tc.curFrame = fake;
     	
     	invokeInternal(tc, invokee, new CallSiteDescriptor(callsite, null));
@@ -1277,26 +1258,9 @@ public final class Ops {
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
     	if (capture instanceof CallCaptureInstance) {
     		CallCaptureInstance cc = (CallCaptureInstance)capture;
-    		
-    		SixModelObject[] oArgOrig = tc.curFrame.oArg;
-    		long[] iArgOrig = tc.curFrame.iArg;
-    		double[] nArgOrig = tc.curFrame.nArg;
-    		String[] sArgOrig = tc.curFrame.sArg;
-    		
-    		try {
-    			tc.curFrame.oArg = cc.oArg;
-    			tc.curFrame.iArg = cc.iArg;
-    			tc.curFrame.nArg = cc.nArg;
-    			tc.curFrame.sArg = cc.sArg;
-    			invokeInternal(tc, invokee, cc.descriptor);
-    			return result_o(tc.curFrame);
-    		}
-    		finally {
-    			tc.curFrame.oArg = oArgOrig;
-    			tc.curFrame.iArg = iArgOrig;
-    			tc.curFrame.nArg = nArgOrig;
-    			tc.curFrame.sArg = sArgOrig;
-    		}
+    		tc.curFrame.args = cc.args;
+    		invokeInternal(tc, invokee, cc.descriptor);
+    		return result_o(tc.curFrame);
     	}
     	else {
     		throw ExceptionHandling.dieInternal(tc, "invokewithcapture requires a CallCapture");
@@ -1860,7 +1824,7 @@ public final class Ops {
         BoolificationSpec bs = obj.st.BoolificationSpec;
         switch (bs == null ? BoolificationSpec.MODE_NOT_TYPE_OBJECT : bs.Mode) {
         case BoolificationSpec.MODE_CALL_METHOD:
-        	tc.curFrame.oArg[0] = obj;
+        	tc.curFrame.args = new Object[] { obj };
         	invokeInternal(tc, bs.Method, invocantCallSite);
         	return istrue(result_o(tc.curFrame), tc);
         case BoolificationSpec.MODE_UNBOX_INT:
@@ -1904,7 +1868,7 @@ public final class Ops {
     	// bulk.
     	SixModelObject numMeth = obj.st.MethodCache.get("Str");
     	if (numMeth != null) {
-    		tc.curFrame.oArg[0] = obj;
+    		tc.curFrame.args = new Object[] { obj };
     		invokeInternal(tc, numMeth, invocantCallSite);
         	return result_s(tc.curFrame);
     	}
@@ -1931,7 +1895,7 @@ public final class Ops {
     	// bulk.
     	SixModelObject numMeth = obj.st.MethodCache.get("Num");
     	if (numMeth != null) {
-    		tc.curFrame.oArg[0] = obj;
+    		tc.curFrame.args = new Object[] { obj };
     		invokeInternal(tc, numMeth, invocantCallSite);
         	return result_n(tc.curFrame);
     	}

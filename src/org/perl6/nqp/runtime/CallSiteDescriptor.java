@@ -22,9 +22,6 @@ public class CallSiteDescriptor {
     /* Flags, one per argument that is being passed. */
     public byte[] argFlags;
     
-    /* Positional argument indexes. */
-    public int[] argIdx;
-    
     /* Maps string names for named params do an Integer that has
      * arg index << 3 + type flag. */
     public HashMap<String, Integer> nameMap;
@@ -49,43 +46,44 @@ public class CallSiteDescriptor {
             nameMap = emptyNameMap;
         this.names = names;
         
-        int oPos = 0, iPos = 0, nPos = 0, sPos = 0, arg = 0, name = 0;
-        argIdx = new int[flags.length];
+        int pos = 0, name = 0;
         for (byte af : argFlags) {
             switch (af) {
             case ARG_OBJ:
-                argIdx[arg++] = oPos++;
+                pos++;
                 numPositionals++;
                 break;
             case ARG_INT:
-                argIdx[arg++] = iPos++;
+                pos++;
                 numPositionals++;
                 break;
             case ARG_NUM:
-                argIdx[arg++] = nPos++;
+                pos++;
                 numPositionals++;
                 break;
             case ARG_STR:
-                argIdx[arg++] = sPos++;
+            	pos++;
                 numPositionals++;
                 break;
             case ARG_OBJ | ARG_NAMED:
-                nameMap.put(names[name++], (oPos++ << 3) | ARG_OBJ);
+                nameMap.put(names[name++], (pos++ << 3) | ARG_OBJ);
                 break;
             case ARG_INT | ARG_NAMED:
-                nameMap.put(names[name++], (iPos++ << 3) | ARG_INT);
+                nameMap.put(names[name++], (pos++ << 3) | ARG_INT);
                 break;
             case ARG_NUM | ARG_NAMED:
-                nameMap.put(names[name++], (nPos++ << 3) | ARG_NUM);
+                nameMap.put(names[name++], (pos++ << 3) | ARG_NUM);
                 break;
             case ARG_STR | ARG_NAMED:
-                nameMap.put(names[name++], (sPos++ << 3) | ARG_STR);
+                nameMap.put(names[name++], (pos++ << 3) | ARG_STR);
                 break;
             case ARG_OBJ | ARG_FLAT:
-                hasFlattening = true;
+            	pos++;
+            	hasFlattening = true;
                 break;
             case ARG_OBJ | ARG_FLAT | ARG_NAMED:
-                hasFlattening = true;
+            	pos++;
+            	hasFlattening = true;
                 break;
             default:
             	new RuntimeException("Unhandld argument flag: " + af);
@@ -98,30 +96,29 @@ public class CallSiteDescriptor {
      */
     public CallSiteDescriptor explodeFlattening(CallFrame cf) {
         ArrayList<Byte> newFlags = new ArrayList<Byte>();
-        ArrayList<SixModelObject> newObjArgs = new ArrayList<SixModelObject>();
+        ArrayList<Object> newArgs = new ArrayList<Object>();
         ArrayList<String> newNames = new ArrayList<String>();
-        
-        SixModelObject[] oldObjArgs = cf.caller.oArg;
-        int oldObjArgsIdx = 0;
+        Object[] oldArgs = cf.caller.args;
+        int oldArgsIdx = 0;
         int oldNameIdx = 0;
         
         for (byte af : argFlags) {
             switch (af) {
             case ARG_OBJ | ARG_FLAT:
-                SixModelObject flatArray = oldObjArgs[oldObjArgsIdx++];
+                SixModelObject flatArray = (SixModelObject)oldArgs[oldArgsIdx++];
                 long elems = flatArray.elems(cf.tc);
                 for (long i = 0; i < elems; i++) {
-                    newObjArgs.add(flatArray.at_pos_boxed(cf.tc, i));
+                    newArgs.add(flatArray.at_pos_boxed(cf.tc, i));
                     newFlags.add(ARG_OBJ);
                 }
                 break;
             case ARG_OBJ | ARG_FLAT | ARG_NAMED:
-                SixModelObject flatHash = oldObjArgs[oldObjArgsIdx++];
+                SixModelObject flatHash = (SixModelObject)oldArgs[oldArgsIdx++];
                 if (flatHash instanceof VMHashInstance) {
                     HashMap<String, SixModelObject> storage = ((VMHashInstance)flatHash).storage;
                     for (String key : storage.keySet()) {
                         newNames.add(key);
-                        newObjArgs.add(storage.get(key));
+                        newArgs.add(storage.get(key));
                         newFlags.add((byte)(ARG_OBJ | ARG_NAMED));
                     }
                 }
@@ -129,23 +126,17 @@ public class CallSiteDescriptor {
                     throw ExceptionHandling.dieInternal(cf.tc, "Flattening named argument must have VMHash REPR");
                 }
                 break;
-            case ARG_OBJ:
-                newObjArgs.add(oldObjArgs[oldObjArgsIdx++]);
-                newFlags.add(af);
-                break;
             case ARG_OBJ | ARG_NAMED:
-                newObjArgs.add(oldObjArgs[oldObjArgsIdx++]);
-                newNames.add(names[oldNameIdx++]);
-                newFlags.add(af);
-                break;
             case ARG_INT | ARG_NAMED:
             case ARG_NUM | ARG_NAMED:
             case ARG_STR | ARG_NAMED:
-                newNames.add(names[oldNameIdx++]);
+                newArgs.add(oldArgs[oldArgsIdx++]);
+            	newNames.add(names[oldNameIdx++]);
                 newFlags.add(af);
                 break;
             default:
-                newFlags.add(af);
+            	newArgs.add(oldArgs[oldArgsIdx++]);
+            	newFlags.add(af);
             }
         }
         
@@ -157,10 +148,9 @@ public class CallSiteDescriptor {
             newNamesArr[i] = newNames.get(i);
         CallSiteDescriptor exploded = new CallSiteDescriptor(newFlagsArr, newNamesArr);
         
-        if (cf.proc_oArg.length < newObjArgs.size())
-            cf.proc_oArg = new SixModelObject[newObjArgs.size()];
-        for (int i = 0; i < newObjArgs.size(); i++)
-            cf.proc_oArg[i] = newObjArgs.get(i);
+        cf.caller.args = new Object[newArgs.size()];
+        for (int i = 0; i < newArgs.size(); i++)
+            cf.caller.args[i] = newArgs.get(i);
         
         return exploded;
     }

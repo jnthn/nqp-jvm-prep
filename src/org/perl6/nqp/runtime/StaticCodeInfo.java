@@ -35,15 +35,7 @@ public class StaticCodeInfo implements Cloneable {
      * Most recent invocation, if any.
      */
     public CallFrame priorInvocation;
-    
-    /**
-     * Maximum argument counts by argument type.
-     */
-    public short oMaxArgs;
-    public short iMaxArgs;
-    public short nMaxArgs;
-    public short sMaxArgs;
-    
+
     /**
      * Static lexicals.
      */
@@ -122,7 +114,6 @@ public class StaticCodeInfo implements Cloneable {
     		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
         this.compUnit = compUnit;
         this.mh = mh;
@@ -132,10 +123,6 @@ public class StaticCodeInfo implements Cloneable {
         this.iLexicalNames = iLexicalNames;
         this.nLexicalNames = nLexicalNames;
         this.sLexicalNames = sLexicalNames;
-        this.oMaxArgs = oMaxArgs;
-        this.iMaxArgs = iMaxArgs;
-        this.nMaxArgs = nMaxArgs;
-        this.sMaxArgs = sMaxArgs;
         this.handlers = handlers;
         if (oLexicalNames != null)
         	this.oLexStatic = new SixModelObject[oLexicalNames.length];

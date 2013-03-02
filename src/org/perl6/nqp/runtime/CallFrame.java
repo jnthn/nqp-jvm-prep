@@ -39,24 +39,10 @@ public class CallFrame {
     public String[] sLex;
     
     /**
-     * Argument passing buffers, by type. Note that a future optimization could
-     * unify these with the lexical storage, tacking them on the end. But for
-     * now, simplicity is more helpful. Note that these are allocated once as
-     * needed at the point of entry to a block and re-used for all of the
-     * invocations that it makes. They are sized according to the maximum
-     * number of arguments of the type that are passed by any call in the
-     * block.
+     * The arguments being passed for the current call. (XXX Will become
+     * an argument in the call itself in next step of refactor.)
      */
-    public SixModelObject[] oArg;
-    public long[] iArg;
-    public double[] nArg;
-    public String[] sArg;
-    
-    /**
-     * The oArg we're currently processing (have to hold on to this since
-     * it may change due to flattening).
-     */
-    public SixModelObject[] proc_oArg;
+    public Object[] args;
     
     /**
      * Return value storage. Note that all the basic types are available and
@@ -133,16 +119,6 @@ public class CallFrame {
         if (sci.sLexicalNames != null)
             this.sLex = new String[sci.sLexicalNames.length];
 
-        // Set up argument buffers. */
-        if (sci.oMaxArgs > 0)
-            this.oArg = new SixModelObject[sci.oMaxArgs];
-        if (sci.iMaxArgs > 0)
-            this.iArg = new long[sci.iMaxArgs];
-        if (sci.nMaxArgs > 0)
-            this.nArg = new double[sci.nMaxArgs];
-        if (sci.sMaxArgs > 0)
-            this.sArg = new String[sci.sMaxArgs];
-        
         // Current call frame becomes this new one.
         tc.curFrame = this;
     }
