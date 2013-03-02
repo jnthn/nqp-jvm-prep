@@ -15,7 +15,7 @@ import org.perl6.nqp.sixmodel.reprs.*;
  * for code reference like things.
  */
 public class KnowHOWMethods extends CompilationUnit {
-    public void new_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void new_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
         /* Get arguments. */
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
@@ -56,7 +56,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
     
-    public void add_method(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void add_method(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 4, 4);
@@ -76,7 +76,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
     
-    public void add_attribute(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void add_attribute(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 3, 3);
@@ -97,7 +97,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
     
-    public void compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 2, 2);
@@ -168,7 +168,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void attributes(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attributes(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 2, 2);
@@ -192,7 +192,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void methods(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void methods(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 2, 2);
@@ -216,7 +216,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
     
-    public void name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 2, 2);
@@ -232,7 +232,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
     
-    public void attr_new(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attr_new(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	        /* Process arguments. */
@@ -260,7 +260,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void attr_compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attr_compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 1, 1);
@@ -272,7 +272,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void attr_name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attr_name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
     		csd = Ops.checkarity(cf, csd, 1, 1);
@@ -284,7 +284,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void attr_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attr_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 1, 1);
@@ -296,7 +296,7 @@ public class KnowHOWMethods extends CompilationUnit {
     	}
     }
 
-    public void attr_box_target(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd) {
+    public void attr_box_target(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	    	csd = Ops.checkarity(cf, csd, 1, 1);
@@ -313,7 +313,7 @@ public class KnowHOWMethods extends CompilationUnit {
         String[] snull = null;
         long[][] hnull = new long[0][];
         MethodType mt = MethodType.methodType(void.class, ThreadContext.class,
-        		CodeRef.class, CallSiteDescriptor.class);
+        		CodeRef.class, CallSiteDescriptor.class, Object[].class);
         Lookup l = MethodHandles.lookup();
         try {
 	        refs[0] = new CodeRef(this, l.findVirtual(KnowHOWMethods.class, "new_type", mt).bindTo(this),

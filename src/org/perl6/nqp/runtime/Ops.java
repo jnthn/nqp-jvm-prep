@@ -1243,7 +1243,8 @@ public final class Ops {
         
         try {
         	// Do the invocation.
-        	cr.staticInfo.mh.invokeExact(tc, cr, csd);
+        	cr.staticInfo.mh.invokeExact(tc, cr, csd,
+        			tc.curFrame == null ? null : tc.curFrame.args);
         }
         catch (UnwindException e) {
         	throw e;
@@ -1252,6 +1253,7 @@ public final class Ops {
         	throw e;
         }
         catch (Throwable e) {
+        	System.err.println(e.toString());
 			ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
     }

@@ -226,7 +226,11 @@ public class JASTToJVMBytecode {
                 }
                 else if (curLine.startsWith(".push_cc ")) {
                     String className = curLine.substring(".push_sc ".length());
-                    il.append(new LDC(cp.addClass((ObjectType)processType(className))));
+                    Type t = processType(className);
+                    if (t instanceof ArrayType)
+                    	il.append(new LDC(cp.addArrayClass((ArrayType)t)));
+                    else
+                    	il.append(new LDC(cp.addClass((ObjectType)t)));
                 }
                 else if (curLine.startsWith(".push_idx ")) {
                     Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
