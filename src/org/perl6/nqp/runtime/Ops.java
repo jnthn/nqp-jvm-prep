@@ -703,9 +703,11 @@ public final class Ops {
     }
     
     /* Invocation arity check. */
-    public static CallSiteDescriptor checkarity(CallFrame cf, CallSiteDescriptor cs, int required, int accepted) {
+    public static CallSiteDescriptor checkarity(CallFrame cf, CallSiteDescriptor cs, Object[] args, int required, int accepted) {
     	if (cs.hasFlattening)
-            cs = cs.explodeFlattening(cf);
+            cs = cs.explodeFlattening(cf, args);
+    	else
+    		cf.tc.flatArgs = args;
         int positionals = cs.numPositionals;
         if (positionals < required || positionals > accepted && accepted != -1)
             throw ExceptionHandling.dieInternal(cf.tc, "Wrong number of arguments passed; expected " +
@@ -714,98 +716,98 @@ public final class Ops {
     }
     
     /* Required positional parameter fetching. */
-    public static SixModelObject posparam_o(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static SixModelObject posparam_o(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_OBJ:
-            return (SixModelObject)cf.caller.args[idx];
+            return (SixModelObject)args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return box_i((long)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+            return box_i((long)args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
         case CallSiteDescriptor.ARG_NUM:
-            return box_n((double)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+            return box_n((double)args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
         case CallSiteDescriptor.ARG_STR:
-            return box_s((String)cf.caller.args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+            return box_s((String)args[idx], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static long posparam_i(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static long posparam_i(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_INT:
-            return (long)cf.caller.args[idx];
+            return (long)args[idx];
         case CallSiteDescriptor.ARG_NUM:
-            return (long)(double)cf.caller.args[idx];
+            return (long)(double)args[idx];
         case CallSiteDescriptor.ARG_STR:
-            return coerce_s2i((String)cf.caller.args[idx]);
+            return coerce_s2i((String)args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return ((SixModelObject)cf.caller.args[idx]).get_int(cf.tc);
+            return ((SixModelObject)args[idx]).get_int(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static double posparam_n(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static double posparam_n(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_NUM:
-            return (double)cf.caller.args[idx];
+            return (double)args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return (double)(long)cf.caller.args[idx];
+            return (double)(long)args[idx];
         case CallSiteDescriptor.ARG_STR:
-            return coerce_s2n((String)cf.caller.args[idx]);
+            return coerce_s2n((String)args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return ((SixModelObject)cf.caller.args[idx]).get_num(cf.tc);
+            return ((SixModelObject)args[idx]).get_num(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
-    public static String posparam_s(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static String posparam_s(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         switch (cs.argFlags[idx]) {
         case CallSiteDescriptor.ARG_STR:
-            return (String)cf.caller.args[idx];
+            return (String)args[idx];
         case CallSiteDescriptor.ARG_INT:
-            return coerce_i2s((long)cf.caller.args[idx]);
+            return coerce_i2s((long)args[idx]);
         case CallSiteDescriptor.ARG_NUM:
-            return coerce_n2s((double)cf.caller.args[idx]);
+            return coerce_n2s((double)args[idx]);
         case CallSiteDescriptor.ARG_OBJ:
-            return ((SixModelObject)cf.caller.args[idx]).get_str(cf.tc);
+            return ((SixModelObject)args[idx]).get_str(cf.tc);
         default:
             throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
         }
     }
     
     /* Optional positional parameter fetching. */
-    public static SixModelObject posparam_opt_o(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static SixModelObject posparam_opt_o(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_o(cf, cs, idx);
+            return posparam_o(cf, cs, args, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return null;
         }
     }
-    public static long posparam_opt_i(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static long posparam_opt_i(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_i(cf, cs, idx);
+            return posparam_i(cf, cs, args, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return 0;
         }
     }
-    public static double posparam_opt_n(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static double posparam_opt_n(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_n(cf, cs, idx);
+            return posparam_n(cf, cs, args, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
             return 0.0;
         }
     }
-    public static String posparam_opt_s(CallFrame cf, CallSiteDescriptor cs, int idx) {
+    public static String posparam_opt_s(CallFrame cf, CallSiteDescriptor cs, Object[] args, int idx) {
         if (idx < cs.numPositionals) {
             cf.tc.lastParameterExisted = 1;
-            return posparam_s(cf, cs, idx);
+            return posparam_s(cf, cs, args, idx);
         }
         else {
             cf.tc.lastParameterExisted = 0;
@@ -814,7 +816,7 @@ public final class Ops {
     }
     
     /* Slurpy positional parameter. */
-    public static SixModelObject posslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs, int fromIdx) {
+    public static SixModelObject posslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs, Object[] args, int fromIdx) {
         /* Create result. */
         HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
         SixModelObject resType = hllConfig.slurpyArrayType;
@@ -825,16 +827,16 @@ public final class Ops {
         for (int i = fromIdx; i < cs.numPositionals; i++) {
             switch (cs.argFlags[i]) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.push_boxed(tc, (SixModelObject)cf.caller.args[i]);
+                result.push_boxed(tc, (SixModelObject)args[i]);
                 break;
             case CallSiteDescriptor.ARG_INT:
-                result.push_boxed(tc, box_i((long)cf.caller.args[i], hllConfig.intBoxType, tc));
+                result.push_boxed(tc, box_i((long)args[i], hllConfig.intBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_NUM:
-                result.push_boxed(tc, box_n((double)cf.caller.args[i], hllConfig.numBoxType, tc));
+                result.push_boxed(tc, box_n((double)args[i], hllConfig.numBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_STR:
-                result.push_boxed(tc, box_s((String)cf.caller.args[i], hllConfig.strBoxType, tc));
+                result.push_boxed(tc, box_s((String)args[i], hllConfig.strBoxType, tc));
                 break;
             }
         }
@@ -843,20 +845,20 @@ public final class Ops {
     }
     
     /* Required named parameter getting. */
-    public static SixModelObject namedparam_o(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static SixModelObject namedparam_o(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return (SixModelObject)cf.caller.args[lookup >> 3];
+                return (SixModelObject)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return box_i((long)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+                return box_i((long)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
-                return box_n((double)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+                return box_n((double)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
             case CallSiteDescriptor.ARG_STR:
-                return box_s((String)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+                return box_s((String)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -864,20 +866,20 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static long namedparam_i(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static long namedparam_i(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_INT:
-                return (long)cf.caller.args[lookup >> 3];
+                return (long)args[lookup >> 3];
             case CallSiteDescriptor.ARG_NUM:
-                return (long)(double)cf.caller.args[lookup >> 3];
+                return (long)(double)args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2i((String)cf.caller.args[lookup >> 3]);
+                return coerce_s2i((String)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_int(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_int(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -885,20 +887,20 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static double namedparam_n(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static double namedparam_n(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_NUM:
-                return (double)cf.caller.args[lookup >> 3];
+                return (double)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return (double)(long)cf.caller.args[lookup >> 3];
+                return (double)(long)args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2n((String)cf.caller.args[lookup >> 3]);
+                return coerce_s2n((String)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_num(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_num(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -906,20 +908,20 @@ public final class Ops {
         else
             throw ExceptionHandling.dieInternal(cf.tc, "Required named argument '" + name + "' not passed");
     }
-    public static String namedparam_s(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static String namedparam_s(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
         if (lookup != null) {
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_STR:
-                return (String)cf.caller.args[lookup >> 3];
+                return (String)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return coerce_i2s((long)cf.caller.args[lookup >> 3]);
+                return coerce_i2s((long)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_NUM:
-                return coerce_n2s((double)cf.caller.args[lookup >> 3]);
+                return coerce_n2s((double)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_str(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_str(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -929,7 +931,7 @@ public final class Ops {
     }
     
     /* Optional named parameter getting. */
-    public static SixModelObject namedparam_opt_o(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static SixModelObject namedparam_opt_o(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -937,13 +939,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                return (SixModelObject)cf.caller.args[lookup >> 3];
+                return (SixModelObject)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return box_i((long)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
+                return box_i((long)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.intBoxType, cf.tc);
             case CallSiteDescriptor.ARG_NUM:
-                return box_n((double)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
+                return box_n((double)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.numBoxType, cf.tc);
             case CallSiteDescriptor.ARG_STR:
-                return box_s((String)cf.caller.args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
+                return box_s((String)args[lookup >> 3], cf.codeRef.staticInfo.compUnit.hllConfig.strBoxType, cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -953,7 +955,7 @@ public final class Ops {
             return null;
         }
     }
-    public static long namedparam_opt_i(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static long namedparam_opt_i(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -961,13 +963,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_INT:
-                return (long)cf.caller.args[lookup >> 3];
+                return (long)args[lookup >> 3];
             case CallSiteDescriptor.ARG_NUM:
-                return (long)(double)cf.caller.args[lookup >> 3];
+                return (long)(double)args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2i((String)cf.caller.args[lookup >> 3]);
+                return coerce_s2i((String)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_int(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_int(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -977,7 +979,7 @@ public final class Ops {
             return 0;
         }
     }
-    public static double namedparam_opt_n(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static double namedparam_opt_n(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -985,13 +987,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_NUM:
-                return (double)cf.caller.args[lookup >> 3];
+                return (double)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return (double)(long)cf.caller.args[lookup >> 3];
+                return (double)(long)args[lookup >> 3];
             case CallSiteDescriptor.ARG_STR:
-                return coerce_s2n((String)cf.caller.args[lookup >> 3]);
+                return coerce_s2n((String)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_num(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_num(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -1001,7 +1003,7 @@ public final class Ops {
             return 0.0;
         }
     }
-    public static String namedparam_opt_s(CallFrame cf, CallSiteDescriptor cs, String name) {
+    public static String namedparam_opt_s(CallFrame cf, CallSiteDescriptor cs, Object[] args, String name) {
         if (cf.workingNameMap == null)
             cf.workingNameMap = new HashMap<String, Integer>(cs.nameMap);
         Integer lookup = cf.workingNameMap.remove(name);
@@ -1009,13 +1011,13 @@ public final class Ops {
             cf.tc.lastParameterExisted = 1;
             switch ((lookup & 7)) {
             case CallSiteDescriptor.ARG_STR:
-                return (String)cf.caller.args[lookup >> 3];
+                return (String)args[lookup >> 3];
             case CallSiteDescriptor.ARG_INT:
-                return coerce_i2s((long)cf.caller.args[lookup >> 3]);
+                return coerce_i2s((long)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_NUM:
-                return coerce_n2s((double)cf.caller.args[lookup >> 3]);
+                return coerce_n2s((double)args[lookup >> 3]);
             case CallSiteDescriptor.ARG_OBJ:
-                return ((SixModelObject)cf.caller.args[lookup >> 3]).get_str(cf.tc);
+                return ((SixModelObject)args[lookup >> 3]).get_str(cf.tc);
             default:
                 throw ExceptionHandling.dieInternal(cf.tc, "Error in argument processing");
             }
@@ -1027,7 +1029,7 @@ public final class Ops {
     }
     
     /* Slurpy named parameter. */
-    public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs) {
+    public static SixModelObject namedslurpy(ThreadContext tc, CallFrame cf, CallSiteDescriptor cs, Object[] args) {
         /* Create result. */
         HLLConfig hllConfig = cf.codeRef.staticInfo.compUnit.hllConfig;
         SixModelObject resType = hllConfig.slurpyHashType;
@@ -1041,16 +1043,16 @@ public final class Ops {
             Integer lookup = cf.workingNameMap.get(name);
             switch (lookup & 7) {
             case CallSiteDescriptor.ARG_OBJ:
-                result.bind_key_boxed(tc, name, (SixModelObject)cf.caller.args[lookup >> 3]);
+                result.bind_key_boxed(tc, name, (SixModelObject)args[lookup >> 3]);
                 break;
             case CallSiteDescriptor.ARG_INT:
-                result.bind_key_boxed(tc, name, box_i((long)cf.caller.args[lookup >> 3], hllConfig.intBoxType, tc));
+                result.bind_key_boxed(tc, name, box_i((long)args[lookup >> 3], hllConfig.intBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_NUM:
-                result.bind_key_boxed(tc, name, box_n((double)cf.caller.args[lookup >> 3], hllConfig.numBoxType, tc));
+                result.bind_key_boxed(tc, name, box_n((double)args[lookup >> 3], hllConfig.numBoxType, tc));
                 break;
             case CallSiteDescriptor.ARG_STR:
-                result.bind_key_boxed(tc, name, box_s((String)cf.caller.args[lookup >> 3], hllConfig.strBoxType, tc));
+                result.bind_key_boxed(tc, name, box_s((String)args[lookup >> 3], hllConfig.strBoxType, tc));
                 break;
             }
         }
@@ -1118,20 +1120,17 @@ public final class Ops {
     }
     
     /* Capture related operations. */
-    public static SixModelObject usecapture(ThreadContext tc, CallSiteDescriptor cs) {
+    public static SixModelObject usecapture(ThreadContext tc, CallSiteDescriptor cs, Object[] args) {
     	CallCaptureInstance cc = tc.savedCC;
-    	CallFrame cf = tc.curFrame;
     	cc.descriptor = cs;
-    	cc.args = cf.caller.args == null ? null : cf.caller.args.clone();
+    	cc.args = args.clone();
     	return cc;
     }
-    public static SixModelObject savecapture(ThreadContext tc, CallSiteDescriptor cs) {
+    public static SixModelObject savecapture(ThreadContext tc, CallSiteDescriptor cs, Object[] args) {
     	SixModelObject CallCapture = tc.gc.CallCapture;
     	CallCaptureInstance cc = (CallCaptureInstance)CallCapture.st.REPR.allocate(tc, CallCapture.st);
-    	CallFrame cf = tc.curFrame;
     	cc.descriptor = cs;
-    	if (cf.caller.args != null)
-    		cc.args = cf.caller.args.clone();
+    	cc.args = args.clone();
     	return cc;
     }
     public static long captureposelems(SixModelObject obj, ThreadContext tc) {
@@ -1168,7 +1167,7 @@ public final class Ops {
     /* Invocation. */
     private static final CallSiteDescriptor emptyCallSite = new CallSiteDescriptor(new byte[0], null);
     private static final CallSiteDescriptor invocantCallSite = new CallSiteDescriptor(new byte[] { CallSiteDescriptor.ARG_OBJ }, null);
-    public static void invoke(SixModelObject invokee, int callsiteIndex, ThreadContext tc) throws Exception {
+    public static void invoke(SixModelObject invokee, int callsiteIndex, Object[] args, ThreadContext tc) throws Exception {
         // If it's lexotic, throw the exception right off.
     	if (invokee instanceof Lexotic) {
     		LexoticException throwee = tc.theLexotic;
@@ -1176,18 +1175,18 @@ public final class Ops {
     		CallSiteDescriptor csd = tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex];
     		switch (csd.argFlags[0]) {
     		case CallSiteDescriptor.ARG_OBJ:
-    			throwee.payload = (SixModelObject)tc.curFrame.args[0];
+    			throwee.payload = (SixModelObject)args[0];
     			break;
     		case CallSiteDescriptor.ARG_INT:
-    			throwee.payload = box_i((long)tc.curFrame.args[0],
+    			throwee.payload = box_i((long)args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.intBoxType, tc);
     			break;
     		case CallSiteDescriptor.ARG_NUM:
-    			throwee.payload = box_n((double)tc.curFrame.args[0],
+    			throwee.payload = box_n((double)args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.numBoxType, tc);
     			break;
     		case CallSiteDescriptor.ARG_STR:
-    			throwee.payload = box_s((String)tc.curFrame.args[0],
+    			throwee.payload = box_s((String)args[0],
     					tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType, tc);
     			break;
     		default:
@@ -1198,12 +1197,12 @@ public final class Ops {
     	
     	// TODO Find a smarter way to do this without all the pointer chasing.
         if (callsiteIndex >= 0)
-        	invokeInternal(tc, invokee, tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex]);
+        	invokeInternal(tc, invokee, tc.curFrame.codeRef.staticInfo.compUnit.callSites[callsiteIndex], args);
         else
-        	invokeInternal(tc, invokee, emptyCallSite);
+        	invokeInternal(tc, invokee, emptyCallSite, args);
     }
     public static void invokeArgless(ThreadContext tc, SixModelObject invokee) {
-    	invokeInternal(tc, invokee, emptyCallSite);
+    	invokeInternal(tc, invokee, emptyCallSite, new Object[0]);
     }
     public static void invokeMain(ThreadContext tc, SixModelObject invokee, String prog, String[] argv) {
     	/* Build argument list from argv. */
@@ -1217,15 +1216,10 @@ public final class Ops {
     		callsite[i + 1] = CallSiteDescriptor.ARG_OBJ;
     	}
     	
-    	/* Create a fake frame for passing the args. */
-    	CallFrame fake = new CallFrame();
-    	fake.args = args;
-    	fake.codeRef = new CodeRef(null, null, "", "", null, null, null, null, null);
-    	tc.curFrame = fake;
-    	
-    	invokeInternal(tc, invokee, new CallSiteDescriptor(callsite, null));
+    	/* Invoke with the descriptor and arg list. */
+    	invokeInternal(tc, invokee, new CallSiteDescriptor(callsite, null), args);
     }
-    private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd) {
+    private static void invokeInternal(ThreadContext tc, SixModelObject invokee, CallSiteDescriptor csd, Object[] args) {
     	// Otherwise, get the code ref.
     	CodeRef cr;
     	if (invokee instanceof CodeRef) {
@@ -1243,8 +1237,7 @@ public final class Ops {
         
         try {
         	// Do the invocation.
-        	cr.staticInfo.mh.invokeExact(tc, cr, csd,
-        			tc.curFrame == null ? null : tc.curFrame.args);
+        	cr.staticInfo.mh.invokeExact(tc, cr, csd, args);
         }
         catch (UnwindException e) {
         	throw e;
@@ -1253,15 +1246,14 @@ public final class Ops {
         	throw e;
         }
         catch (Throwable e) {
-        	System.err.println(e.toString());
+        	e.printStackTrace();
 			ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
     }
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
     	if (capture instanceof CallCaptureInstance) {
     		CallCaptureInstance cc = (CallCaptureInstance)capture;
-    		tc.curFrame.args = cc.args;
-    		invokeInternal(tc, invokee, cc.descriptor);
+    		invokeInternal(tc, invokee, cc.descriptor, cc.args);
     		return result_o(tc.curFrame);
     	}
     	else {
@@ -1826,8 +1818,7 @@ public final class Ops {
         BoolificationSpec bs = obj.st.BoolificationSpec;
         switch (bs == null ? BoolificationSpec.MODE_NOT_TYPE_OBJECT : bs.Mode) {
         case BoolificationSpec.MODE_CALL_METHOD:
-        	tc.curFrame.args = new Object[] { obj };
-        	invokeInternal(tc, bs.Method, invocantCallSite);
+        	invokeInternal(tc, bs.Method, invocantCallSite, new Object[] { obj });
         	return istrue(result_o(tc.curFrame), tc);
         case BoolificationSpec.MODE_UNBOX_INT:
             return obj instanceof TypeObject || obj.get_int(tc) == 0 ? 0 : 1;
@@ -1870,8 +1861,7 @@ public final class Ops {
     	// bulk.
     	SixModelObject numMeth = obj.st.MethodCache.get("Str");
     	if (numMeth != null) {
-    		tc.curFrame.args = new Object[] { obj };
-    		invokeInternal(tc, numMeth, invocantCallSite);
+    		invokeInternal(tc, numMeth, invocantCallSite, new Object[] { obj });
         	return result_s(tc.curFrame);
     	}
     	
@@ -1897,8 +1887,7 @@ public final class Ops {
     	// bulk.
     	SixModelObject numMeth = obj.st.MethodCache.get("Num");
     	if (numMeth != null) {
-    		tc.curFrame.args = new Object[] { obj };
-    		invokeInternal(tc, numMeth, invocantCallSite);
+    		invokeInternal(tc, numMeth, invocantCallSite, new Object[] { obj });
         	return result_n(tc.curFrame);
     	}
     	

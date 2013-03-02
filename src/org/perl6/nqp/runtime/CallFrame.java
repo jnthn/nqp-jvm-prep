@@ -39,12 +39,6 @@ public class CallFrame {
     public String[] sLex;
     
     /**
-     * The arguments being passed for the current call. (XXX Will become
-     * an argument in the call itself in next step of refactor.)
-     */
-    public Object[] args;
-    
-    /**
      * Return value storage. Note that all the basic types are available and
      * the returning function picks the one it has.
      */

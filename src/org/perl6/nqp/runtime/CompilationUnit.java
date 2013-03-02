@@ -82,7 +82,7 @@ public abstract class CompilationUnit {
         int dIdx = deserializeIdx();
         if (dIdx >= 0)
         	try {
-        		Ops.invoke(codeRefs[dIdx], -1, tc);
+        		Ops.invokeArgless(tc, codeRefs[dIdx]);
         	}
         	catch (Exception e)
         	{
@@ -97,7 +97,7 @@ public abstract class CompilationUnit {
     	int lIdx = loadIdx();
         if (lIdx >= 0)
         	try {
-        		Ops.invoke(codeRefs[lIdx], -1, tc);
+        		Ops.invokeArgless(tc, codeRefs[lIdx]);
         	}
         	catch (Exception e)
         	{

@@ -19,10 +19,11 @@ public class KnowHOWMethods extends CompilationUnit {
         /* Get arguments. */
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 1, 1);
-	        SixModelObject self = Ops.posparam_o(cf, csd, 0);
-	        String repr_arg = Ops.namedparam_opt_s(cf, csd, "repr");
-	        String name_arg = Ops.namedparam_opt_s(cf, csd, "name");
+	    	csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+	        SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
+	        String repr_arg = Ops.namedparam_opt_s(cf, csd, args, "repr");
+	        String name_arg = Ops.namedparam_opt_s(cf, csd, args, "name");
 	        if (self == null || !(self.st.REPR instanceof KnowHOWREPR))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object with REPR KnowHOWREPR");
 	        
@@ -59,10 +60,11 @@ public class KnowHOWMethods extends CompilationUnit {
     public void add_method(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 4, 4);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
-	        String name = Ops.posparam_s(cf, csd, 2);
-	        SixModelObject method = Ops.posparam_o(cf, csd, 3);
+	    	csd = Ops.checkarity(cf, csd, args, 4, 4);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
+	        String name = Ops.posparam_s(cf, csd, args, 2);
+	        SixModelObject method = Ops.posparam_o(cf, csd, args, 3);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -79,9 +81,10 @@ public class KnowHOWMethods extends CompilationUnit {
     public void add_attribute(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 3, 3);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
-	        SixModelObject attribute = Ops.posparam_o(cf, csd, 2);
+	    	csd = Ops.checkarity(cf, csd, args, 3, 3);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
+	        SixModelObject attribute = Ops.posparam_o(cf, csd, args, 2);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -100,9 +103,10 @@ public class KnowHOWMethods extends CompilationUnit {
     public void compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 2, 2);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
-	        SixModelObject type_obj = Ops.posparam_o(cf, csd, 1);
+	    	csd = Ops.checkarity(cf, csd, args, 2, 2);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
+	        SixModelObject type_obj = Ops.posparam_o(cf, csd, args, 1);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -171,8 +175,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void attributes(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 2, 2);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 2, 2);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -195,8 +200,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void methods(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 2, 2);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 2, 2);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -219,8 +225,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 2, 2);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 2, 2);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        
 	        if (self == null || !(self instanceof KnowHOWREPRInstance))
 	            throw ExceptionHandling.dieInternal(tc, "KnowHOW methods must be called on object instance with REPR KnowHOWREPR");
@@ -236,11 +243,12 @@ public class KnowHOWMethods extends CompilationUnit {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
 	        /* Process arguments. */
-	    	csd = Ops.checkarity(cf, csd, 1, 1);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
-	        String name_arg = Ops.namedparam_s(cf, csd, "name");
-	        SixModelObject type_arg = Ops.namedparam_opt_o(cf, csd, "type");
-	        long bt_arg = Ops.namedparam_opt_i(cf, csd, "box_target");
+	    	csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
+	        String name_arg = Ops.namedparam_s(cf, csd, args, "name");
+	        SixModelObject type_arg = Ops.namedparam_opt_o(cf, csd, args, "type");
+	        long bt_arg = Ops.namedparam_opt_i(cf, csd, args, "box_target");
 	
 	        /* Allocate attribute object. */
 	        REPR repr = REPRRegistry.getByName("KnowHOWAttribute");
@@ -263,8 +271,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void attr_compose(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 1, 1);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        Ops.return_o(self, cf);
     	}
     	finally {
@@ -275,8 +284,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void attr_name(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-    		csd = Ops.checkarity(cf, csd, 1, 1);
-    		SixModelObject self = Ops.posparam_o(cf, csd, 0);
+    		csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+    		SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
         	Ops.return_s(((KnowHOWAttributeInstance)self).name, cf);
     	}
     	finally {
@@ -287,8 +297,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void attr_type(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 1, 1);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        Ops.return_o(((KnowHOWAttributeInstance)self).type, cf);
     	}
     	finally {
@@ -299,8 +310,9 @@ public class KnowHOWMethods extends CompilationUnit {
     public void attr_box_target(ThreadContext tc, CodeRef cr, CallSiteDescriptor csd, Object[] args) {
     	CallFrame cf = new CallFrame(tc, cr);
     	try {
-	    	csd = Ops.checkarity(cf, csd, 1, 1);
-	    	SixModelObject self = Ops.posparam_o(cf, csd, 0);
+	    	csd = Ops.checkarity(cf, csd, args, 1, 1);
+	    	args = tc.flatArgs;
+	    	SixModelObject self = Ops.posparam_o(cf, csd, args, 0);
 	        Ops.return_i(((KnowHOWAttributeInstance)self).box_target, cf);
     	}
     	finally {
