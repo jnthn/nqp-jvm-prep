@@ -28,7 +28,7 @@ all: $(NQPLIBS)
 
 bin: $(JAVAS)
 	$(PERL) -MExtUtils::Command -e mkpath bin
-	$(JAVAC) -source 1.7 -cp 3rdparty/asm/asm-4.1.jar:3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
+	$(JAVAC) -source 1.7 -cp 3rdparty/bcel/bcel-5.2.jar -d bin $(JAVAS)
 
 test: all
 	$(PROVE) --exec=$(NQP) t/jast/*.t t/qast/*.t
@@ -37,7 +37,7 @@ nqptest: all
 	$(PROVE) --exec="$(NQP) nqp-jvm-cc.nqp" t/nqp/*.t
 
 selftest: all
-	$(PROVE) --exec="java -cp .:bin:3rdparty/asm/asm-4.1.jar:3rdparty/bcel/bcel-5.2.jar NQPJVM" t/nqp/*.t
+	$(PROVE) --exec="java -cp .;bin;3rdparty/bcel/bcel-5.2.jar NQPJVM" t/nqp/*.t
 
 clean:
 	$(PERL) -MExtUtils::Command -e rm_rf bin *.pir *.pbc *.class *.dump

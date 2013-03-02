@@ -1,15 +1,9 @@
 package org.perl6.nqp.sixmodel.reprs;
 
-import org.apache.bcel.Constants;
-import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.FieldGen;
-import org.apache.bcel.generic.Instruction;
-import org.apache.bcel.generic.InstructionConstants;
-import org.apache.bcel.generic.InstructionFactory;
-import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.Type;
+
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -42,66 +36,96 @@ public class P6str extends REPR {
         return ss;
     }
     
-    public void inlineStorage(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        FieldGen fg = new FieldGen(Constants.ACC_PUBLIC, Type.STRING, prefix, cp);
-        c.addField(fg.getField());
+    public void inlineStorage(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
+    	cw.visitField(Opcodes.ACC_PUBLIC, prefix, "Ljava/lang/String", null, null);
+//        FieldGen fg = new FieldGen(Constants.ACC_PUBLIC, Type.STRING, prefix, cp);
+//        mv.addField(fg.getField());
     }
     
-    public Instruction[] inlineBind(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        InstructionFactory f = new InstructionFactory(cp);
-        Instruction[] ins = new Instruction[8];
-        ins[0] = InstructionConstants.ALOAD_1;
-        ins[1] = f.createConstant(ThreadContext.NATIVE_STR);
-        ins[2] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_type", Type.INT, Constants.PUTFIELD);
-        ins[3] = InstructionConstants.ALOAD_0;
-        ins[4] = InstructionConstants.ALOAD_1;
-        ins[5] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_s", Type.STRING, Constants.GETFIELD);
-        ins[6] = f.createFieldAccess(c.getClassName(), prefix, Type.STRING, Constants.PUTFIELD);
-        ins[7] = InstructionConstants.RETURN;
-        return ins;
-    }
-    
-    public Instruction[] inlineGet(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        InstructionFactory f = new InstructionFactory(cp);
-        Instruction[] ins = new Instruction[8];
-        ins[0] = InstructionConstants.ALOAD_1;
-        ins[1] = InstructionConstants.DUP;
-        ins[2] = f.createConstant(ThreadContext.NATIVE_STR);
-        ins[3] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_type", Type.INT, Constants.PUTFIELD);
-        ins[4] = InstructionConstants.ALOAD_0;
-        ins[5] = f.createFieldAccess(c.getClassName(), prefix, Type.STRING, Constants.GETFIELD);
-        ins[6] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_s", Type.STRING, Constants.PUTFIELD);
-        ins[7] = InstructionConstants.RETURN;
-        return ins;
-    }
-    
-    public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
-        InstructionFactory f = new InstructionFactory(cp);
+    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+//        InstructionFactory f = new InstructionFactory(cp);
+//        Instruction[] ins = new Instruction[8];
+//        ins[0] = InstructionConstants.ALOAD_1;
+//        ins[1] = f.createConstant(ThreadContext.NATIVE_STR);
+//        ins[2] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_type", Type.INT, Constants.PUTFIELD);
+//        ins[3] = InstructionConstants.ALOAD_0;
+//        ins[4] = InstructionConstants.ALOAD_1;
+//        ins[5] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_s", Type.STRING, Constants.GETFIELD);
+//        ins[6] = f.createFieldAccess(mv.getClassName(), prefix, Type.STRING, Constants.PUTFIELD);
+//        ins[7] = InstructionConstants.RETURN;
+//        return ins;
         
-        InstructionList getIl = new InstructionList();
-        MethodGen getMeth = new MethodGen(Constants.ACC_PUBLIC, Type.STRING,
-                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;") },
-                new String[] { "tc" },
-                "get_str", c.getClassName(), getIl, cp);
-        getIl.append(InstructionConstants.ALOAD_0);
-        getIl.append(f.createFieldAccess(c.getClassName(), prefix, Type.STRING, Constants.GETFIELD));
-        getIl.append(InstructionConstants.ARETURN);
-        getMeth.setMaxStack();
-        c.addMethod(getMeth.getMethod());
-        getIl.dispose();
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_type", "I");
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_s", "Ljava/lang/String;");
+        mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+        mv.visitInsn(Opcodes.RETURN);
+    }
+    
+    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+//        InstructionFactory f = new InstructionFactory(cp);
+//        Instruction[] ins = new Instruction[8];
+//        ins[0] = InstructionConstants.ALOAD_1;
+//        ins[1] = InstructionConstants.DUP;
+//        ins[2] = f.createConstant(ThreadContext.NATIVE_STR);
+//        ins[3] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_type", Type.INT, Constants.PUTFIELD);
+//        ins[4] = InstructionConstants.ALOAD_0;
+//        ins[5] = f.createFieldAccess(mv.getClassName(), prefix, Type.STRING, Constants.GETFIELD);
+//        ins[6] = f.createFieldAccess("org.perl6.nqp.runtime.ThreadContext", "native_s", Type.STRING, Constants.PUTFIELD);
+//        ins[7] = InstructionConstants.RETURN;
+//        return ins;
+    	
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_type", "I");
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+        mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_s", "Ljava/lang/String;");
+        mv.visitInsn(Opcodes.RETURN);    	
+    }
+    
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
+//        InstructionFactory f = new InstructionFactory(cp);
+//        
+//        InstructionList getIl = new InstructionList();
+//        MethodGen getMeth = new MethodGen(Constants.ACC_PUBLIC, Type.STRING,
+//                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;") },
+//                new String[] { "tc" },
+//                "get_str", cw.getClassName(), getIl, cp);
+//        getIl.append(InstructionConstants.ALOAD_0);
+//        getIl.append(f.createFieldAccess(cw.getClassName(), prefix, Type.STRING, Constants.GETFIELD));
+//        getIl.append(InstructionConstants.ARETURN);
+//        getMeth.setMaxStack();
+//        cw.addMethod(getMeth.getMethod());
+//        getIl.dispose();
+    	
+    	MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "get_str", 
+    			"(Lorg/perl6/nqp/runtime/ThreadContext;)Ljava/lang/String;", null, null);
+    	mv.visitVarInsn(Opcodes.ALOAD, 0);
+    	mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+    	mv.visitInsn(Opcodes.ARETURN);    	
         
-        InstructionList setIl = new InstructionList();
-        MethodGen setMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
-                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"), Type.STRING },
-                new String[] { "tc", "value" },
-                "set_str", c.getClassName(), setIl, cp);
-        setIl.append(InstructionConstants.ALOAD_0);
-        setIl.append(InstructionFactory.createLoad(Type.STRING, 2));
-        setIl.append(f.createFieldAccess(c.getClassName(), prefix, Type.STRING, Constants.PUTFIELD));
-        setIl.append(InstructionConstants.RETURN);
-        setMeth.setMaxStack();
-        c.addMethod(setMeth.getMethod());
-        setIl.dispose();
+//        InstructionList setIl = new InstructionList();
+//        MethodGen setMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
+//                new Type[] { Type.getType("Lorg/perl6/nqp/runtime/ThreadContext;"), Type.STRING },
+//                new String[] { "tc", "value" },
+//                "set_str", cw.getClassName(), setIl, cp);
+//        setIl.append(InstructionConstants.ALOAD_0);
+//        setIl.append(InstructionFactory.createLoad(Type.STRING, 2));
+//        setIl.append(f.createFieldAccess(cw.getClassName(), prefix, Type.STRING, Constants.PUTFIELD));
+//        setIl.append(InstructionConstants.RETURN);
+//        setMeth.setMaxStack();
+//        cw.addMethod(setMeth.getMethod());
+//        setIl.dispose();
+    
+    	MethodVisitor setMeth = cw.visitMethod(Opcodes.ACC_PUBLIC, "set_str", 
+    			"(Lorg/perl6/nqp/runtime/ThreadContext;Ljava/lang/String;)V", null, null);
+    	setMeth.visitVarInsn(Opcodes.ALOAD, 0);
+    	setMeth.visitVarInsn(Opcodes.ALOAD, 2);
+    	setMeth.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+    	mv.visitInsn(Opcodes.RETURN);
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {

@@ -1,8 +1,7 @@
 package org.perl6.nqp.sixmodel;
 
-import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.ConstantPoolGen;
-import org.apache.bcel.generic.Instruction;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
 import org.perl6.nqp.runtime.ThreadContext;
 
 /**
@@ -108,16 +107,16 @@ public abstract class REPR {
     /**
      * Flattening related functions.
      */
-    public void inlineStorage(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+    public void inlineStorage(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public Instruction[] inlineBind(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public Instruction[] inlineGet(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
         throw new RuntimeException("This representation does not support being a box target");        
     }
     public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
