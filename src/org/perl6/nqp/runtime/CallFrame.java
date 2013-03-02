@@ -147,5 +147,14 @@ public class CallFrame {
             this.nArg = new double[sci.nMaxArgs];
         if (sci.sMaxArgs > 0)
             this.sArg = new String[sci.sMaxArgs];
+        
+        // Current call frame becomes this new one.
+        tc.curFrame = this;
+    }
+    
+    // Does work needed to leave this callframe.
+    public void leave() {
+    	this.codeRef.staticInfo.priorInvocation = this;
+    	this.tc.curFrame = this.caller;
     }
 }

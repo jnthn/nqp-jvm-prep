@@ -1282,9 +1282,6 @@ public final class Ops {
         CallFrame cf = new CallFrame(tc, cr);
         cf.callSite = csd;
         
-        // Current call frame becomes this new one.
-        tc.curFrame = cf;
-        
         try {
         	// Do the invocation.
         	cr.staticInfo.mh.invokeExact(tc);
@@ -1299,9 +1296,7 @@ public final class Ops {
 			ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
         finally {
-        	// Set curFrame back to caller.
-        	cr.staticInfo.priorInvocation = cf;
-        	tc.curFrame = cf.caller;
+        	cf.leave();
         }
     }
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
