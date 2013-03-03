@@ -104,7 +104,7 @@ class QRegex::NFA {
 
     method cclass($node, $from, $to) {
         self.addedge($from, $to, $EDGE_CHARCLASS + ?$node.negate,
-                     %cclass_code{nqp::lc($node.subtype)});
+                     %cclass_code{nqp::lc($node.name)});
     }
 
     method concat($node, $from, $to) {

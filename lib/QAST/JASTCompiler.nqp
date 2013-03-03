@@ -3919,7 +3919,6 @@ class QAST::CompilerJAST {
         %cclass_code<s>  := nqp::const::CCLASS_WHITESPACE;
         %cclass_code<w>  := nqp::const::CCLASS_WORD;
         %cclass_code<n>  := nqp::const::CCLASS_NEWLINE;
-        %cclass_code<nl> := nqp::const::CCLASS_NEWLINE;
     }
 
     method cclass($node) {
@@ -3930,8 +3929,8 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('lcmp') ));
         $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
         
-        my $subtype := nqp::lc($node.subtype);
-        self.panic("Unrecognized subtype '$subtype' in QAST::Regex cclass")
+        my $subtype := nqp::lc($node.name);
+        nep::die("Unrecognized subtype '$subtype' in QAST::Regex cclass")
             unless nqp::existskey(%cclass_code, $subtype);
         my $cclass := %cclass_code{$subtype};
         if $subtype ne '.' {
@@ -3943,7 +3942,7 @@ class QAST::CompilerJAST {
             $il.append(JAST::Instruction.new( :op('l2i') ));
             $il.append(JAST::Instruction.new( :op($node.negate ?? 'ifne' !! 'ifeq'), %*REG<fail> ));
             
-            if $subtype eq 'nl' {
+            if $subtype == nqp::const::CCLASS_NEWLINE {
                 $il.append(JAST::Instruction.new( :op('aload'), %*REG<tgt> ));
                 $il.append(JAST::Instruction.new( :op('lload'), %*REG<pos> ));
                 $il.append(JAST::Instruction.new( :op('l2i') ));
