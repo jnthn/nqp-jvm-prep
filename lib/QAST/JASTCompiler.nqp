@@ -3930,7 +3930,7 @@ class QAST::CompilerJAST {
         $il.append(JAST::Instruction.new( :op('ifge'), %*REG<fail> ));
         
         my $subtype := nqp::lc($node.name);
-        nep::die("Unrecognized subtype '$subtype' in QAST::Regex cclass")
+        nqp::die("Unrecognized subtype '$subtype' in QAST::Regex cclass")
             unless nqp::existskey(%cclass_code, $subtype);
         my $cclass := %cclass_code{$subtype};
         if $subtype ne '.' {
