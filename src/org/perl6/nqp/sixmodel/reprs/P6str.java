@@ -37,12 +37,12 @@ public class P6str extends REPR {
     }
     
     public void inlineStorage(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
-    	cw.visitField(Opcodes.ACC_PUBLIC, prefix, "Ljava/lang/String", null, null);
+    	cw.visitField(Opcodes.ACC_PUBLIC, prefix, "Ljava/lang/String;", null, null);
 //        FieldGen fg = new FieldGen(Constants.ACC_PUBLIC, Type.STRING, prefix, cp);
 //        mv.addField(fg.getField());
     }
     
-    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String className, String prefix) {
 //        InstructionFactory f = new InstructionFactory(cp);
 //        Instruction[] ins = new Instruction[8];
 //        ins[0] = InstructionConstants.ALOAD_1;
@@ -56,15 +56,16 @@ public class P6str extends REPR {
 //        return ins;
         
         mv.visitVarInsn(Opcodes.ALOAD, 1);
+    	mv.visitInsn(Opcodes.ICONST_0 + ThreadContext.NATIVE_STR);
         mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_type", "I");
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitVarInsn(Opcodes.ALOAD, 1);
         mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_s", "Ljava/lang/String;");
-        mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+        mv.visitFieldInsn(Opcodes.PUTFIELD, className, prefix, "Ljava/lang/String;");
         mv.visitInsn(Opcodes.RETURN);
     }
     
-    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String className, String prefix) {
 //        InstructionFactory f = new InstructionFactory(cp);
 //        Instruction[] ins = new Instruction[8];
 //        ins[0] = InstructionConstants.ALOAD_1;
@@ -79,14 +80,15 @@ public class P6str extends REPR {
     	
         mv.visitVarInsn(Opcodes.ALOAD, 1);
         mv.visitInsn(Opcodes.DUP);
+    	mv.visitInsn(Opcodes.ICONST_0 + ThreadContext.NATIVE_STR);
         mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_type", "I");
         mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
+        mv.visitFieldInsn(Opcodes.GETFIELD, className, prefix, "Ljava/lang/String;");
         mv.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/runtime/ThreadContext", "native_s", "Ljava/lang/String;");
         mv.visitInsn(Opcodes.RETURN);    	
     }
     
-    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String className, String prefix) {
 //        InstructionFactory f = new InstructionFactory(cp);
 //        
 //        InstructionList getIl = new InstructionList();
@@ -101,11 +103,12 @@ public class P6str extends REPR {
 //        cw.addMethod(getMeth.getMethod());
 //        getIl.dispose();
     	
-    	MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "get_str", 
+    	MethodVisitor getMeth = cw.visitMethod(Opcodes.ACC_PUBLIC, "get_str", 
     			"(Lorg/perl6/nqp/runtime/ThreadContext;)Ljava/lang/String;", null, null);
-    	mv.visitVarInsn(Opcodes.ALOAD, 0);
-    	mv.visitFieldInsn(Opcodes.GETFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
-    	mv.visitInsn(Opcodes.ARETURN);    	
+    	getMeth.visitVarInsn(Opcodes.ALOAD, 0);
+    	getMeth.visitFieldInsn(Opcodes.GETFIELD, className, prefix, "Ljava/lang/String;");
+    	getMeth.visitInsn(Opcodes.ARETURN);
+    	getMeth.visitMaxs(0, 0);
         
 //        InstructionList setIl = new InstructionList();
 //        MethodGen setMeth = new MethodGen(Constants.ACC_PUBLIC, Type.VOID,
@@ -124,8 +127,9 @@ public class P6str extends REPR {
     			"(Lorg/perl6/nqp/runtime/ThreadContext;Ljava/lang/String;)V", null, null);
     	setMeth.visitVarInsn(Opcodes.ALOAD, 0);
     	setMeth.visitVarInsn(Opcodes.ALOAD, 2);
-    	setMeth.visitFieldInsn(Opcodes.PUTFIELD, "org/perl6/nqp/sixmodel/reprs/P6str", prefix, "Ljava/lang/String;");
-    	mv.visitInsn(Opcodes.RETURN);
+    	setMeth.visitFieldInsn(Opcodes.PUTFIELD, className, prefix, "Ljava/lang/String;");
+    	setMeth.visitInsn(Opcodes.RETURN);
+    	setMeth.visitMaxs(0, 0);
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {

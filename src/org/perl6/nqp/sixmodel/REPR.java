@@ -110,13 +110,13 @@ public abstract class REPR {
     public void inlineStorage(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+    public void inlineBind(ThreadContext tc, STable st, MethodVisitor mv, String className, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String prefix) {
+    public void inlineGet(ThreadContext tc, STable st, MethodVisitor mv, String className, String prefix) {
         throw new RuntimeException("This representation cannot inline itself into another");
     }
-    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String prefix) {
+    public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String className, String prefix) {
         throw new RuntimeException("This representation does not support being a box target");        
     }
     public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
