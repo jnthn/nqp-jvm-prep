@@ -82,12 +82,11 @@ public abstract class CompilationUnit {
         int dIdx = deserializeIdx();
         if (dIdx >= 0)
         	try {
-        		Ops.invoke(codeRefs[dIdx], -1, tc);
+        		Ops.invokeArgless(tc, codeRefs[dIdx]);
         	}
         	catch (Exception e)
         	{
-        		e.printStackTrace(System.err);
-        		throw new RuntimeException(e);
+        		throw ExceptionHandling.dieInternal(tc, e.getMessage());
         	}
     }
     
@@ -98,11 +97,11 @@ public abstract class CompilationUnit {
     	int lIdx = loadIdx();
         if (lIdx >= 0)
         	try {
-        		Ops.invoke(codeRefs[lIdx], -1, tc);
+        		Ops.invokeArgless(tc, codeRefs[lIdx]);
         	}
         	catch (Exception e)
         	{
-        		throw new RuntimeException(e);
+        		throw ExceptionHandling.dieInternal(tc, e.getMessage());
         	}
     }
     
@@ -120,20 +119,10 @@ public abstract class CompilationUnit {
     	CodeRef cr = cuidToCodeRef.get(uniqueId);
     	Integer idx = cr.staticInfo.oTryGetLexicalIdx(name);
     	if (idx == null)
-    		throw new RuntimeException("Invalid lexical name '" + name + "' in static lexical installation");
+    		new RuntimeException("Invalid lexical name '" + name + "' in static lexical installation");
     	cr.staticInfo.oLexStatic[idx] = value;
     	return value;
     }
-
-    /**
-     * The JVM doesn't have first-class delegate types. Using the anonymous
-     * class pattern to fake that won't fly too well as we'll end up with many
-     * thousands of them. Instead, a code reference identifies a compilation
-     * unit and an index, and the compilation unit overrides InvokeCode and
-     * does a switch to delegate to the Right Thing. This is a virtual
-     * invocation, but the next call along can be non-virtual.
-     */
-    public abstract void InvokeCode(ThreadContext tc, int idx);
     
     /**
      * Code generation emits this to build up the various CodeRef related

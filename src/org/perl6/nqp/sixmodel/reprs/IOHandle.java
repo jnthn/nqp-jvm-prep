@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -23,11 +24,11 @@ public class IOHandle extends REPR {
 	}
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
-		throw new RuntimeException("Cannot deserialize an IO handle");
+		throw ExceptionHandling.dieInternal(tc, "Cannot deserialize an IO handle");
 	}
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("Cannot deserialize an IO handle");
+		throw ExceptionHandling.dieInternal(tc, "Cannot deserialize an IO handle");
 	}
 }

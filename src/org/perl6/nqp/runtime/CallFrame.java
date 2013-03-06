@@ -16,11 +16,6 @@ public class CallFrame {
     public ThreadContext tc;
     
     /**
-     * Call site descriptor, describing the kinds of arguments being passed.
-     */
-    public CallSiteDescriptor callSite;
-    
-    /**
      * The next entry in the static (lexical) chain.
      */
     public CallFrame outer;
@@ -42,26 +37,6 @@ public class CallFrame {
     public long[] iLex;
     public double[] nLex;
     public String[] sLex;
-    
-    /**
-     * Argument passing buffers, by type. Note that a future optimization could
-     * unify these with the lexical storage, tacking them on the end. But for
-     * now, simplicity is more helpful. Note that these are allocated once as
-     * needed at the point of entry to a block and re-used for all of the
-     * invocations that it makes. They are sized according to the maximum
-     * number of arguments of the type that are passed by any call in the
-     * block.
-     */
-    public SixModelObject[] oArg;
-    public long[] iArg;
-    public double[] nArg;
-    public String[] sArg;
-    
-    /**
-     * The oArg we're currently processing (have to hold on to this since
-     * it may change due to flattening).
-     */
-    public SixModelObject[] proc_oArg;
     
     /**
      * Return value storage. Note that all the basic types are available and
@@ -90,4 +65,61 @@ public class CallFrame {
      * Current working copy of the named arguments data.
      */
     public HashMap<String, Integer> workingNameMap;
+    
+    // Empty constructor for things that want to fake one up.
+    public CallFrame()
+    {
+    }
+    
+    // Normal constructor.
+    public CallFrame(ThreadContext tc, CodeRef cr) {
+    	this.tc = tc;
+    	this.codeRef = cr;
+    	this.caller = tc.curFrame;
+    	
+    	// Set outer; if it's explicitly in the code ref, use that. If not,
+        // go hunting for one. Fall back to outer's prior invocation.
+    	StaticCodeInfo sci = cr.staticInfo;
+        if (cr.outer != null) {
+            this.outer = cr.outer;
+        }
+        else {
+            StaticCodeInfo wanted = sci.outerStaticInfo;
+            if (wanted != null) {
+                CallFrame checkFrame = tc.curFrame;
+                while (checkFrame != null) {
+                    if (checkFrame.codeRef.staticInfo.mh == wanted.mh &&
+                    		checkFrame.codeRef.staticInfo.compUnit == wanted.compUnit) {
+                        this.outer = checkFrame;
+                        break;
+                    }
+                    checkFrame = checkFrame.caller;
+                }
+                if (this.outer == null)
+                	this.outer = wanted.priorInvocation;
+                if (this.outer == null)
+                    throw ExceptionHandling.dieInternal(tc, "Could not locate an outer for code reference " +
+                        cr.staticInfo.uniqueId);
+            }
+        }
+        
+        // Set up lexical storage.
+        if (sci.oLexicalNames != null)
+            this.oLex = sci.oLexStatic.clone();
+        if (sci.iLexicalNames != null)
+            this.iLex = new long[sci.iLexicalNames.length];
+        if (sci.nLexicalNames != null)
+            this.nLex = new double[sci.nLexicalNames.length];
+        if (sci.sLexicalNames != null)
+            this.sLex = new String[sci.sLexicalNames.length];
+
+        // Current call frame becomes this new one.
+        tc.curFrame = this;
+    }
+    
+    // Does work needed to leave this callframe.
+    public void leave() {
+    	this.codeRef.staticInfo.priorInvocation = this;
+    	this.tc.curFrame = this.caller;
+    }
 }

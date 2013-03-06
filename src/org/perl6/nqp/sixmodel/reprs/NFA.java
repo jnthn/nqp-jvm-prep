@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -42,6 +43,6 @@ public class NFA extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("NFA deserialization NYI");
+		throw ExceptionHandling.dieInternal(tc, "NFA deserialization NYI");
 	}
 }

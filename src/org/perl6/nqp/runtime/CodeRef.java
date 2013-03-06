@@ -1,4 +1,6 @@
 package org.perl6.nqp.runtime;
+import java.lang.invoke.MethodHandle;
+
 import org.perl6.nqp.sixmodel.*;
 
 /**
@@ -34,14 +36,14 @@ public class CodeRef extends SixModelObject {
     /**
      * Sets up the code-ref data structure.
      */
-    public CodeRef(CompilationUnit compUnit, int idx, String name, String uniqueId,
+    public CodeRef(CompilationUnit compUnit, MethodHandle mh,
+    		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
-        staticInfo = new StaticCodeInfo(compUnit, idx, name,uniqueId,
+        staticInfo = new StaticCodeInfo(compUnit, mh, name,uniqueId,
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
-                oMaxArgs, iMaxArgs, nMaxArgs, sMaxArgs, handlers);
+                handlers);
     }
     
     /**

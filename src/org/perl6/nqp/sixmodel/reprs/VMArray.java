@@ -29,7 +29,7 @@ public class VMArray extends REPR {
         		obj = new VMArrayInstance_s();
         		break;
         	default:
-        		throw new RuntimeException("Invalid REPR data for VMArray");
+        		throw ExceptionHandling.dieInternal(tc, "Invalid REPR data for VMArray");
         	}
         }
         obj.st = st;
@@ -49,7 +49,7 @@ public class VMArray extends REPR {
         		break;
         	default:
         		if (ss.inlineable != StorageSpec.REFERENCE)
-        			throw new RuntimeException("VMArray can only store native int/num/str or reference types");
+        			throw ExceptionHandling.dieInternal(tc, "VMArray can only store native int/num/str or reference types");
         	}
         }
     }
@@ -62,6 +62,6 @@ public class VMArray extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("VMArray deserialization NYI");
+		throw ExceptionHandling.dieInternal(tc, "VMArray deserialization NYI");
 	}
 }

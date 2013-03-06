@@ -1,10 +1,10 @@
 NQP JVM Preparation Roadmap
 
-This provides an idea of the things that need to be worked on, very roughly
-sorted by priority. Currently, quite a lot of the NQP test suite passes. The
-current goals are to cross-compile the HLL library, then the grammar for
-regexes, get the QAST -> JAST cross-compiler to compile itself, then get NQP
-self-hosting.
+This provides an idea of the things that need to be worked on. By now, the
+cross-compiler can cross-compile NQP itself to the JVM. This produces an NQP
+that does not need Parrot to run. There are still some NQP tests that are not
+passing; this simply means they're not required to compile NQP itself, but no
+doubt the things they test will be needed for Rakudo on NQP.
 
 QAST to JAST Compiler
 * xor
@@ -18,7 +18,6 @@ Exceptions
 
 Context Introspection
 * Tests for what's implemented so far
-* Finish up lexpad fiddling
 
 6model
 * BoolificationSpec - bigint case

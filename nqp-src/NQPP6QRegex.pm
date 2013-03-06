@@ -489,7 +489,7 @@ class QRegex::P6Regex::Actions is HLL::Actions {
     }
 
     method metachar:sym<.>($/) {
-        make QAST::Regex.new( :rxtype<cclass>, :subtype<.>, :node($/) );
+        make QAST::Regex.new( :rxtype<cclass>, :name<.>, :node($/) );
     }
 
     method metachar:sym<^>($/) {
@@ -585,8 +585,7 @@ class QRegex::P6Regex::Actions is HLL::Actions {
     method metachar:sym<mod>($/) { make $<mod_internal>.ast; }
 
     method backslash:sym<s>($/) {
-        make QAST::Regex.new(:rxtype<cclass>, '.CCLASS_WHITESPACE', 
-                             :subtype($<sym> eq 'n' ?? 'nl' !! ~$<sym>), 
+        make QAST::Regex.new(:rxtype<cclass>, :name( nqp::lc(~$<sym>) ),
                              :negate($<sym> le 'Z'), :node($/));
     }
 
@@ -747,20 +746,18 @@ class QRegex::P6Regex::Actions is HLL::Actions {
             $qast.subtype('zerowidth');
             $qast := QAST::Regex.new(:rxtype<concat>, :node($/),
                                      $qast, 
-                                     QAST::Regex.new( :rxtype<cclass>, :subtype<.> ));
+                                     QAST::Regex.new( :rxtype<cclass>, :name<.> ));
         }
+        
         my $i := 1;
         my $n := +$clist;
         while $i < $n {
             my $ast := $clist[$i].ast;
-            if $ast.negate {
-                if $ast.rxtype eq 'cclass' {
-                    $ast := QAST::Regex.new( :rxtype<conj>, :subtype<zerowidth>, $ast );
-                }
-                else {
-                    $ast.subtype('zerowidth');
-                }
-                $qast := QAST::Regex.new( $ast, $qast, :rxtype<concat>, :node($/));
+            if $ast.negate || $ast.rxtype eq 'cclass' && ~$ast.node le 'Z' {
+                $ast.subtype('zerowidth');
+                $qast := QAST::Regex.new( :rxtype<concat>, :node($/), :subtype<zerowidth>, :negate(1),
+                        QAST::Regex.new( :rxtype<conj>, :subtype<zerowidth>, $ast ), 
+                        $qast );
             }
             else {
                 $qast := QAST::Regex.new( $qast, $ast, :rxtype<altseq>, :node($/));
@@ -833,6 +830,7 @@ class QRegex::P6Regex::Actions is HLL::Actions {
                 elsif $_[0]<backslash> {
                     my $bs := $_[0]<backslash>.ast;
                     $bs.negate(!$bs.negate) if $<sign> eq '-';
+                    $bs.subtype('zerowidth') if $bs.negate;
                     @alts.push($bs);
                 }
                 else { $str := $str ~ ~$_[0]; }
@@ -841,12 +839,11 @@ class QRegex::P6Regex::Actions is HLL::Actions {
                 if nqp::chars($str);
             $qast := +@alts == 1 ?? @alts[0] !!
                 $<sign> eq '-' ??
-                    QAST::Regex.new( :rxtype<concat>, :node($/),
+                    QAST::Regex.new( :rxtype<concat>, :node($/), :subtype<zerowidth>, :negate(1),
                         QAST::Regex.new( :rxtype<conj>, :subtype<zerowidth>, |@alts ), 
-                        QAST::Regex.new( :rxtype<cclass>, :subtype<.> ) ) !!
+                        QAST::Regex.new( :rxtype<cclass>, :name<.> ) ) !!
                     QAST::Regex.new( :rxtype<altseq>, |@alts );
         }
-        #$qast.negate( $<sign> eq '-' );
         make $qast;
     }
 

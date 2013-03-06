@@ -2,6 +2,7 @@ package org.perl6.nqp.sixmodel.reprs;
 
 import java.util.Iterator;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
@@ -45,14 +46,14 @@ public class VMIterInstance extends SixModelObject {
         case MODE_ARRAY:
             idx++;
             if (idx >= limit)
-                throw new RuntimeException("Iteration past end of iterator");
+                throw ExceptionHandling.dieInternal(tc, "Iteration past end of iterator");
             return target.at_pos_boxed(tc, idx);
         case MODE_HASH:
             curKey = hashKeyIter.next();
             curValue = target.at_key_boxed(tc, curKey);
             return this;
         default:
-            throw new RuntimeException("Unknown iteration mode");
+            throw ExceptionHandling.dieInternal(tc, "Unknown iteration mode");
         }
     }
     
@@ -76,7 +77,7 @@ public class VMIterInstance extends SixModelObject {
         case MODE_HASH:
             return curKey;
         default:
-            throw new RuntimeException("Unknown iteration mode");
+            throw ExceptionHandling.dieInternal(tc, "Unknown iteration mode");
         }
     }
     public SixModelObject val(ThreadContext tc) {
@@ -86,7 +87,7 @@ public class VMIterInstance extends SixModelObject {
         case MODE_HASH:
             return curValue;
         default:
-            throw new RuntimeException("Unknown iteration mode");
+            throw ExceptionHandling.dieInternal(tc, "Unknown iteration mode");
         }
     }
 }

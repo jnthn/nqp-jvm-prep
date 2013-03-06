@@ -2,6 +2,7 @@ package org.perl6.nqp.sixmodel.reprs;
 
 import java.util.HashMap;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
 
@@ -33,6 +34,6 @@ public class VMHash extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw new RuntimeException("VMHash deserialization NYI");
+		throw ExceptionHandling.dieInternal(tc, "VMHash deserialization NYI");
 	}
 }

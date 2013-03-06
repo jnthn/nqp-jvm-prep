@@ -30,7 +30,7 @@ public class LibraryLoader {
 			// Note that we already loaded it.
 			loaded.add(filename);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
 	}
 	

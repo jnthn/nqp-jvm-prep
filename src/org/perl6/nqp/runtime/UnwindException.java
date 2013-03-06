@@ -8,6 +8,9 @@ public class UnwindException extends RuntimeException {
 	/* What we're unwinding to. */
 	public long unwindTarget;
 	
+	/* The compilation unit holding the unwind target. */
+	public CompilationUnit unwindCompUnit;
+	
 	/* The category, if we're a simple handler. */
 	public long category;
 	

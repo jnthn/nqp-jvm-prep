@@ -1,5 +1,6 @@
 package org.perl6.nqp.runtime;
 
+import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
@@ -11,9 +12,9 @@ public class StaticCodeInfo implements Cloneable {
     public CompilationUnit compUnit;
     
     /**
-     * The index of the code reference in the compilation unit.
+     * Method handle for the code ref.
      */
-    public int idx;
+    MethodHandle mh;
     
     /**
      * The (human-readable) name of the code-ref.
@@ -34,15 +35,7 @@ public class StaticCodeInfo implements Cloneable {
      * Most recent invocation, if any.
      */
     public CallFrame priorInvocation;
-    
-    /**
-     * Maximum argument counts by argument type.
-     */
-    public short oMaxArgs;
-    public short iMaxArgs;
-    public short nMaxArgs;
-    public short sMaxArgs;
-    
+
     /**
      * Static lexicals.
      */
@@ -117,23 +110,19 @@ public class StaticCodeInfo implements Cloneable {
     /**
      * Initializes the static code info data structure.
      */
-    public StaticCodeInfo(CompilationUnit compUnit, int idx, String name, String uniqueId,
+    public StaticCodeInfo(CompilationUnit compUnit, MethodHandle mh,
+    		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            short oMaxArgs, short iMaxArgs, short nMaxArgs, short sMaxArgs,
             long[][] handlers) {
         this.compUnit = compUnit;
-        this.idx = idx;
+        this.mh = mh;
         this.name = name;
         this.uniqueId = uniqueId;
         this.oLexicalNames = oLexicalNames;
         this.iLexicalNames = iLexicalNames;
         this.nLexicalNames = nLexicalNames;
         this.sLexicalNames = sLexicalNames;
-        this.oMaxArgs = oMaxArgs;
-        this.iMaxArgs = iMaxArgs;
-        this.nMaxArgs = nMaxArgs;
-        this.sMaxArgs = sMaxArgs;
         this.handlers = handlers;
         if (oLexicalNames != null)
         	this.oLexStatic = new SixModelObject[oLexicalNames.length];

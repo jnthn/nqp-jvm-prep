@@ -16,7 +16,7 @@ public class VMArrayInstance extends SixModelObject {
         if (index < 0) {
             index += elems;
             if (index < 0)
-                throw new RuntimeException("VMArray: Index out of bounds");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Index out of bounds");
         }
         else if (index >= elems)
             return null;
@@ -41,7 +41,7 @@ public class VMArrayInstance extends SixModelObject {
         SixModelObject[] slots = this.slots;
 
         if (n < 0)
-            throw new RuntimeException("VMArray: Can't resize to negative elements");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't resize to negative elements");
 
         if (n == elems)
             return;
@@ -96,7 +96,7 @@ public class VMArrayInstance extends SixModelObject {
         if (index < 0) {
             index += elems;
             if (index < 0)
-                throw new RuntimeException("VMArray: Index out of bounds");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Index out of bounds");
         }
         else if (index >= elems)
             set_size_internal(tc, index + 1);
@@ -119,7 +119,7 @@ public class VMArrayInstance extends SixModelObject {
 
     public SixModelObject pop_boxed(ThreadContext tc) {
         if (elems < 1)
-            throw new RuntimeException("VMArray: Can't pop from an empty array");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't pop from an empty array");
         elems--;
         return slots[start + elems];
     }
@@ -153,7 +153,7 @@ public class VMArrayInstance extends SixModelObject {
 
     public SixModelObject shift_boxed(ThreadContext tc) {
         if (elems < 1)
-            throw new RuntimeException("VMArray: Can't shift from an empty array");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't shift from an empty array");
 
         SixModelObject result = slots[start];
         start++;
@@ -174,7 +174,7 @@ public class VMArrayInstance extends SixModelObject {
             offset += elems0;
     
             if (offset < 0)
-                throw new RuntimeException("VMArray: Illegal splice offset");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Illegal splice offset");
         }
     
         /* When offset == 0, then we may be able to reduce the memmove

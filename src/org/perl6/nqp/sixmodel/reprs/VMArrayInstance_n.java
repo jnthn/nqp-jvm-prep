@@ -1,5 +1,6 @@
 package org.perl6.nqp.sixmodel.reprs;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
@@ -12,7 +13,7 @@ public class VMArrayInstance_n extends SixModelObject {
         if (index < 0) {
             index += elems;
             if (index < 0)
-                throw new RuntimeException("VMArray: Index out of bounds");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Index out of bounds");
         }
         else if (index >= elems) {
         	tc.native_type = ThreadContext.NATIVE_NUM;
@@ -41,7 +42,7 @@ public class VMArrayInstance_n extends SixModelObject {
         double[] slots = this.slots;
 
         if (n < 0)
-            throw new RuntimeException("VMArray: Can't resize to negative elements");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't resize to negative elements");
 
         if (n == elems)
             return;
@@ -96,7 +97,7 @@ public class VMArrayInstance_n extends SixModelObject {
         if (index < 0) {
             index += elems;
             if (index < 0)
-                throw new RuntimeException("VMArray: Index out of bounds");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Index out of bounds");
         }
         else if (index >= elems)
             set_size_internal(tc, index + 1);
@@ -121,7 +122,7 @@ public class VMArrayInstance_n extends SixModelObject {
 
     public void pop_native(ThreadContext tc) {
         if (elems < 1)
-            throw new RuntimeException("VMArray: Can't pop from an empty array");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't pop from an empty array");
         elems--;
         tc.native_type = ThreadContext.NATIVE_NUM;
         tc.native_n = slots[start + elems];
@@ -157,7 +158,7 @@ public class VMArrayInstance_n extends SixModelObject {
 
     public void shift_native(ThreadContext tc) {
         if (elems < 1)
-            throw new RuntimeException("VMArray: Can't shift from an empty array");
+            throw ExceptionHandling.dieInternal(tc, "VMArray: Can't shift from an empty array");
 
         tc.native_type = ThreadContext.NATIVE_NUM;
         tc.native_n = slots[start];
@@ -178,7 +179,7 @@ public class VMArrayInstance_n extends SixModelObject {
             offset += elems0;
     
             if (offset < 0)
-                throw new RuntimeException("VMArray: Illegal splice offset");
+                throw ExceptionHandling.dieInternal(tc, "VMArray: Illegal splice offset");
         }
     
         /* When offset == 0, then we may be able to reduce the memmove

@@ -30,6 +30,11 @@ public class ThreadContext {
     public int lastParameterExisted;
     
     /**
+     * Holds just-processed args in the case we have a flattening. 
+     */
+    public Object[] flatArgs;
+    
+    /**
      * When we wish to look up or bind native or inlined things in an
      * object, we need a way to pass around some native value. The
      * following set of slots, along with a flag indicating value
