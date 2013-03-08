@@ -13,7 +13,6 @@ public class SerializationWriter {
 	
 	/* Various sizes (in bytes). */
 	private final int HEADER_SIZE               = 4 * 16;
-	private final int DEP_TABLE_ENTRY_SIZE      = 8;
 	private final int STABLES_TABLE_ENTRY_SIZE  = 8;
 	private final int OBJECTS_TABLE_ENTRY_SIZE  = 16;
 	private final int CLOSURES_TABLE_ENTRY_SIZE = 24;
@@ -42,8 +41,21 @@ public class SerializationWriter {
 	private ArrayList<SerializationContext> dependentSCs;
 	
 	private static final int DEPS = 0;
+	private static final int STABLES = 1;
+	private static final int STABLE_DATA = 2;
+	private static final int OBJECTS = 3;
+	private static final int OBJECT_DATA = 4;
+	private static final int CLOSURES = 5;
+	private static final int CONTEXTS = 6;
+	private static final int CONTEXT_DATA = 7;
+	private static final int REPOS = 8;
 	private ByteBuffer[] outputs;
-	private int currentBuffer = 0;
+	private int currentBuffer;
+	
+	private int numClosures;
+	private int numContexts;
+	private int sTablesListPos;
+	private int objectsListPos;
 	
 	public SerializationWriter(ThreadContext tc, SerializationContext sc, ArrayList<String> sh) {
 		this.tc = tc;
@@ -51,12 +63,32 @@ public class SerializationWriter {
 		this.sh = sh;
 		this.stringMap = new HashMap<String, Integer>();
 		this.dependentSCs = new ArrayList<SerializationContext>();
-		this.outputs = new ByteBuffer[1];
+		this.outputs = new ByteBuffer[9];
 		this.outputs[DEPS] = ByteBuffer.allocate(128);
+		this.outputs[STABLES] = ByteBuffer.allocate(512);
+		this.outputs[STABLE_DATA] = ByteBuffer.allocate(1024);
+		this.outputs[OBJECTS] = ByteBuffer.allocate(2048);
+		this.outputs[OBJECT_DATA] = ByteBuffer.allocate(8912);
+		this.outputs[CLOSURES] = ByteBuffer.allocate(128);
+		this.outputs[CONTEXTS] = ByteBuffer.allocate(128);
+		this.outputs[CONTEXT_DATA] = ByteBuffer.allocate(1024);
+		this.outputs[REPOS] = ByteBuffer.allocate(64);
+		this.currentBuffer = 0;
+		this.numClosures = 0;
+		this.numContexts = 0;
+		this.sTablesListPos = 0;
+		this.objectsListPos = 0;
 	}
 
 	public String serialize() {
-		throw new RuntimeException("Serialization nyi");
+		/* Initialize string heap so first entry is the NULL string. */
+		sh.add(null);
+
+	    /* Start serializing. */
+	    serializationLoop();
+
+	    /* Build a single result string out of the serialized data. */
+	    return concatenateOutputs();
 	}
 	
 	private int addStringToHeap(String s) {
@@ -262,6 +294,144 @@ public class SerializationWriter {
 		outputs[currentBuffer].putInt(idxs[1]);
 	}
 	
+	/* Concatenates the various output segments into a single binary string. */
+	private String concatenateOutputs() {
+	    int output_size = 0;
+	    int offset      = 0;
+	    
+	    /* Calculate total size. */
+	    output_size += HEADER_SIZE;
+	    output_size += outputs[DEPS].position();
+	    output_size += outputs[STABLES].position();
+	    output_size += outputs[STABLE_DATA].position();
+	    output_size += outputs[OBJECTS].position();
+	    output_size += outputs[OBJECT_DATA].position();
+	    output_size += outputs[CLOSURES].position();
+	    output_size += outputs[CONTEXTS].position();
+	    output_size += outputs[CONTEXT_DATA].position();
+	    output_size += outputs[REPOS].position();
+	    
+	    /* Allocate a buffer that size. */
+	    ByteBuffer output = ByteBuffer.allocate(output_size);
+	    
+	    /* Write version into header. */
+	    output.putInt(CURRENT_VERSION);
+	    offset += HEADER_SIZE;
+	    
+	    /* Put dependencies table in place and set location/rows in header. */
+	    output.putInt(offset);
+	    output.putInt(this.dependentSCs.size());
+	    output.position(offset);
+	    output.put(usedBytes(outputs[DEPS]));
+	    offset += outputs[DEPS].position();
+	    
+	    /* Put STables table in place, and set location/rows in header. */
+	    output.position(12);
+	    output.putInt(offset);
+	    output.putInt(this.sc.root_stables.size());
+	    output.position(offset);
+	    output.put(usedBytes(outputs[STABLES]));
+	    offset += outputs[STABLES].position();
+	    
+	    /* Put STables data in place. */
+	    output.position(20);
+	    output.putInt(offset);
+	    output.position(offset);
+	    output.put(usedBytes(outputs[STABLE_DATA]));
+	    offset += outputs[STABLE_DATA].position();
+	    
+	    /* Put objects table in place, and set location/rows in header. */
+	    output.position(20);
+	    output.putInt(offset);
+	    output.putInt(this.sc.root_objects.size());
+	    output.position(offset);
+	    output.put(usedBytes(outputs[OBJECTS]));
+	    offset += outputs[OBJECTS].position();
+	    
+	    /* Put objects data in place. */
+	    output.position(32);
+	    output.putInt(offset);
+	    output.position(offset);
+	    output.put(usedBytes(outputs[OBJECT_DATA]));
+	    offset += outputs[OBJECT_DATA].position();
+	    
+	    /* Put closures table in place, and set location/rows in header. */
+	    output.position(36);
+	    output.putInt(offset);
+	    output.putInt(this.numClosures);
+	    output.position(offset);
+	    output.put(usedBytes(outputs[CLOSURES]));
+	    offset += outputs[CLOSURES].position();
+
+	    /* Put contexts table in place, and set location/rows in header. */
+	    output.position(44);
+	    output.putInt(offset);
+	    output.putInt(this.numContexts);
+	    output.position(offset);
+	    output.put(usedBytes(outputs[CONTEXTS]));
+	    offset += outputs[CONTEXTS].position();
+	    
+	    /* Put contexts data in place. */
+	    output.position(52);
+	    output.putInt(offset);
+	    output.position(offset);
+	    output.put(usedBytes(outputs[CONTEXT_DATA]));
+	    offset += outputs[CONTEXT_DATA].position();
+	    
+	    /* Put repossessions table in place, and set location/rows in header. */
+	    output.position(56);
+	    output.putInt(offset);
+	    output.putInt(this.sc.rep_scs.size());
+	    output.position(offset);
+	    output.put(usedBytes(outputs[REPOS]));
+	    offset += outputs[REPOS].position();
+	    
+	    /* Sanity check. */
+	    if (offset != output_size)
+	        throw new RuntimeException("Serialization sanity check failed: offset != output_size");
+	    
+	    /* Base 64 encode and return. */
+	    throw new RuntimeException("No base-64 encoding yet");
+	}
+	
+	/* Grabs an array of the bytes actually populated in the specified buffer. */
+	private byte[] usedBytes(ByteBuffer bb) {
+		byte[] result = new byte[bb.position()];
+		bb.position(0);
+		bb.get(result);
+		bb.position(result.length);
+		return result;
+	}
+	
+	/* This handles the serialization of an object, which largely involves a
+	 * delegation to its representation. */
+	private void serializeObject(SixModelObject obj) {
+	    /* Get index of SC that holds the STable and its index. */
+	    int[] ref = getSTableRefInfo(obj.st);
+	    int sc = ref[0];
+	    int sc_idx = ref[1];
+	    
+	    /* Ensure there's space in the objects table; grow if not. */
+	    growToHold(OBJECTS, OBJECTS_TABLE_ENTRY_SIZE);
+	    
+	    /* Make objects table entry. */
+	    outputs[OBJECTS].putInt(sc);
+	    outputs[OBJECTS].putInt(sc_idx);
+	    outputs[OBJECTS].putInt(outputs[OBJECT_DATA].position());
+	    outputs[OBJECTS].putInt(obj instanceof TypeObject ? 0 : 1);
+	    
+	    /* Make sure we're going to write to the correct place. */
+	    currentBuffer = OBJECT_DATA;
+	    
+	    /* Delegate to its serialization REPR function. */
+	    if (!(obj instanceof TypeObject))
+	        obj.st.REPR.serialize(tc, obj, this);
+	}
+
+	private void serializeStable(STable sTable) {
+		throw new RuntimeException("STable serialization NYI");
+	}
+
 	/* Grows a buffer as needed to hold more data. */
 	private void growToHold(int idx, int required) {
 		ByteBuffer check = this.outputs[idx];
@@ -270,5 +440,52 @@ public class SerializationWriter {
 			replacement.put(check);
 			this.outputs[idx] = replacement;
 		}
+	}
+	
+	/* This is the overall serialization loop. It keeps an index into the list of
+	 * STables and objects in the SC. As we discover new ones, they get added. We
+	 * finished when we've serialized everything. */
+	private void serializationLoop() {
+	    boolean workTodo = true;
+	    while (workTodo) {
+	        /* Current work list sizes. */
+	    	int sTablesTodo = sc.root_stables.size();
+	    	int objectsTodo = sc.root_objects.size();
+	        /* XXX
+	         * INTVAL contexts_todo = VTABLE_elements(interp, writer->contexts_list);
+	         */
+	        
+	        /* Reset todo flag - if we do some work we'll go round again as it
+	         * may have generated more. */
+	        workTodo = false;
+	        
+	        /* Serialize any STables on the todo list. */
+	        while (sTablesListPos < sTablesTodo) {
+	            serializeStable(sc.root_stables.get(sTablesListPos));
+	            sTablesListPos++;
+	            workTodo = true;
+	        }
+	        
+	        /* Serialize any objects on the todo list. */
+	        while (objectsListPos < objectsTodo) {
+	        	serializeObject(sc.root_objects.get(objectsListPos));
+	            objectsListPos++;
+	            workTodo = true;
+	        }
+	        
+	        /* Serialize any contexts on the todo list. */
+	        /* XXX
+	         while (writer->contexts_list_pos < contexts_todo) {
+	            serialize_context(interp, writer, VTABLE_get_pmc_keyed_int(interp,
+	                writer->contexts_list, writer->contexts_list_pos));
+	            writer->contexts_list_pos++;
+	            workTodo = true;
+	        }*/
+	    }
+	    
+	    /* Finally, serialize repossessions table (this can't make any more
+	     * work, so is done as a separate step here at the end). */
+	    /* XXX */
+	    /*serializeRepossessions();*/
 	}
 }

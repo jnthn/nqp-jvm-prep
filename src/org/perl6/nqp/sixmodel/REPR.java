@@ -75,9 +75,12 @@ public abstract class REPR {
         throw ExceptionHandling.dieInternal(tc, "This representation does not support type changes.");
     }
     
-    /* Object serialization. Writes the objects body out using the passed
+    /**
+     * Object serialization. Writes the objects body out using the passed
      * serialization writer. */
-    // XXX void (*serialize) (ThreadContext, STable *st, void *data, SerializationWriter *writer);
+    public void serialize(ThreadContext tc, SixModelObject obj, SerializationWriter writer) {
+    	throw ExceptionHandling.dieInternal(tc, "Missing serialize function for REPR");
+    }
     
     /**
      * Object deserialization. Happens in two steps. The first stub step
