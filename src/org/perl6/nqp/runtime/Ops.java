@@ -3074,8 +3074,8 @@ public final class Ops {
     public static SixModelObject loadcompunit(SixModelObject obj, ThreadContext tc) {
     	try {
 	    	EvalResult res = (EvalResult)obj;
-	    	ByteClassLoader cl = new ByteClassLoader(res.jc.getBytes());
-	    	res.cu = (CompilationUnit)cl.findClass(res.jc.getClassName()).newInstance();
+	    	ByteClassLoader cl = new ByteClassLoader(res.jc.bytes);
+	    	res.cu = (CompilationUnit)cl.findClass(res.jc.name).newInstance();
 	    	res.cu.initializeCompilationUnit(tc);
 	    	res.jc = null;
 	    	return obj;

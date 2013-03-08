@@ -68,7 +68,7 @@ class HLL::Backend::JVM {
         my $dump := $jast.dump();
         spurt($name ~ '.dump', $dump);
         run('java',
-            '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
+            '-cp ' ~ pathlist('bin', '3rdparty/asm/asm-4.1.jar'),
             'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
             $name ~ '.dump', $name ~ '.class');
         unlink($name ~ '.dump');
@@ -83,7 +83,7 @@ class HLL::Backend::JVM {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         -> {
             run('java',
-                '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar'),
+                '-cp ' ~ pathlist('.', 'bin', '3rdparty/asm/asm-4.1.jar'),
                 $name);
             unlink($name ~ '.class');
         }

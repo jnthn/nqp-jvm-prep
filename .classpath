@@ -2,8 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="3rdparty/bcel/bcel-5.2.jar" sourcepath="/Users/donaldh/work/bcel/src/main/java"/>
 	<classpathentry kind="lib" path="3rdparty/asm/asm-4.1.jar" sourcepath="/Users/donaldh/Downloads/asm-4.1/src.zip"/>
-	<classpathentry kind="lib" path="3rdparty/asm/asm-commons-4.1.jar" sourcepath="/Users/donaldh/Downloads/asm-4.1/src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

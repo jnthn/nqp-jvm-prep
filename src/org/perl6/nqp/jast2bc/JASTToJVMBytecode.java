@@ -1,14 +1,21 @@
 package org.perl6.nqp.jast2bc;
 
-import java.util.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
-import org.apache.bcel.Constants;
-import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.generic.*;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class JASTToJVMBytecode {
     public static void main(String[] argv)
@@ -19,10 +26,11 @@ public class JASTToJVMBytecode {
         try
         {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(argv[0])));
-            ClassGen c = buildClassFrom(in);
+            JavaClass c = buildClassFrom(in);
             in.close();
-            c.setMajor(49);
-            c.getJavaClass().dump(argv[1]);
+            FileOutputStream fos = new FileOutputStream(argv[1]);
+            fos.write(c.bytes);
+            fos.close();
         }
         catch (Exception e)
         {
@@ -34,16 +42,15 @@ public class JASTToJVMBytecode {
     public static JavaClass buildClassFromString(String in) {
     	try {
 	    	BufferedReader br = new BufferedReader(new StringReader(in));
-	    	ClassGen c = buildClassFrom(br);
-	        c.setMajor(49);
-	        return c.getJavaClass();
+	    	JavaClass c = buildClassFrom(br);
+	    	return c;
     	}
     	catch (Exception e) {
     		throw new RuntimeException(e);
     	}
     }
     
-    private static ClassGen buildClassFrom(BufferedReader in) throws Exception
+    private static JavaClass buildClassFrom(BufferedReader in) throws Exception
     {
         // Read in class name, superclass and any fields.
         String curLine, className = null, superName = null;
@@ -71,53 +78,63 @@ public class JASTToJVMBytecode {
             throw new Exception("Missing superclass name");
         
         // Create class generator object.
-        ClassGen c = new ClassGen(className, superName,  "<generated>",
-                Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
-        ConstantPoolGen cp = c.getConstantPool();
-        InstructionList il = new InstructionList();
+//        ClassGen c = new ClassGen(className, superName,  "<generated>",
+//                Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
+//        ConstantPoolGen cp = c.getConstantPool();
+//        InstructionList il = new InstructionList();
+        
+        className = className.replace('.', '/');
+        superName = superName.replace('.', '/');
+
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        cw.visit(Opcodes.V1_7, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, className, null, 
+        		superName, null);
         
         // Add the fields.
         for (String field : fieldLines) {
             String[] bits = field.split("\\s");
-            FieldGen fg = new FieldGen(
-                    bits[2].equals("static")
-                        ? Constants.ACC_PUBLIC | Constants.ACC_STATIC
-                        : Constants.ACC_PUBLIC,
-                    processType(bits[1]), bits[0], cp);
-            c.addField(fg.getField());
+            
+            cw.visitField(
+            		bits[2].equals("static")
+            			? Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
+            			: Opcodes.ACC_PUBLIC, 
+            		bits[0], processType(bits[1]).getDescriptor(), null, null);
         }
         
         // Process all of the methods.
         if (!curLine.equals("+ method"))
             throw new Exception("Expected method after class configuration");
-        while (processMethod(in, c, cp, il))
+        while (processMethod(in, cw, className))
             ;
         
         // Add empty constructor.
-        c.addEmptyConstructor(Constants.ACC_PUBLIC);
+        MethodVisitor constructor = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+        constructor.visitCode();
+        constructor.visitVarInsn(Opcodes.ALOAD, 0);
+        constructor.visitMethodInsn(Opcodes.INVOKESPECIAL, 
+        		superName, "<init>", "()V");
+        constructor.visitInsn(Opcodes.RETURN);
+        constructor.visitMaxs(1, 1);
+        constructor.visitEnd();
 
+        cw.visitEnd();
+        
+        JavaClass c = new JavaClass(className, cw.toByteArray());
         return c;
     }
     
-    private static boolean processMethod(BufferedReader in, ClassGen c,
-            ConstantPoolGen cp, InstructionList il) throws Exception {
+    private static boolean processMethod(BufferedReader in, ClassWriter c, String className) throws Exception {
         String curLine, methodName = null, returnType = null;
         boolean isStatic = false;
         List<String> argNames = new ArrayList<String>();
         List<Type> argTypes = new ArrayList<Type>();
-        Map<String, Type> localTypes = new HashMap<String, Type>();
         Map<String, Integer> argIndexes = new HashMap<String, Integer>();
-        Map<String, LocalVariableGen> localVariables = new HashMap<String, LocalVariableGen>();
-        Map<String, InstructionHandle> labelIns = new HashMap<String, InstructionHandle>();
-        Map<String, ArrayList<BranchInstruction>> labelFixups = new HashMap<String, ArrayList<BranchInstruction>>();
-        Map<InstructionHandle, String> tablesToGenerate = new HashMap<InstructionHandle, String>();
-        Stack<InstructionHandle> tryStartStack = new Stack<InstructionHandle>();
-        Stack<InstructionHandle> tryEndStack = new Stack<InstructionHandle>();
-        Stack<ObjectType> catchTypeStack = new Stack<ObjectType>();
+        Map<String, VariableDef> localVariables = new HashMap<String, VariableDef>();
+        Map<String, Label> labelMap = new HashMap<String, Label>();
+        Stack<Label> tryStartStack = new Stack<Label>();
         int curArgIndex = 1;
         
-        MethodGen m = null;
-        InstructionFactory f = null;
+        MethodVisitor m = null;
         
         boolean inMethodHeader = true;
         while ((curLine = in.readLine()) != null) {
@@ -125,7 +142,7 @@ public class JASTToJVMBytecode {
             if (curLine.equals("+ method")) {
                 if (inMethodHeader)
                     throw new Exception("Unexpected + method in method header");
-                finishMethod(c, cp, il, m, labelIns, labelFixups, tablesToGenerate);
+                finishMethod(m);
                 return true;
             }
             
@@ -147,13 +164,16 @@ public class JASTToJVMBytecode {
                     argNames.add(bits[2]);
                     argTypes.add(t);
                     argIndexes.put(bits[2], curArgIndex);
-                    curArgIndex += (t == Type.LONG || t == Type.DOUBLE ? 2 : 1);
+                    curArgIndex += (t == Type.LONG_TYPE || t == Type.DOUBLE_TYPE ? 2 : 1);
                 }
                 else if (curLine.startsWith("++ local ")) {
                     String[] bits = curLine.split("\\s", 4);
-                    if (localTypes.containsKey(bits[2]))
+                    if (localVariables.containsKey(bits[2]))
                         throw new Exception("Duplicate local name: " + bits[2]);
-                    localTypes.put(bits[2], processType(bits[3]));
+                    
+                    //TODO: indexes
+                    localVariables.put(bits[2], 
+                    		new VariableDef(++curArgIndex, processType(bits[3]).getDescriptor()));
                 }
                 else
                     throw new Exception("Cannot understand '" + curLine + "'");
@@ -167,28 +187,28 @@ public class JASTToJVMBytecode {
                 inMethodHeader = false;
                 
                 // Create method object.
-                m = new MethodGen(
-                        (isStatic
-                            ? Constants.ACC_STATIC | Constants.ACC_PUBLIC
-                            : Constants.ACC_PUBLIC),
-                        processType(returnType),
-                        argTypes.toArray(new Type[0]),
-                        argNames.toArray(new String[0]),
-                        methodName, c.getClassName(),
-                        il, cp);
-                 f = new InstructionFactory(c);
+                String desc = Type.getMethodDescriptor(processType(returnType), argTypes.toArray(new Type[0]));
+                m = c.visitMethod(
+                		(isStatic
+                			? Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC
+                			: Opcodes.ACC_PUBLIC), 
+                			methodName, desc, null, null);
                  
                  // Add locals.
-                 for (String local : localTypes.keySet())
-                     localVariables.put(local, m.addLocalVariable(local, localTypes.get(local), null, null));
+                 for (Map.Entry<String, VariableDef> e : localVariables.entrySet()) {
+                	 VariableDef def = e.getValue();
+                	 m.visitLocalVariable(e.getKey(), def.type, null, def.start, def.end, def.index);
+                 }
             }
             
             // Check if it's a label.
             if (curLine.startsWith(":")) {
                 String labelName = curLine.substring(1);
-                if (labelIns.containsKey(labelName))
-                    throw new Exception("Duplicate label: " + labelName);
-                labelIns.put(labelName, il.getEnd());
+//                if (labelMap.containsKey(labelName))
+//                    throw new Exception("Duplicate label: " + labelName);
+                if (!labelMap.containsKey(labelName))
+                	labelMap.put(labelName, new Label());
+                m.visitLabel(labelMap.get(labelName));
                 continue;
             }
             
@@ -196,11 +216,11 @@ public class JASTToJVMBytecode {
             if (curLine.startsWith(".")) {
                 if (curLine.startsWith(".push_ic ")) {
                     Long value = Long.parseLong(curLine.substring(".push_ic ".length()));
-                    il.append(new PUSH(cp, value));
+                    m.visitLdcInsn(value);
                 }
                 else if (curLine.startsWith(".push_nc ")) {
                     Double value = Double.parseDouble(curLine.substring(".push_nc ".length()));
-                    il.append(new PUSH(cp, value));
+                    m.visitLdcInsn(value);
                 }
                 else if (curLine.startsWith(".push_sc ")) {
                     String value = curLine.substring(".push_sc ".length());
@@ -222,42 +242,34 @@ public class JASTToJVMBytecode {
                     		sb.append(ch);
                     	}
                     }
-                    il.append(new PUSH(cp, sb.toString()));
+                    m.visitLdcInsn(sb.toString());
                 }
                 else if (curLine.startsWith(".push_cc ")) {
-                    String className = curLine.substring(".push_sc ".length());
-                    Type t = processType(className);
-                    if (t instanceof ArrayType)
-                    	il.append(new LDC(cp.addArrayClass((ArrayType)t)));
-                    else
-                    	il.append(new LDC(cp.addClass((ObjectType)t)));
+                    String cName = curLine.substring(".push_cc ".length());
+                    Type t = Type.getType(cName);
+                    m.visitLdcInsn(t);
                 }
                 else if (curLine.startsWith(".push_idx ")) {
                     Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
-                    il.append(new PUSH(cp, value));
+                    m.visitLdcInsn(value);
+//                    il.append(new PUSH(cp, value));
                 }
                 else if (curLine.equals(".try")) {
-                    if (il.getEnd() == null)
-                        il.append(new NOP());
-                    tryStartStack.push(il.getEnd());
+                	Label start = new Label();
+                	m.visitLabel(start);
+                	tryStartStack.push(start);
                 }
                 else if (curLine.startsWith(".catch ")) {
-                    il.append(InstructionFactory.createBranchInstruction((short)Constants.GOTO, null));
-                    tryEndStack.push(il.getEnd());
                     String typeName = curLine.substring(".catch ".length());
-                    if (typeName.equals(""))
-                    	catchTypeStack.push(null);
-                    else
-                    	catchTypeStack.push((ObjectType)processType(typeName));
+                    Label start = tryStartStack.peek();
+                    Label end = new Label();
+                    Label handler = new Label();
+                    m.visitLabel(end);
+                    m.visitLabel(handler);
+                    m.visitTryCatchBlock(start, end, handler, typeName);
                 }
                 else if (curLine.equals(".endtry")) {
-                    InstructionHandle tryStart = tryStartStack.pop().getNext();
-                    InstructionHandle tryEnd = tryEndStack.pop();
-                    InstructionHandle catchStart = tryEnd.getNext();
-                    ObjectType catchType = catchTypeStack.pop();
-                    m.addExceptionHandler(tryStart, tryEnd, catchStart, catchType);
-                    il.append(new NOP());
-                    ((BranchInstruction)tryEnd.getInstruction()).setTarget(il.getEnd());
+                	tryStartStack.pop();
                 }
                 else {
                     throw new Exception("Don't understand directive: " + curLine);
@@ -266,21 +278,20 @@ public class JASTToJVMBytecode {
             }
             
             // Process line as an instruction.
-            emitInstruction(il, f, labelFixups, argIndexes, localVariables, tablesToGenerate, curLine);
+            emitInstruction(m, labelMap, argIndexes, localVariables, curLine);
         }
         if (inMethodHeader)
             throw new Exception("Unexpected end of file in method header");
-        finishMethod(c, cp, il, m, labelIns, labelFixups, tablesToGenerate);
+        finishMethod(m);
         return false;
     }
 
-    private static void emitInstruction(InstructionList il, InstructionFactory f,
-            Map<String, ArrayList<BranchInstruction>> labelFixups,
+    private static void emitInstruction(MethodVisitor m,
+            Map<String, Label> labelMap,
             Map<String, Integer> argIndexes,
-            Map<String, LocalVariableGen> localVariables,
-            Map<InstructionHandle, String> tablesToGenerate,
+            Map<String, VariableDef> localVariables,
             String curLine) throws Exception {
-        // Find instruciton code and get rest of the string.
+        // Find instruction code and get rest of the string.
         int endIns = curLine.indexOf(" ");
         String rest = "";
         if (endIns < 0)
@@ -292,495 +303,251 @@ public class JASTToJVMBytecode {
         // Go by instruction.
         switch (instruction) {
         case 0x00: // nop
-            il.append(InstructionConstants.NOP);
-            break;
         case 0x01: //aconst_null
-            il.append(InstructionConstants.ACONST_NULL);
-            break;
         case 0x02: // iconst_m1
-            il.append(InstructionConstants.ICONST_M1);
-            break;
         case 0x03: // iconst_0
-            il.append(InstructionConstants.ICONST_0);
-            break;
         case 0x04: // iconst_1
-            il.append(InstructionConstants.ICONST_1);
-            break;
         case 0x05: // iconst_2
-            il.append(InstructionConstants.ICONST_2);
-            break;
         case 0x06: // iconst_3
-            il.append(InstructionConstants.ICONST_3);
-            break;
         case 0x07: // iconst_4
-            il.append(InstructionConstants.ICONST_4);
-            break;
         case 0x08: // iconst_5
-            il.append(InstructionConstants.ICONST_5);
-            break;
         case 0x09: // lconst_0
-            il.append(InstructionConstants.LCONST_0);
-            break;
         case 0x0a: // lconst_1
-            il.append(InstructionConstants.LCONST_1);
-            break;
         case 0x0b: // fconst_0
-            il.append(InstructionConstants.FCONST_0);
-            break;
         case 0x0c: // fconst_1
-            il.append(InstructionConstants.FCONST_1);
-            break;
         case 0x0d: // fconst_2
-            il.append(InstructionConstants.FCONST_2);
-            break;
         case 0x0e: // dconst_0
-            il.append(InstructionConstants.DCONST_0);
-            break;
         case 0x0f: // dconst_1
-            il.append(InstructionConstants.DCONST_1);
+            m.visitInsn(instruction);
             break;
         case 0x15: // iload
-            if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.INT, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.INT, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x16: // lload
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.LONG, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.LONG, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x17: // fload
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.FLOAT, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.FLOAT, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x18: // dload
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.DOUBLE, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.DOUBLE, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x19: // aload
         	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.OBJECT, localVariables.get(rest).getIndex()));
+        		m.visitVarInsn(instruction, localVariables.get(rest).index);
             else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createLoad(Type.OBJECT, argIndexes.get(rest)));
+            	m.visitVarInsn(instruction, argIndexes.get(rest));
             else
             	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x1a: // iload_0
-            il.append(InstructionFactory.createLoad(Type.INT, 0));
+        	m.visitVarInsn(Opcodes.ILOAD, 0);
             break;
         case 0x1b: // iload_1
-            il.append(InstructionFactory.createLoad(Type.INT, 1));
+        	m.visitVarInsn(Opcodes.ILOAD, 1);
             break;
         case 0x1c: // iload_2
-            il.append(InstructionFactory.createLoad(Type.INT, 2));
+        	m.visitVarInsn(Opcodes.ILOAD, 2);
             break;
         case 0x1d: // iload_3
-            il.append(InstructionFactory.createLoad(Type.INT, 3));
+        	m.visitVarInsn(Opcodes.ILOAD, 3);
             break;
         case 0x1e: // lload_0
-            il.append(InstructionFactory.createLoad(Type.LONG, 0));
+        	m.visitVarInsn(Opcodes.LLOAD, 0);
             break;
         case 0x1f: // lload_1
-            il.append(InstructionFactory.createLoad(Type.LONG, 1));
+        	m.visitVarInsn(Opcodes.LLOAD, 1);
             break;
         case 0x20: // lload_2
-            il.append(InstructionFactory.createLoad(Type.LONG, 2));
+        	m.visitVarInsn(Opcodes.LLOAD, 2);
             break;
         case 0x21: // lload_3
-            il.append(InstructionFactory.createLoad(Type.LONG, 3));
+        	m.visitVarInsn(Opcodes.LLOAD, 3);
             break;
         case 0x22: // fload_0
-            il.append(InstructionFactory.createLoad(Type.FLOAT, 0));
+        	m.visitVarInsn(Opcodes.FLOAD, 0);
             break;
         case 0x23: // fload_1
-            il.append(InstructionFactory.createLoad(Type.FLOAT, 1));
+        	m.visitVarInsn(Opcodes.FLOAD, 1);
             break;
         case 0x24: // fload_2
-            il.append(InstructionFactory.createLoad(Type.FLOAT, 2));
+        	m.visitVarInsn(Opcodes.FLOAD, 2);
             break;
         case 0x25: // fload_3
-            il.append(InstructionFactory.createLoad(Type.FLOAT, 3));
+        	m.visitVarInsn(Opcodes.FLOAD, 3);
             break;
         case 0x26: // dload_0
-            il.append(InstructionFactory.createLoad(Type.DOUBLE, 0));
+        	m.visitVarInsn(Opcodes.DLOAD, 0);
             break;
         case 0x27: // dload_1
-            il.append(InstructionFactory.createLoad(Type.DOUBLE, 1));
+        	m.visitVarInsn(Opcodes.DLOAD, 1);
             break;
         case 0x28: // dload_2
-            il.append(InstructionFactory.createLoad(Type.DOUBLE, 2));
+        	m.visitVarInsn(Opcodes.DLOAD, 2);
             break;
         case 0x29: // dload_3
-            il.append(InstructionFactory.createLoad(Type.DOUBLE, 3));
+        	m.visitVarInsn(Opcodes.DLOAD, 3);
             break;
         case 0x2a: // aload_0
-            il.append(InstructionFactory.createLoad(Type.OBJECT, 0));
+        	m.visitVarInsn(Opcodes.ALOAD, 0);
             break;
         case 0x2b: // aload_1
-            il.append(InstructionFactory.createLoad(Type.OBJECT, 1));
+        	m.visitVarInsn(Opcodes.ALOAD, 1);
             break;
         case 0x2c: // aload_2
-            il.append(InstructionFactory.createLoad(Type.OBJECT, 2));
+        	m.visitVarInsn(Opcodes.ALOAD, 2);
             break;
         case 0x2d: // aload_3
-            il.append(InstructionFactory.createLoad(Type.OBJECT, 3));
+        	m.visitVarInsn(Opcodes.ALOAD, 3);
             break;
         case 0x2e: // iaload
-            il.append(InstructionFactory.IALOAD);
-            break;
         case 0x2f: // laload
-            il.append(InstructionFactory.LALOAD);
-            break;
         case 0x30: // faload
-            il.append(InstructionFactory.FALOAD);
-            break;
         case 0x31: // daload
-            il.append(InstructionFactory.DALOAD);
-            break;
         case 0x32: // aaload
-            il.append(InstructionFactory.AALOAD);
-            break;
         case 0x33: // baload
-            il.append(InstructionFactory.BALOAD);
-            break;
         case 0x34: // caload
-            il.append(InstructionFactory.CALOAD);
-            break;
         case 0x35: // saload
-            il.append(InstructionFactory.SALOAD);
+            m.visitInsn(instruction);
             break;
         case 0x36: // istore
-            if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.INT, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.INT, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x37: // lstore
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.LONG, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.LONG, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x38: // fstore
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.FLOAT, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.FLOAT, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x39: // dstore
-        	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.DOUBLE, localVariables.get(rest).getIndex()));
-            else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.DOUBLE, argIndexes.get(rest)));
-            else
-            	throw new Exception("Undeclared local variable: " + rest);
-            break;
         case 0x3a: // astore
         	if (localVariables.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.OBJECT, localVariables.get(rest).getIndex()));
+        		m.visitVarInsn(instruction, localVariables.get(rest).index);
             else if (argIndexes.containsKey(rest))
-            	il.append(InstructionFactory.createStore(Type.OBJECT, argIndexes.get(rest)));
+            	m.visitVarInsn(instruction, argIndexes.get(rest));
             else
             	throw new Exception("Undeclared local variable: " + rest);
             break;
         case 0x3b: // istore_0
-            il.append(InstructionFactory.createStore(Type.INT, 0));
+        	m.visitVarInsn(Opcodes.ISTORE, 0);
             break;
         case 0x3c: // istore_1
-            il.append(InstructionFactory.createStore(Type.INT, 1));
+        	m.visitVarInsn(Opcodes.ISTORE, 1);
             break;
         case 0x3d: // istore_2
-            il.append(InstructionFactory.createStore(Type.INT, 2));
+        	m.visitVarInsn(Opcodes.ISTORE, 2);
             break;
         case 0x3e: // istore_3
-            il.append(InstructionFactory.createStore(Type.INT, 3));
+        	m.visitVarInsn(Opcodes.ISTORE, 3);
             break;
         case 0x3f: // lstore_0
-            il.append(InstructionFactory.createStore(Type.LONG, 0));
+        	m.visitVarInsn(Opcodes.LSTORE, 0);
             break;
         case 0x40: // lstore_1
-            il.append(InstructionFactory.createStore(Type.LONG, 1));
+        	m.visitVarInsn(Opcodes.LSTORE, 1);
             break;
         case 0x41: // lstore_2
-            il.append(InstructionFactory.createStore(Type.LONG, 2));
+        	m.visitVarInsn(Opcodes.LSTORE, 2);
             break;
         case 0x42: // lstore_3
-            il.append(InstructionFactory.createStore(Type.LONG, 3));
+        	m.visitVarInsn(Opcodes.LSTORE, 3);
             break;
         case 0x43: // fstore_0
-            il.append(InstructionFactory.createStore(Type.FLOAT, 0));
+        	m.visitVarInsn(Opcodes.FSTORE, 0);
             break;
         case 0x44: // fstore_1
-            il.append(InstructionFactory.createStore(Type.FLOAT, 1));
+        	m.visitVarInsn(Opcodes.FSTORE, 1);
             break;
         case 0x45: // fstore_2
-            il.append(InstructionFactory.createStore(Type.FLOAT, 2));
+        	m.visitVarInsn(Opcodes.FSTORE, 2);
             break;
         case 0x46: // fstore_3
-            il.append(InstructionFactory.createStore(Type.FLOAT, 3));
+        	m.visitVarInsn(Opcodes.FSTORE, 3);
             break;
         case 0x47: // dstore_0
-            il.append(InstructionFactory.createStore(Type.DOUBLE, 0));
+        	m.visitVarInsn(Opcodes.DSTORE, 0);
             break;
         case 0x48: // dstore_1
-            il.append(InstructionFactory.createStore(Type.DOUBLE, 1));
+        	m.visitVarInsn(Opcodes.DSTORE, 1);
             break;
         case 0x49: // dstore_2
-            il.append(InstructionFactory.createStore(Type.DOUBLE, 2));
+        	m.visitVarInsn(Opcodes.DSTORE, 2);
             break;
         case 0x4a: // dstore_3
-            il.append(InstructionFactory.createStore(Type.DOUBLE, 3));
+        	m.visitVarInsn(Opcodes.DSTORE, 3);
             break;
         case 0x4b: // astore_0
-            il.append(InstructionFactory.createStore(Type.OBJECT, 0));
+        	m.visitVarInsn(Opcodes.DSTORE, 0);
             break;
         case 0x4c: // astore_1
-            il.append(InstructionFactory.createStore(Type.OBJECT, 1));
+        	m.visitVarInsn(Opcodes.DSTORE, 1);
             break;
         case 0x4d: // astore_2
-            il.append(InstructionFactory.createStore(Type.OBJECT, 2));
+        	m.visitVarInsn(Opcodes.DSTORE, 2);
             break;
         case 0x4e: // astore_3
-            il.append(InstructionFactory.createStore(Type.OBJECT, 3));
+        	m.visitVarInsn(Opcodes.DSTORE, 3);
             break;
         case 0x4f: // iastore
-            il.append(InstructionFactory.IASTORE);
-            break;
         case 0x50: // lastore
-            il.append(InstructionFactory.LASTORE);
-            break;
         case 0x51: // fastore
-            il.append(InstructionFactory.FASTORE);
-            break;
         case 0x52: // dastore
-            il.append(InstructionFactory.DASTORE);
-            break;
         case 0x53: // aastore
-            il.append(InstructionFactory.AASTORE);
-            break;
         case 0x54: // bastore
-            il.append(InstructionFactory.BASTORE);
-            break;
         case 0x55: // castore
-            il.append(InstructionFactory.CASTORE);
-            break;
         case 0x56: // sastore
-            il.append(InstructionFactory.SASTORE);
-            break;
         case 0x57: // pop
-            il.append(InstructionConstants.POP);
-            break;
         case 0x58: // pop2
-            il.append(InstructionConstants.POP2);
-            break;
         case 0x59: // dup
-            il.append(InstructionConstants.DUP);
-            break;
         case 0x5a: // dup_x1
-            il.append(InstructionConstants.DUP_X1);
-            break;
         case 0x5b: // dup_x2
-            il.append(InstructionConstants.DUP_X2);
-            break;
         case 0x5c: // dup2
-            il.append(InstructionConstants.DUP2);
-            break;
         case 0x5d: // dup2_x1
-            il.append(InstructionConstants.DUP2_X1);
-            break;
         case 0x5e: // dup2_x2
-            il.append(InstructionConstants.DUP2_X2);
-            break;
         case 0x5f: // swap
-            il.append(InstructionConstants.SWAP);
-            break;
         case 0x60: // iadd
-            il.append(InstructionConstants.IADD);
-            break;
         case 0x61: // ladd
-            il.append(InstructionConstants.LADD);
-            break;
         case 0x62: // fadd
-            il.append(InstructionConstants.FADD);
-            break;
         case 0x63: // dadd
-            il.append(InstructionConstants.DADD);
-            break;
         case 0x64: // isub
-            il.append(InstructionConstants.ISUB);
-            break;
         case 0x65: // lsub
-            il.append(InstructionConstants.LSUB);
-            break;
         case 0x66: // fsub
-            il.append(InstructionConstants.FSUB);
-            break;
         case 0x67: // dsub
-            il.append(InstructionConstants.DSUB);
-            break;
         case 0x68: // imul
-            il.append(InstructionConstants.IMUL);
-            break;
         case 0x69: // lmul
-            il.append(InstructionConstants.LMUL);
-            break;
         case 0x6a: // fmul
-            il.append(InstructionConstants.FMUL);
-            break;
         case 0x6b: // dmul
-            il.append(InstructionConstants.DMUL);
-            break;
         case 0x6c: // idiv
-            il.append(InstructionConstants.IDIV);
-            break;
         case 0x6d: // ldiv
-            il.append(InstructionConstants.LDIV);
-            break;
         case 0x6e: // fdiv
-            il.append(InstructionConstants.FDIV);
-            break;
         case 0x6f: // ddiv
-            il.append(InstructionConstants.DDIV);
-            break;
         case 0x70: // irem
-            il.append(InstructionConstants.IREM);
-            break;
         case 0x71: // lrem
-            il.append(InstructionConstants.LREM);
-            break;
         case 0x72: // frem
-            il.append(InstructionConstants.FREM);
-            break;
         case 0x73: // drem
-            il.append(InstructionConstants.DREM);
-            break;
         case 0x74: // ineg
-            il.append(InstructionConstants.INEG);
-            break;
         case 0x75: // lneg
-            il.append(InstructionConstants.LNEG);
-            break;
         case 0x76: // fneg
-            il.append(InstructionConstants.FNEG);
-            break;
         case 0x77: // dneg
-            il.append(InstructionConstants.DNEG);
-            break;
         case 0x78: // ishl
-            il.append(InstructionConstants.ISHL);
-            break;
         case 0x79: // lshl
-            il.append(InstructionConstants.LSHL);
-            break;
         case 0x7a: // ishr
-            il.append(InstructionConstants.ISHR);
-            break;
         case 0x7b: // lshr
-            il.append(InstructionConstants.LSHR);
-            break;
         case 0x7c: // iushr
-            il.append(InstructionConstants.IUSHR);
-            break;
         case 0x7d: // lushr
-            il.append(InstructionConstants.LUSHR);
-            break;
         case 0x7e: // iand
-            il.append(InstructionConstants.IAND);
-            break;
         case 0x7f: // land
-            il.append(InstructionConstants.LAND);
-            break;
         case 0x80: // ior
-            il.append(InstructionConstants.IOR);
-            break;
         case 0x81: // lor
-            il.append(InstructionConstants.LOR);
-            break;
         case 0x82: // ixor
-            il.append(InstructionConstants.IXOR);
-            break;
         case 0x83: // lxor
-            il.append(InstructionConstants.LXOR);
-            break;
         case 0x85: // i2l
-            il.append(InstructionConstants.I2L);
-            break;
         case 0x86: // i2f
-            il.append(InstructionConstants.I2F);
-            break;
         case 0x87: // i2d
-            il.append(InstructionConstants.I2D);
-            break;
         case 0x88: // l2i
-            il.append(InstructionConstants.L2I);
-            break;
         case 0x89: // l2f
-            il.append(InstructionConstants.L2F);
-            break;
         case 0x8a: // l2d
-            il.append(InstructionConstants.L2D);
-            break;
         case 0x8b: // f2i
-            il.append(InstructionConstants.F2I);
-            break;
         case 0x8c: // f2l
-            il.append(InstructionConstants.F2L);
-            break;
         case 0x8d: // f2d
-            il.append(InstructionConstants.F2D);
-            break;
         case 0x8e: // d2i
-            il.append(InstructionConstants.D2I);
-            break;
         case 0x8f: // d2l
-            il.append(InstructionConstants.D2L);
-            break;
         case 0x90: // d2f
-            il.append(InstructionConstants.D2F);
-            break;
         case 0x91: // i2b
-            il.append(InstructionConstants.I2B);
-            break;
         case 0x92: // i2c
-            il.append(InstructionConstants.I2C);
-            break;
         case 0x93: // i2s
-            il.append(InstructionConstants.I2S);
-            break;
         case 0x94: // lcmp
-            il.append(InstructionConstants.LCMP);
-            break;
         case 0x95: // fcmpl
-            il.append(InstructionConstants.FCMPL);
-            break;
         case 0x96: // fcmpg
-            il.append(InstructionConstants.FCMPG);
-            break;
         case 0x97: // dcmpl
-            il.append(InstructionConstants.DCMPL);
-            break;
         case 0x98: // dcmpg
-            il.append(InstructionConstants.DCMPG);
+        	m.visitInsn(instruction);
             break;
         case 0x99: // ifeq
         case 0x9a: // ifne
@@ -797,150 +564,125 @@ public class JASTToJVMBytecode {
         case 0xa5: // if_acmpeq
         case 0xa6: // if_acmpne
         case 0xa7: // goto
-            emitBranchInstruction(il, labelFixups, rest, instruction);
+            emitBranchInstruction(m, labelMap, rest, instruction);
             break;
         case 0xaa: // tableswitch
-            il.append(InstructionFactory.createBranchInstruction((short)0xa7, null)); // dummy
-            tablesToGenerate.put(il.getEnd(), rest);
+        	emitTableSwitchInstruction(m, labelMap, rest);
             break;
         case 0xac: // ireturn
-            il.append(InstructionConstants.IRETURN);
-            break;
         case 0xad: // lreturn
-            il.append(InstructionConstants.LRETURN);
-            break;
         case 0xae: // freturn
-            il.append(InstructionConstants.FRETURN);
-            break;
         case 0xaf: // dreturn
-            il.append(InstructionConstants.DRETURN);
-            break;
         case 0xb0: // areturn
-            il.append(InstructionConstants.ARETURN);
-            break;
         case 0xb1: // return
-            il.append(InstructionConstants.RETURN);
+        	m.visitInsn(instruction);
             break;
         case 0xb2: // getstatic
-            emitFieldAccess(il, f, rest, Constants.GETSTATIC);
-            break;
         case 0xb3: // putstatic
-            emitFieldAccess(il, f, rest, Constants.PUTSTATIC);
-            break;
         case 0xb4: // getfield
-            emitFieldAccess(il, f, rest, Constants.GETFIELD);
-            break;
         case 0xb5: // putfield
-            emitFieldAccess(il, f, rest, Constants.PUTFIELD);
+            emitFieldAccess(m, rest, instruction);
             break;
         case 0xb6: // invokevirtual
-            emitCall(il, f, rest, Constants.INVOKEVIRTUAL);
-            break;
         case 0xb7: // invokespecial
-            emitCall(il, f, rest, Constants.INVOKESPECIAL);
-            break;
         case 0xb8: // invokestatic
-            emitCall(il, f, rest, Constants.INVOKESTATIC);
+            emitCall(m, rest, instruction);
             break;
         case 0xbb: // new
-            ObjectType t = (ObjectType)processType(rest);
-            il.append(f.createNew(t));
+            Type t = processType(rest);
+        	m.visitTypeInsn(instruction, t.getInternalName());
             break;
         case 0xbc: // newarray
+        	int type;
+        	if (rest.equals("Integer"))
+        		type = Opcodes.T_INT;
+        	else if (rest.equals("Long"))
+        		type = Opcodes.T_LONG;
+        	else if (rest.equals("Double"))
+        		type = Opcodes.T_DOUBLE;
+        	else if (rest.equals("Boolean"))
+        		type = Opcodes.T_BOOLEAN;
+        	else 
+        		type = Opcodes.T_INT;
+        	m.visitIntInsn(Opcodes.NEWARRAY, type);
+        	break;
         case 0xbd: // anewarray
-            il.append(f.createNewArray(processType(rest), (short)1));
+        	m.visitTypeInsn(Opcodes.ANEWARRAY, processType(rest).getDescriptor());
             break;
         case 0xbe: // arraylength
-            il.append(InstructionConstants.ARRAYLENGTH);
+        	m.visitInsn(Opcodes.ARRAYLENGTH);
             break;
         case 0xbf: // athrow
-            il.append(InstructionConstants.ATHROW);
+        	m.visitInsn(Opcodes.ATHROW);
             break;
         case 0xc6: // ifnull
         case 0xc7: // ifnonnull
         case 0xc8: // goto_w
-            emitBranchInstruction(il, labelFixups, rest, instruction);
+            emitBranchInstruction(m, labelMap, rest, instruction);
             break;
         default:
             throw new Exception("Unrecognized instruction line: " + curLine);
         }
     }
 
-    private static void emitFieldAccess(InstructionList il,
-            InstructionFactory f, String fieldSpec, short accessType) {
+    private static void emitFieldAccess(MethodVisitor m, String fieldSpec, int accessType) {
         String[] bits = fieldSpec.split("\\s");
-        ObjectType classType = (ObjectType)processType(bits[0]);
+        Type classType = processType(bits[0]);
         String fieldName = bits[1];
         Type fieldType = processType(bits[2]);
-        il.append(f.createFieldAccess(classType.getClassName(), fieldName, fieldType, accessType));
+        m.visitFieldInsn(accessType, classType.getInternalName(), fieldName, fieldType.getDescriptor());
     }
 
-    private static void emitCall(InstructionList il, InstructionFactory f,
-            String callSpec, short callType) {
+    private static void emitCall(MethodVisitor m,
+            String callSpec, int callType) {
         String[] bits = callSpec.split("\\s");
-        ObjectType targetType = (ObjectType)processType(bits[0]);
+        Type targetType = processType(bits[0]);
         String methodName = bits[1];
         Type returnType = processType(bits[2]);
         Type[] argumentTypes = new Type[bits.length - 3];
         for (int i = 3; i < bits.length; i++)
             argumentTypes[i - 3] = processType(bits[i]);
-        il.append(f.createInvoke(targetType.getClassName(),
-                methodName, returnType, argumentTypes, callType));
+        m.visitMethodInsn(callType, targetType.getInternalName(), methodName, 
+        		Type.getMethodDescriptor(returnType, argumentTypes));
     }
 
-    private static void emitBranchInstruction(InstructionList il,
-            Map<String, ArrayList<BranchInstruction>> labelFixups,
+    private static void emitBranchInstruction(MethodVisitor m,
+            Map<String, Label> labelFixups,
             String label, int icode) {
-        BranchInstruction bi = InstructionFactory.createBranchInstruction((short)icode, null);
+    	
         if (!labelFixups.containsKey(label))
-            labelFixups.put(label, new ArrayList<BranchInstruction>());
-        labelFixups.get(label).add(bi);
-        il.append(bi);
+            labelFixups.put(label, new Label());
+        m.visitJumpInsn(icode, labelFixups.get(label));
+    }
+    
+    private static void emitTableSwitchInstruction(MethodVisitor m, Map<String, Label> labelMap, String rest) {
+    	String[] labelKeys = rest.split("\\s");
+    	Label[] labels = new Label[labelKeys.length - 1];
+    	Label defaultLabel = null;
+    	
+    	for (int i = 0; i < labelKeys.length; i++) {
+    		String key = labelKeys[i];
+    		if (!labelMap.containsKey(key)) {
+    			labelMap.put(key, new Label());
+    		}
+    		if (i == 0) {
+    			defaultLabel = labelMap.get(key);
+    		} else {
+    			labels[i - 1] = labelMap.get(key);
+    		}
+    	}
+    	m.visitTableSwitchInsn(0, labels.length - 1, defaultLabel, labels);
     }
 
-    private static void finishMethod(ClassGen c, ConstantPoolGen cp,
-            InstructionList il, MethodGen m, Map<String, InstructionHandle> labelIns,
-            Map<String, ArrayList<BranchInstruction>> labelFixups,
-            Map<InstructionHandle, String> tablesToGenerate) throws Exception {
-        // Fix up any labels.
-        for (String label : labelFixups.keySet()) {
-            if (!labelIns.containsKey(label))
-                throw new Exception("Missing label: " + label);
-            InstructionHandle target = labelIns.get(label).getNext();
-            for (BranchInstruction bi : labelFixups.get(label))
-                bi.setTarget(target);
-        }
-        
-        // Generate any tables.
-        for (InstructionHandle repIns : tablesToGenerate.keySet()) {
-            String tableDesc = tablesToGenerate.get(repIns);
-            String[] labels = tableDesc.split("\\s");
-            if (labels.length < 1)
-                throw new Exception("Switch table must at least have a default");
-            if (!labelIns.containsKey(labels[0]))
-                throw new Exception("Missing label: " + labels[0]);
-            InstructionHandle defaultTarget = labelIns.get(labels[0]).getNext();
-            int[] match = new int[labels.length - 1];
-            InstructionHandle[] targets = new InstructionHandle[labels.length - 1];
-            for (int i = 1; i < labels.length; i++) {
-                match[i - 1] = i - 1;
-                if (!labelIns.containsKey(labels[i]))
-                    throw new Exception("Missing label: " + labels[i]);
-                targets[i - 1] = labelIns.get(labels[i]).getNext();
-            }
-            repIns.setInstruction(new TABLESWITCH(match, targets, defaultTarget));
-        }
-        
-        // Finalize method and cleanup instruciton list.
-        m.setMaxStack();
-        c.addMethod(m.getMethod());
-        il.dispose();
+    private static void finishMethod(MethodVisitor m) throws Exception {        
+        // Finalize method.
+        m.visitMaxs(0, 0);
     }
 
     private static Type processType(String typeName) {
         // Long needs special treatment; getType doesn't cope with it.
         if (typeName.equals("Long"))
-            return Type.LONG;
+            return Type.LONG_TYPE;
         return Type.getType(typeName);
     }
 
@@ -948,5 +690,19 @@ public class JASTToJVMBytecode {
     {
         System.err.println("Usage: JASTToJVMBytecode jast-dump-file output-class-file");
         System.exit(1);
+    }
+    
+    static class VariableDef {
+    	public VariableDef(int i, String t) {
+    		index = i;
+    		type = t;
+    		start = new Label();
+    		end = new Label();
+    	}
+    	
+    	public final int index;
+    	public final String type;
+    	public final Label start;
+    	public final Label end;
     }
 }

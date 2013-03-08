@@ -7,7 +7,7 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') is export {
     $jast_maker($c);
     spurt('jastdump.temp', $c.dump());
     run('java',
-        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
+        '-cp ' ~ pathlist('bin', '3rdparty/asm/asm-4.1.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'jastdump.temp', 'JASTTest.class');
     # Compile the test program.
@@ -24,7 +24,7 @@ sub jast_test($jast_maker, $exercise, $expected, $desc = '') is export {
     run('java', 'RunTest', '> output.temp');
     my $output := slurp('output.temp');
     $output := subst($output, /\r\n/, "\n", :global);
-    ok($output eq $expected, $desc);
+    ok($output eq $expected, $desc) || die($output);
 
     # Cleanup.
     try unlink('jastdump.temp');
@@ -49,13 +49,13 @@ sub run_qast($qast) is export {
     my $dump := $jast.dump();
     spurt('QAST2JASTOutput.dump', $dump);
     run('java',
-        '-cp ' ~ pathlist('bin', '3rdparty/bcel/bcel-5.2.jar'),
+        '-cp ' ~ pathlist('bin', '3rdparty/asm/asm-4.1.jar'),
         'org/perl6/nqp/jast2bc/JASTToJVMBytecode',
         'QAST2JASTOutput.dump', 'QAST2JASTOutput.class');
 
     my $before := pir::time__N;
     my $spawn_result := pir::spawnw__Is('java ' ~
-        '-cp ' ~ pathlist('.', 'bin', '3rdparty/bcel/bcel-5.2.jar') ~
+        '-cp ' ~ pathlist('.', 'bin', '3rdparty/asm/asm-4.1.jar') ~
         ' QAST2JASTOutput' ~
         '> QAST2JASTOutput.output');
     my $after := pir::time__N;
