@@ -2360,7 +2360,25 @@ public final class Ops {
     	return tc.gc.scRefs.get(sc.handle);
     }
     public static String serialize(SixModelObject scRef, SixModelObject sh, ThreadContext tc) {
-    	throw ExceptionHandling.dieInternal(tc, "Serialization NYI");
+    	if (scRef instanceof SCRefInstance) {
+    		ArrayList<String> stringHeap = new ArrayList<String>();
+    		SerializationWriter sw = new SerializationWriter(tc,
+    				((SCRefInstance)scRef).referencedSC,
+    				stringHeap);
+    		
+    		String serialized = sw.serialize();
+    		
+    		int index = 0;
+    		for (String s : stringHeap) {
+    			tc.native_s = s;
+    			sh.bind_pos_native(tc, index++);
+    		}
+    		
+    		return serialized;
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "serialize was not passed a valid SCRef");
+    	}
     }
     public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
