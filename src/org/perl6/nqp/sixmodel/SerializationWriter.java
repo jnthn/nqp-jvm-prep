@@ -162,6 +162,12 @@ public class SerializationWriter {
 		this.growToHold(currentBuffer, 8);
 		outputs[currentBuffer].putLong(value);
 	}
+	
+	/* Writing function for 32-bit native integers. */
+	public void writeInt32(int value) {
+		this.growToHold(currentBuffer, 4);
+		outputs[currentBuffer].putInt(value);
+	}
 
 	/* Writing function for native numbers. */
 	public void writeNum(double value) {
@@ -189,6 +195,11 @@ public class SerializationWriter {
 	    this.growToHold(currentBuffer, 8);
 	    outputs[currentBuffer].putInt(getSCId(ref.sc));
 	    outputs[currentBuffer].putInt(ref.sc.root_objects.indexOf(ref));
+	}
+	
+	/* Writes a hash; just delegate to the REPR. */
+	private void writeHashStrVar(SixModelObject ref) {
+		ref.st.REPR.serialize(tc, this, ref);
 	}
 	
 	/* Writing function for references to things. */
@@ -284,9 +295,11 @@ public class SerializationWriter {
 	        case REFVAR_VM_ARR_STR:
 	            writeArrayStr(ref);
 	            break;
+	        */
 	        case REFVAR_VM_HASH_STR_VAR:
 	            writeHashStrVar(ref);
 	            break;
+	        /*
 	        case REFVAR_STATIC_CODEREF:
 	        case REFVAR_CLONED_CODEREF:
 	            writeCodeRef(ref);
@@ -295,7 +308,7 @@ public class SerializationWriter {
 	            throw new RuntimeException("Serialization Error: Unimplemented object type writeRef");
 	    }
 	}
-	
+
 	/* Writing function for references to STables. */
 	public void writeSTableRef(STable st) {
 	    int[] idxs = getSTableRefInfo(st);

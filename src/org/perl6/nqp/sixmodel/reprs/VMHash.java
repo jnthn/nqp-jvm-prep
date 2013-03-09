@@ -2,7 +2,6 @@ package org.perl6.nqp.sixmodel.reprs;
 
 import java.util.HashMap;
 
-import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
 
@@ -34,6 +33,25 @@ public class VMHash extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw ExceptionHandling.dieInternal(tc, "VMHash deserialization NYI");
+		HashMap<String, SixModelObject> storage = ((VMHashInstance)obj).storage;
+		int elems = reader.readInt32();
+		for (int i = 0; i < elems; i++) {
+			String key = reader.readStr();
+			SixModelObject value = reader.readRef();
+			storage.put(key, value);
+		}
 	}
+	
+    public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+    	HashMap<String, SixModelObject> storage = ((VMHashInstance)obj).storage;
+        
+        /* Write out element count. */
+        writer.writeInt32(storage.size());
+        
+        /* Write elements, as key,value,key,value etc. */
+        for (String key : storage.keySet()) {
+            writer.writeStr(key);
+            writer.writeRef(storage.get(key));
+        }
+    }
 }
