@@ -6,8 +6,16 @@ import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.List;
 
-import org.perl6.nqp.runtime.*;
-import org.perl6.nqp.sixmodel.reprs.*;
+import org.perl6.nqp.runtime.CallFrame;
+import org.perl6.nqp.runtime.CallSiteDescriptor;
+import org.perl6.nqp.runtime.CodeRef;
+import org.perl6.nqp.runtime.CompilationUnit;
+import org.perl6.nqp.runtime.ExceptionHandling;
+import org.perl6.nqp.runtime.Ops;
+import org.perl6.nqp.runtime.ThreadContext;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWAttributeInstance;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWREPR;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWREPRInstance;
 
 /**
  * This class contains methods that belong on the KnowHOW meta-object. It
@@ -116,7 +124,7 @@ public class KnowHOWMethods extends CompilationUnit {
 	        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
 	        
 	        /* Set type check cache. */
-	        // TODO
+	        type_obj.st.TypeCheckCache = new SixModelObject[] { type_obj };
 	        
 	        /* Use any attribute information to produce attribute protocol
 	         * data. The protocol consists of an array... */

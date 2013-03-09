@@ -1,7 +1,8 @@
 package org.perl6.nqp.sixmodel.reprs;
 
-import org.perl6.nqp.sixmodel.*;
-import org.perl6.nqp.runtime.*;
+import org.perl6.nqp.runtime.ExceptionHandling;
+import org.perl6.nqp.runtime.ThreadContext;
+import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
  * This is a fairly direct port of the QRPA logic implemented by Patrick Michaud in

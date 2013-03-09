@@ -4,6 +4,7 @@ import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SerializationReader;
+import org.perl6.nqp.sixmodel.SerializationWriter;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.TypeObject;
 
@@ -34,4 +35,9 @@ public class KnowHOWAttribute extends REPR {
 		data.name = reader.readStr();
 		data.type = tc.gc.KnowHOW; // Not serialized yet
 	}
+	
+    public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+    	KnowHOWAttributeInstance data = (KnowHOWAttributeInstance)obj;
+    	writer.writeStr(data.name);
+    }
 }

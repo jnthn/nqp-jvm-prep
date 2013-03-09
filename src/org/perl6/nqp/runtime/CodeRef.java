@@ -1,7 +1,7 @@
 package org.perl6.nqp.runtime;
 import java.lang.invoke.MethodHandle;
 
-import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
  * Object representing a reference to a piece of code (may later become a
@@ -43,7 +43,7 @@ public class CodeRef extends SixModelObject {
             long[][] handlers) {
         staticInfo = new StaticCodeInfo(compUnit, mh, name,uniqueId,
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
-                handlers);
+                handlers, this);
     }
     
     /**

@@ -1,6 +1,5 @@
 package org.perl6.nqp.runtime;
 
-import java.math.BigInteger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,20 +9,44 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.perl6.nqp.jast2bc.JASTToJVMBytecode;
-import org.perl6.nqp.sixmodel.*;
-import org.perl6.nqp.sixmodel.reprs.*;
+import org.perl6.nqp.sixmodel.BoolificationSpec;
+import org.perl6.nqp.sixmodel.InvocationSpec;
+import org.perl6.nqp.sixmodel.REPRRegistry;
+import org.perl6.nqp.sixmodel.STable;
+import org.perl6.nqp.sixmodel.SerializationContext;
+import org.perl6.nqp.sixmodel.SerializationReader;
+import org.perl6.nqp.sixmodel.SerializationWriter;
+import org.perl6.nqp.sixmodel.SixModelObject;
+import org.perl6.nqp.sixmodel.StorageSpec;
+import org.perl6.nqp.sixmodel.TypeObject;
+import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
+import org.perl6.nqp.sixmodel.reprs.ContextRef;
+import org.perl6.nqp.sixmodel.reprs.ContextRefInstance;
+import org.perl6.nqp.sixmodel.reprs.IOHandleInstance;
+import org.perl6.nqp.sixmodel.reprs.NFA;
+import org.perl6.nqp.sixmodel.reprs.NFAInstance;
+import org.perl6.nqp.sixmodel.reprs.NFAStateInfo;
+import org.perl6.nqp.sixmodel.reprs.SCRefInstance;
+import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMArrayInstance;
+import org.perl6.nqp.sixmodel.reprs.VMExceptionInstance;
+import org.perl6.nqp.sixmodel.reprs.VMHash;
+import org.perl6.nqp.sixmodel.reprs.VMHashInstance;
+import org.perl6.nqp.sixmodel.reprs.VMIterInstance;
 
 /**
  * Contains complex operations that are more involved that the simple ops that the
@@ -2267,11 +2290,16 @@ public final class Ops {
     }
     public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
-    		ArrayList<SixModelObject> roots = ((SCRefInstance)scRef).referencedSC.root_objects; 
+    		SerializationContext sc = ((SCRefInstance)scRef).referencedSC;
+    		ArrayList<SixModelObject> roots = sc.root_objects; 
     		if (roots.size() == idx)
     			roots.add(obj);
     		else
     			roots.set((int)idx, obj);
+    		if (obj.st.sc == null) {
+    			sc.root_stables.add(obj.st);
+    			obj.st.sc = sc;
+    		}
     		return obj;
     	}
     	else {
@@ -2286,6 +2314,7 @@ public final class Ops {
     				roots.add((CodeRef)obj);
     			else
     				roots.set((int)idx, (CodeRef)obj);
+    			obj.sc = ((SCRefInstance)scRef).referencedSC;
     			return obj;
     		}
     		else {
@@ -2360,7 +2389,25 @@ public final class Ops {
     	return tc.gc.scRefs.get(sc.handle);
     }
     public static String serialize(SixModelObject scRef, SixModelObject sh, ThreadContext tc) {
-    	throw ExceptionHandling.dieInternal(tc, "Serialization NYI");
+    	if (scRef instanceof SCRefInstance) {
+    		ArrayList<String> stringHeap = new ArrayList<String>();
+    		SerializationWriter sw = new SerializationWriter(tc,
+    				((SCRefInstance)scRef).referencedSC,
+    				stringHeap);
+    		
+    		String serialized = sw.serialize();
+    		
+    		int index = 0;
+    		for (String s : stringHeap) {
+    			tc.native_s = s;
+    			sh.bind_pos_native(tc, index++);
+    		}
+    		
+    		return serialized;
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "serialize was not passed a valid SCRef");
+    	}
     }
     public static String deserialize(String blob, SixModelObject scRef, SixModelObject sh, SixModelObject cr, SixModelObject conflict, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
@@ -2596,6 +2643,12 @@ public final class Ops {
     		throw ExceptionHandling.dieInternal(tc, "markcodestub must be used on a CodeRef");
     	((CodeRef)code).isCompilerStub = true;
     	return code;
+    }
+    public static SixModelObject getstaticcode(SixModelObject code, ThreadContext tc) {
+    	if (code instanceof CodeRef)
+            return ((CodeRef)code).staticInfo.staticCode;
+        else
+            throw ExceptionHandling.dieInternal(tc, "getstaticcode can only be used with a CodeRef");
     }
 
     /* process related opcodes */

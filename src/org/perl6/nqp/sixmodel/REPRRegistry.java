@@ -1,7 +1,25 @@
 package org.perl6.nqp.sixmodel;
 
-import org.perl6.nqp.sixmodel.reprs.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.perl6.nqp.sixmodel.reprs.CallCapture;
+import org.perl6.nqp.sixmodel.reprs.CodeRefREPR;
+import org.perl6.nqp.sixmodel.reprs.ContextRef;
+import org.perl6.nqp.sixmodel.reprs.IOHandle;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWAttribute;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWREPR;
+import org.perl6.nqp.sixmodel.reprs.NFA;
+import org.perl6.nqp.sixmodel.reprs.P6Opaque;
+import org.perl6.nqp.sixmodel.reprs.P6int;
+import org.perl6.nqp.sixmodel.reprs.P6num;
+import org.perl6.nqp.sixmodel.reprs.P6str;
+import org.perl6.nqp.sixmodel.reprs.SCRef;
+import org.perl6.nqp.sixmodel.reprs.Uninstantiable;
+import org.perl6.nqp.sixmodel.reprs.VMArray;
+import org.perl6.nqp.sixmodel.reprs.VMException;
+import org.perl6.nqp.sixmodel.reprs.VMHash;
+import org.perl6.nqp.sixmodel.reprs.VMIter;
 
 public class REPRRegistry {
     private static HashMap<String, Integer> reprIdMap = new HashMap<String, Integer>();

@@ -442,7 +442,7 @@ public class SerializationReader {
 			SixModelObject sResult = BOOTStr.st.REPR.allocate(tc, BOOTStr.st);
 			sResult.set_str(tc, lookupString(orig.getInt()));
 			return sResult;
-		case REFVAR_VM_ARR_VAR:
+		case REFVAR_VM_ARR_VAR: {
 			SixModelObject BOOTArray = tc.gc.BOOTArray;
 			SixModelObject resArray = BOOTArray.st.REPR.allocate(tc, BOOTArray.st);
 			resArray.initialize(tc);
@@ -451,6 +451,31 @@ public class SerializationReader {
 				resArray.bind_pos_boxed(tc, i, readRef());
 			resArray.sc = sc;
 			return resArray;
+		}
+		case REFVAR_VM_ARR_STR: {
+			SixModelObject BOOTStrArray = tc.gc.BOOTStrArray;
+			SixModelObject resArray = BOOTStrArray.st.REPR.allocate(tc, BOOTStrArray.st);
+			resArray.initialize(tc);
+			elems = orig.getInt();
+			for (int i = 0; i < elems; i++) {
+				tc.native_s = readStr();
+				resArray.bind_pos_native(tc, i);
+			}
+			resArray.sc = sc;
+			return resArray;
+		}
+		case REFVAR_VM_ARR_INT: {
+			SixModelObject BOOTIntArray = tc.gc.BOOTIntArray;
+			SixModelObject resArray = BOOTIntArray.st.REPR.allocate(tc, BOOTIntArray.st);
+			resArray.initialize(tc);
+			elems = orig.getInt();
+			for (int i = 0; i < elems; i++) {
+				tc.native_i = readLong();
+				resArray.bind_pos_native(tc, i);
+			}
+			resArray.sc = sc;
+			return resArray;
+		}
 		case REFVAR_VM_HASH_STR_VAR:
 			SixModelObject BOOTHash = tc.gc.BOOTHash;
 			SixModelObject resHash = BOOTHash.st.REPR.allocate(tc, BOOTHash.st);
@@ -492,6 +517,10 @@ public class SerializationReader {
 	
 	public long readLong() {
 		return orig.getLong();
+	}
+	
+	public int readInt32() {
+		return orig.getInt();
 	}
 	
 	public double readDouble() {

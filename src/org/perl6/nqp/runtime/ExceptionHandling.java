@@ -3,7 +3,7 @@ package org.perl6.nqp.runtime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.perl6.nqp.sixmodel.*;
+import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.reprs.VMExceptionInstance;
 
 public class ExceptionHandling {

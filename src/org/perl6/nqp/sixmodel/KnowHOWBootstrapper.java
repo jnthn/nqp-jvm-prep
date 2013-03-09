@@ -1,6 +1,8 @@
 package org.perl6.nqp.sixmodel;
-import org.perl6.nqp.runtime.*;
-import org.perl6.nqp.sixmodel.reprs.*;
+import org.perl6.nqp.runtime.CompilationUnit;
+import org.perl6.nqp.runtime.Ops;
+import org.perl6.nqp.runtime.ThreadContext;
+import org.perl6.nqp.sixmodel.reprs.KnowHOWREPRInstance;
 
 public class KnowHOWBootstrapper {
     public static void bootstrap(ThreadContext tc)
@@ -139,6 +141,15 @@ public class KnowHOWBootstrapper {
         SixModelObject type_obj = repr.type_object_for(tc, meta_obj);
         type_obj.st.MethodCache = meta_obj.methods;
         type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
+        
+        SerializationContext sc = tc.gc.scs.get("__6MODEL_CORE__");
+        sc.root_objects.add(type_obj);
+        type_obj.sc = sc;
+        sc.root_objects.add(type_obj.st.HOW);
+        type_obj.st.HOW.sc = sc;
+        sc.root_stables.add(type_obj.st);
+        type_obj.st.sc = sc;
+        
         return type_obj;
     }
 

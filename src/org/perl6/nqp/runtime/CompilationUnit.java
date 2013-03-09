@@ -1,6 +1,7 @@
 package org.perl6.nqp.runtime;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.perl6.nqp.sixmodel.STable;
 import org.perl6.nqp.sixmodel.SixModelObject;

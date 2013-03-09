@@ -1,8 +1,9 @@
 package org.perl6.nqp.sixmodel.reprs;
 
 import java.util.HashMap;
-import org.perl6.nqp.runtime.*;
-import org.perl6.nqp.sixmodel.*;
+
+import org.perl6.nqp.runtime.ThreadContext;
+import org.perl6.nqp.sixmodel.SixModelObject;
 
 public class VMHashInstance extends SixModelObject {
     public HashMap<String, SixModelObject> storage;

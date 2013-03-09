@@ -55,6 +55,11 @@ public class StaticCodeInfo implements Cloneable {
     public long[][] handlers;
     
     /**
+     * Static code object (base of any clones).
+     */
+    public SixModelObject staticCode;
+    
+    /**
      * Lexical name maps (produced lazily on first use). Note they are only
      * used when we do lexical lookup by name.
      */
@@ -114,7 +119,7 @@ public class StaticCodeInfo implements Cloneable {
     		String name, String uniqueId,
             String[] oLexicalNames, String[] iLexicalNames,
             String[] nLexicalNames, String[] sLexicalNames,
-            long[][] handlers) {
+            long[][] handlers, SixModelObject staticCode) {
         this.compUnit = compUnit;
         this.mh = mh;
         this.name = name;
@@ -124,6 +129,7 @@ public class StaticCodeInfo implements Cloneable {
         this.nLexicalNames = nLexicalNames;
         this.sLexicalNames = sLexicalNames;
         this.handlers = handlers;
+        this.staticCode = staticCode;
         if (oLexicalNames != null)
         	this.oLexStatic = new SixModelObject[oLexicalNames.length];
     }

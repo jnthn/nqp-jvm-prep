@@ -74,9 +74,12 @@ public abstract class REPR {
         throw ExceptionHandling.dieInternal(tc, "This representation does not support type changes.");
     }
     
-    /* Object serialization. Writes the objects body out using the passed
+    /**
+     * Object serialization. Writes the objects body out using the passed
      * serialization writer. */
-    // XXX void (*serialize) (ThreadContext, STable *st, void *data, SerializationWriter *writer);
+    public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+    	throw ExceptionHandling.dieInternal(tc, "Missing serialize function for REPR");
+    }
     
     /**
      * Object deserialization. Happens in two steps. The first stub step
@@ -119,6 +122,10 @@ public abstract class REPR {
     }
     public void generateBoxingMethods(ThreadContext tc, STable st, ClassWriter cw, String className, String prefix) {
         throw ExceptionHandling.dieInternal(tc, "This representation does not support being a box target");        
+    }
+    public void serialize_inlined(ThreadContext tc, STable st, SerializationWriter writer, 
+    		String prefix, SixModelObject obj) {
+    	throw ExceptionHandling.dieInternal(tc, "This representation cannot serialize an inlined representation of itself");
     }
     public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
     		String prefix, SixModelObject obj) {

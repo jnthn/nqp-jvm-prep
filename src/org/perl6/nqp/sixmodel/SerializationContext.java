@@ -1,6 +1,7 @@
 package org.perl6.nqp.sixmodel;
 
 import java.util.ArrayList;
+
 import org.perl6.nqp.runtime.CodeRef;
 
 /**
