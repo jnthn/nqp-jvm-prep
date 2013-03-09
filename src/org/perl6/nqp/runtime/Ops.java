@@ -2267,11 +2267,16 @@ public final class Ops {
     }
     public static SixModelObject scsetobj(SixModelObject scRef, long idx, SixModelObject obj, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
-    		ArrayList<SixModelObject> roots = ((SCRefInstance)scRef).referencedSC.root_objects; 
+    		SerializationContext sc = ((SCRefInstance)scRef).referencedSC;
+    		ArrayList<SixModelObject> roots = sc.root_objects; 
     		if (roots.size() == idx)
     			roots.add(obj);
     		else
     			roots.set((int)idx, obj);
+    		if (obj.st.sc == null) {
+    			sc.root_stables.add(obj.st);
+    			obj.st.sc = sc;
+    		}
     		return obj;
     	}
     	else {
