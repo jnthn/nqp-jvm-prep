@@ -2291,6 +2291,7 @@ public final class Ops {
     				roots.add((CodeRef)obj);
     			else
     				roots.set((int)idx, (CodeRef)obj);
+    			obj.sc = ((SCRefInstance)scRef).referencedSC;
     			return obj;
     		}
     		else {
