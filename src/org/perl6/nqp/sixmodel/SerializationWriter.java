@@ -288,9 +288,8 @@ public class SerializationWriter {
 	            /* Closure but didn't see it yet. Take care of it serialization, which
 	             * gets it marked with this SC. Then it's just a normal code ref that
 	             * needs serializing. */
-	            //serializeClosure(ref);
+	            serializeClosure((CodeRef)ref);
 	            discrim = REFVAR_CLONED_CODEREF;
-	        	throw new RuntimeException("Closure serialization NYI");
 	        }
 	    }
 	    else {
@@ -328,7 +327,7 @@ public class SerializationWriter {
 	        	ref.st.REPR.serialize(tc, this, ref);
 	            break;
 	        case REFVAR_STATIC_CODEREF:
-	        /*case REFVAR_CLONED_CODEREF:*/
+	        case REFVAR_CLONED_CODEREF:
 	            writeCodeRef(ref);
 	            break;
 	        default:
@@ -535,6 +534,74 @@ public class SerializationWriter {
 	    
 	    /* If the REPR has a function to serialize representation data, call it. */
 	    st.REPR.serialize_repr_data(tc, st, this);
+	}
+	
+	private SixModelObject closureToStaticCodeRef(CodeRef closure, boolean fatal) {
+        SixModelObject staticCode = ((CodeRef)closure).staticInfo.staticCode;
+        if (staticCode == null)
+        {
+            if (fatal)
+            	throw ExceptionHandling.dieInternal(tc,
+                    "Serialization Error: missing static code ref for closure");
+            else
+                return null;
+        }
+        if (staticCode.sc == null) {
+            if (fatal)
+            	throw ExceptionHandling.dieInternal(tc,
+                    "Serialization Error: could not locate static code ref for closure");
+            else
+                return null;
+        }
+        return staticCode;
+	}
+
+	private void serializeClosure(CodeRef closure) {
+	    /* Locate the static code object. */
+	    SixModelObject staticCodeRef = closureToStaticCodeRef(closure, true);
+	    SerializationContext staticCodeSC = staticCodeRef.sc;
+
+	    /* Ensure there's space in the closures table; grow if not. */
+	    growToHold(CLOSURES, CLOSURES_TABLE_ENTRY_SIZE);
+	    
+	    /* Get the index of the context (which will add it to the todo list if
+	     * needed). */
+	    int contextIdx = getSerializedOuterContextIdx(closure);
+	    
+	    /* Add an entry to the closures table. */
+	    int staticSCId = getSCId(staticCodeSC);
+	    int staticIdx = staticCodeSC.root_codes.indexOf(staticCodeRef);
+	    outputs[CLOSURES].putInt(staticSCId);
+	    outputs[CLOSURES].putInt(staticIdx);
+	    outputs[CLOSURES].putInt(contextIdx);
+	    
+	    /* Check if it has a static code object. */
+	    if (closure.codeObject != null) {
+	    	outputs[CLOSURES].putInt(1);
+	        if (closure.codeObject.sc == null) {
+	        	closure.codeObject.sc = this.sc;
+	        	this.sc.root_objects.add(closure.codeObject);
+	        }
+	        outputs[CLOSURES].putInt(getSCId(closure.codeObject.sc));
+	        outputs[CLOSURES].putInt(closure.codeObject.sc.root_objects.indexOf(closure.codeObject));
+	    }
+	    else {
+	    	outputs[CLOSURES].putInt(0);
+	    	outputs[CLOSURES].putInt(0); // pad
+	    	outputs[CLOSURES].putInt(0); // pad
+	    }
+	    
+	    /* Increment count of closures in the table. */
+	    numClosures++;
+
+	    /* Add the closure to this SC, and mark it as as being in it. */
+	    this.sc.root_codes.add((CodeRef)closure);
+	    closure.sc = this.sc;
+	}
+
+	private int getSerializedOuterContextIdx(CodeRef closure) {
+		// TODO Complete this...
+		return 0;
 	}
 
 	/* Grows a buffer as needed to hold more data. */
