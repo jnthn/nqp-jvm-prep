@@ -42,6 +42,7 @@ public class SerializationWriter {
 	private HashMap<String, Integer> stringMap;
 	
 	private ArrayList<SerializationContext> dependentSCs;
+	private ArrayList<CallFrame> contexts;
 	
 	private static final int DEPS = 0;
 	private static final int STABLES = 1;
@@ -56,9 +57,9 @@ public class SerializationWriter {
 	private int currentBuffer;
 	
 	private int numClosures;
-	private int numContexts;
 	private int sTablesListPos;
 	private int objectsListPos;
+	private int contextsListPos;
 	
 	public SerializationWriter(ThreadContext tc, SerializationContext sc, ArrayList<String> sh) {
 		this.tc = tc;
@@ -66,6 +67,7 @@ public class SerializationWriter {
 		this.sh = sh;
 		this.stringMap = new HashMap<String, Integer>();
 		this.dependentSCs = new ArrayList<SerializationContext>();
+		this.contexts = new ArrayList<CallFrame>();
 		this.outputs = new ByteBuffer[9];
 		this.outputs[DEPS] = ByteBuffer.allocate(128);
 		this.outputs[STABLES] = ByteBuffer.allocate(512);
@@ -87,9 +89,9 @@ public class SerializationWriter {
 		this.outputs[REPOS].order(ByteOrder.LITTLE_ENDIAN);
 		this.currentBuffer = 0;
 		this.numClosures = 0;
-		this.numContexts = 0;
 		this.sTablesListPos = 0;
 		this.objectsListPos = 0;
+		this.contextsListPos = 0;
 	}
 
 	public String serialize() {
@@ -416,7 +418,7 @@ public class SerializationWriter {
 	    /* Put contexts table in place, and set location/rows in header. */
 	    output.position(44);
 	    output.putInt(offset);
-	    output.putInt(this.numContexts);
+	    output.putInt(this.contexts.size());
 	    output.position(offset);
 	    output.put(usedBytes(outputs[CONTEXTS]));
 	    offset += outputs[CONTEXTS].position();
@@ -600,8 +602,100 @@ public class SerializationWriter {
 	}
 
 	private int getSerializedOuterContextIdx(CodeRef closure) {
-		// TODO Complete this...
-		return 0;
+		if (closure.isCompilerStub)
+	        return 0;
+	    if (closure.outer == null)
+	        return 0;
+	    return getSerializedContextIdx(closure.outer);
+	}
+
+	private int getSerializedContextIdx(CallFrame cf) {
+	    if (cf.sc == null) {
+	        /* Make sure we should chase a level down. */
+	        if (closureToStaticCodeRef(cf.codeRef, false) == null) {
+	            return 0;
+	        }
+	        else {
+	            contexts.add(cf);
+	            cf.sc = this.sc;
+	            return contexts.size();
+	        }
+	    }
+	    else {
+	        if (cf.sc != this.sc)
+	            ExceptionHandling.dieInternal(tc,
+	                "Serialization Error: reference to context outside of SC");
+	        int idx = contexts.indexOf(cf);
+	        if (idx < 0)
+	        	ExceptionHandling.dieInternal(tc, 
+	        		"Serialization Error: could not locate outer context in current SC");
+	        return idx + 1;
+	    }
+	}
+
+	private void serializeContext(CallFrame cf) {
+	    /* Locate the static code ref this context points to. */
+	    SixModelObject staticCodeRef = closureToStaticCodeRef(cf.codeRef, true);
+	    SerializationContext staticCodeSC = staticCodeRef.sc;
+	    if (staticCodeSC == null)
+	        ExceptionHandling.dieInternal(tc,
+	            "Serialization Error: closure outer is a code object not in an SC");
+	    int staticSCId = getSCId(staticCodeSC);
+	    int staticIdx = staticCodeSC.root_codes.indexOf(staticCodeRef);
+
+	    /* Ensure there's space in the contexts table; grow if not. */
+	    growToHold(CONTEXTS, CONTEXTS_TABLE_ENTRY_SIZE);
+	    
+	    /* Make contexts table entry. */
+	    outputs[CONTEXTS].putInt(staticSCId);
+	    outputs[CONTEXTS].putInt(staticIdx);
+	    outputs[CONTEXTS].putInt(outputs[CONTEXT_DATA].position());
+	    
+	    /* See if there's any relevant outer context, and if so set it up to
+	     * be serialized. */
+	    if (cf.outer != null)
+	    	outputs[CONTEXTS].putInt(getSerializedContextIdx(cf.outer));
+	    else
+	    	outputs[CONTEXTS].putInt(0);
+	    
+	    /* Set up writer. */
+	    currentBuffer = CONTEXT_DATA;
+
+	    /* Serialize lexicals. */
+	    int numLexicals = 0;
+	    numLexicals += cf.oLex == null ? 0 : cf.oLex.length;
+	    numLexicals += cf.iLex == null ? 0 : cf.iLex.length;
+	    numLexicals += cf.nLex == null ? 0 : cf.nLex.length;
+	    numLexicals += cf.sLex == null ? 0 : cf.sLex.length;
+	    writeInt(numLexicals);
+	    if (cf.oLex != null) {
+	    	String[] names = cf.codeRef.staticInfo.oLexicalNames;
+	    	for (int i = 0; i < cf.oLex.length; i++) {
+	    		writeStr(names[i]);
+	    		writeRef(cf.oLex[i]);
+	    	}
+	    }
+	    if (cf.iLex != null) {
+	    	String[] names = cf.codeRef.staticInfo.iLexicalNames;
+	    	for (int i = 0; i < cf.iLex.length; i++) {
+	    		writeStr(names[i]);
+	    		writeInt(cf.iLex[i]);
+	    	}
+	    }
+	    if (cf.nLex != null) {
+	    	String[] names = cf.codeRef.staticInfo.nLexicalNames;
+	    	for (int i = 0; i < cf.nLex.length; i++) {
+	    		writeStr(names[i]);
+	    		writeNum(cf.nLex[i]);
+	    	}
+	    }
+	    if (cf.sLex != null) {
+	    	String[] names = cf.codeRef.staticInfo.sLexicalNames;
+	    	for (int i = 0; i < cf.sLex.length; i++) {
+	    		writeStr(names[i]);
+	    		writeStr(cf.sLex[i]);
+	    	}
+	    }
 	}
 
 	/* Grows a buffer as needed to hold more data. */
@@ -623,9 +717,7 @@ public class SerializationWriter {
 	        /* Current work list sizes. */
 	    	int sTablesTodo = sc.root_stables.size();
 	    	int objectsTodo = sc.root_objects.size();
-	        /* XXX
-	         * INTVAL contexts_todo = VTABLE_elements(interp, writer->contexts_list);
-	         */
+	        int contextsTodo = contexts.size();
 	        
 	        /* Reset todo flag - if we do some work we'll go round again as it
 	         * may have generated more. */
@@ -646,13 +738,11 @@ public class SerializationWriter {
 	        }
 	        
 	        /* Serialize any contexts on the todo list. */
-	        /* XXX
-	         while (writer->contexts_list_pos < contexts_todo) {
-	            serialize_context(interp, writer, VTABLE_get_pmc_keyed_int(interp,
-	                writer->contexts_list, writer->contexts_list_pos));
-	            writer->contexts_list_pos++;
+	         while (contextsListPos < contextsTodo) {
+	            serializeContext(contexts.get(contextsListPos));
+	            contextsListPos++;
 	            workTodo = true;
-	        }*/
+	        }
 	    }
 	    
 	    /* Finally, serialize repossessions table (this can't make any more

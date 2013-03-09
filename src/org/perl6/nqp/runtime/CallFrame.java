@@ -2,6 +2,7 @@ package org.perl6.nqp.runtime;
 
 import java.util.HashMap;
 
+import org.perl6.nqp.sixmodel.SerializationContext;
 import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
@@ -65,6 +66,11 @@ public class CallFrame {
      * Current working copy of the named arguments data.
      */
     public HashMap<String, Integer> workingNameMap;
+    
+    /**
+     * Serialization context this frame is associated with, if any.
+     */
+    public SerializationContext sc;
     
     // Empty constructor for things that want to fake one up.
     public CallFrame()
