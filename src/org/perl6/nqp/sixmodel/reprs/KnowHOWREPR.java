@@ -2,6 +2,7 @@ package org.perl6.nqp.sixmodel.reprs;
 
 import java.util.ArrayList;
 
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.*;
 
@@ -39,4 +40,11 @@ public class KnowHOWREPR extends REPR {
 	    
 	    body.methods = ((VMHashInstance)reader.readRef()).storage;
 	}
+	
+    public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+    	KnowHOWREPRInstance kh = (KnowHOWREPRInstance)obj;
+    	writer.writeStr(kh.name);
+    	writer.writeList(kh.attributes);
+    	writer.writeHash(kh.methods);
+    }
 }

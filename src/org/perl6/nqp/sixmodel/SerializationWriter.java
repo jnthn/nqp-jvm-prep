@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.perl6.nqp.runtime.*;
 import org.perl6.nqp.sixmodel.reprs.*;
@@ -195,6 +197,24 @@ public class SerializationWriter {
 	    this.growToHold(currentBuffer, 8);
 	    outputs[currentBuffer].putInt(getSCId(ref.sc));
 	    outputs[currentBuffer].putInt(ref.sc.root_objects.indexOf(ref));
+	}
+	
+	public void writeList(List<SixModelObject> list) {
+		growToHold(currentBuffer, 6);
+		outputs[currentBuffer].putShort(REFVAR_VM_ARR_VAR);
+		outputs[currentBuffer].putInt(list.size());
+    	for (SixModelObject item : list)
+    		writeRef(item);
+	}
+	
+	public void writeHash(Map<String, SixModelObject> hash) {
+		growToHold(currentBuffer, 6);
+		outputs[currentBuffer].putShort(REFVAR_VM_HASH_STR_VAR);
+		outputs[currentBuffer].putInt(hash.size());
+    	for (String key : hash.keySet()) {
+    		writeStr(key);
+    		writeRef(hash.get(key));
+    	}
 	}
 	
 	/* Writing function for references to things. */
@@ -459,12 +479,7 @@ public class SerializationWriter {
 	    /* Method cache and v-table. */
 	    growToHold(currentBuffer, 2);
 	    if (st.MethodCache != null) {
-	    	outputs[currentBuffer].putShort(REFVAR_VM_HASH_STR_VAR);
-	    	writeInt32(st.MethodCache.size());
-	    	for (String meth : st.MethodCache.keySet()) {
-	    		writeStr(meth);
-	    		writeRef(st.MethodCache.get(meth));
-	    	}
+	    	writeHash(st.MethodCache);
 	    }
 	    else {
 	    	outputs[currentBuffer].putShort(REFVAR_VM_NULL);
