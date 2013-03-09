@@ -55,13 +55,80 @@ public class VMArray extends REPR {
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {
-		SixModelObject obj = new VMArrayInstance();
+		SixModelObject obj;
+		if (st.REPRData == null) {
+        	obj = new VMArrayInstance();
+        }
+        else {
+        	switch ((short)st.REPRData) {
+        	case StorageSpec.BP_INT:
+        		obj = new VMArrayInstance_i();
+        		break;
+        	case StorageSpec.BP_NUM:
+        		obj = new VMArrayInstance_n();
+        		break;
+        	case StorageSpec.BP_STR:
+        		obj = new VMArrayInstance_s();
+        		break;
+        	default:
+        		throw ExceptionHandling.dieInternal(tc, "Invalid REPR data for VMArray");
+        	}
+        }
         obj.st = st;
         return obj;
 	}
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		throw ExceptionHandling.dieInternal(tc, "VMArray deserialization NYI");
+		long elems = reader.readLong();
+		if (st.REPRData == null) {
+			for (long i = 0; i < elems; i++)
+				obj.bind_pos_boxed(tc, i, reader.readRef());
+		}
+		else {
+			for (long i = 0; i < elems; i++) {
+	    		switch ((short)obj.st.REPRData) {
+	        	case StorageSpec.BP_INT:
+	        		tc.native_i = reader.readLong();
+	        		break;
+	        	case StorageSpec.BP_NUM:
+	        		tc.native_n = reader.readDouble();
+	        		break;
+	        	case StorageSpec.BP_STR:
+	        		tc.native_s = reader.readStr();
+	        		break;
+	        	default:
+	        		throw ExceptionHandling.dieInternal(tc, "Invalid REPR data for VMArray");
+	        	}
+	    		obj.bind_pos_native(tc, i);
+    		}
+		}
 	}
+	
+    public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+    	long elems = obj.elems(tc);
+    	writer.writeInt(elems);
+    	if (obj.st.REPRData == null) {
+    		for (long i = 0; i < elems; i++)
+    			writer.writeRef(obj.at_pos_boxed(tc, i));
+    	}
+    	else {
+    		for (long i = 0; i < elems; i++) {
+	    		obj.at_pos_native(tc, i);
+	    		switch ((short)obj.st.REPRData) {
+	        	case StorageSpec.BP_INT:
+	        		writer.writeInt(tc.native_i);
+	        		break;
+	        	case StorageSpec.BP_NUM:
+	        		writer.writeNum(tc.native_n);
+	        		break;
+	        	case StorageSpec.BP_STR:
+	        		writer.writeStr(tc.native_s);
+	        		break;
+	        	default:
+	        		throw ExceptionHandling.dieInternal(tc, "Invalid REPR data for VMArray");
+	        	}
+    		}
+        }
+    }
 }
