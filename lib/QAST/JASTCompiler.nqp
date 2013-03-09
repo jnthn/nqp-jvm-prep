@@ -4206,7 +4206,6 @@ class QAST::CompilerJAST {
                     $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
                     $il.append(JAST::PushIVal.new( :value($node.max) ));
                     $il.append(JAST::Instruction.new( :op('lcmp') ));
-                    $il.append(JAST::Instruction.new( :op('l2i') ));
                     $il.append(JAST::Instruction.new( :op('ifge'), $donelabel ));
                 }
             }
@@ -4224,7 +4223,6 @@ class QAST::CompilerJAST {
                 $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
                 $il.append(JAST::PushIVal.new( :value(+$node.min) ));
                 $il.append(JAST::Instruction.new( :op('lcmp') ));
-                $il.append(JAST::Instruction.new( :op('l2i') ));
                 $il.append(JAST::Instruction.new( :op('iflt'), %*REG<fail> ));
             }
         }
