@@ -228,6 +228,15 @@ public class SerializationWriter {
     		outputs[currentBuffer].putLong((int)hash.get(key));
 		}
 	}
+
+	private void writeCodeRef(SixModelObject ref) {
+		SerializationContext codeSC = ref.sc;
+		int scId = getSCId(codeSC);
+		int idx = codeSC.root_codes.indexOf(ref);
+	    growToHold(currentBuffer, 8);
+	    outputs[currentBuffer].putInt(scId);
+	    outputs[currentBuffer].putInt(idx);
+	}
 	
 	/* Writing function for references to things. */
 	public void writeRef(SixModelObject ref) {
@@ -318,12 +327,10 @@ public class SerializationWriter {
 	        	/* These all delegate to the REPR. */
 	        	ref.st.REPR.serialize(tc, this, ref);
 	            break;
-	        // XXX Implement these cases.
-	        /*
 	        case REFVAR_STATIC_CODEREF:
-	        case REFVAR_CLONED_CODEREF:
+	        /*case REFVAR_CLONED_CODEREF:*/
 	            writeCodeRef(ref);
-	            break;*/
+	            break;
 	        default:
 	            throw new RuntimeException("Serialization Error: Unimplemented object type writeRef");
 	    }
