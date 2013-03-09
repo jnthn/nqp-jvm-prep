@@ -1,6 +1,7 @@
 package org.perl6.nqp.sixmodel;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -73,6 +74,15 @@ public class SerializationWriter {
 		this.outputs[CONTEXTS] = ByteBuffer.allocate(128);
 		this.outputs[CONTEXT_DATA] = ByteBuffer.allocate(1024);
 		this.outputs[REPOS] = ByteBuffer.allocate(64);
+		this.outputs[DEPS].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[STABLES].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[STABLE_DATA].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[OBJECTS].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[OBJECT_DATA].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[CLOSURES].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[CONTEXTS].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[CONTEXT_DATA].order(ByteOrder.LITTLE_ENDIAN);
+		this.outputs[REPOS].order(ByteOrder.LITTLE_ENDIAN);
 		this.currentBuffer = 0;
 		this.numClosures = 0;
 		this.numContexts = 0;
@@ -313,6 +323,7 @@ public class SerializationWriter {
 	    
 	    /* Allocate a buffer that size. */
 	    ByteBuffer output = ByteBuffer.allocate(output_size);
+	    output.order(ByteOrder.LITTLE_ENDIAN);
 	    
 	    /* Write version into header. */
 	    output.putInt(CURRENT_VERSION);
