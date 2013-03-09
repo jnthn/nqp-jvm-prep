@@ -216,6 +216,18 @@ public class SerializationWriter {
     		writeRef(hash.get(key));
     	}
 	}
+
+	public void writeIntHash(HashMap<String, Integer> hash) {
+		growToHold(currentBuffer, 6);
+		outputs[currentBuffer].putShort(REFVAR_VM_HASH_STR_VAR);
+		outputs[currentBuffer].putInt(hash.size());
+		for (String key : hash.keySet()) {
+    		writeStr(key);
+    		growToHold(currentBuffer, 10);
+    		outputs[currentBuffer].putShort(REFVAR_VM_INT);
+    		outputs[currentBuffer].putLong((int)hash.get(key));
+		}
+	}
 	
 	/* Writing function for references to things. */
 	public void writeRef(SixModelObject ref) {

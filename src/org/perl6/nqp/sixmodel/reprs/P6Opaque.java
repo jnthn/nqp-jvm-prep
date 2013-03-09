@@ -64,7 +64,7 @@ public class P6Opaque extends REPR {
                     SixModelObject attrType = attrHash.at_key_boxed(tc, "type");
                     if (attrType == null)
                     	attrType = tc.gc.KnowHOW;
-                    indexes.put(attrName, curAttr++);
+                    indexes.put(attrName, curAttr);
                     AttrInfo info = new AttrInfo();
                     info.st = attrType.st;
                     if (attrType.st.REPR.get_storage_spec(tc, attrType.st).inlineable == StorageSpec.INLINED)
@@ -79,6 +79,26 @@ public class P6Opaque extends REPR {
                     info.posDelegate = attrHash.exists_key(tc, "positional_delegate") != 0;
                     info.assDelegate = attrHash.exists_key(tc, "associative_delegate") != 0;
                     attrInfoList.add(info);
+                    
+                    if (info.boxTarget) {
+                    	switch (info.st.REPR.get_storage_spec(tc, info.st).boxed_primitive) {
+                    	case StorageSpec.BP_INT:
+                    		((P6OpaqueREPRData)st.REPRData).unboxIntSlot = curAttr;
+                    		break;
+                    	case StorageSpec.BP_NUM:
+                    		((P6OpaqueREPRData)st.REPRData).unboxNumSlot = curAttr;
+                    		break;
+                    	case StorageSpec.BP_STR:
+                    		((P6OpaqueREPRData)st.REPRData).unboxStrSlot = curAttr;
+                    		break;
+                    	}
+                    }
+                    if (info.posDelegate)
+                    	((P6OpaqueREPRData)st.REPRData).posDelSlot = curAttr;
+                    if (info.assDelegate)
+                    	((P6OpaqueREPRData)st.REPRData).assDelSlot = curAttr;
+                    
+                    curAttr++;
                 }
                 classHandles.add(type);
                 attrIndexes.add(indexes);
@@ -512,9 +532,9 @@ public class P6Opaque extends REPR {
         }
         
         // Read unbox slot locations.
-        int unboxIntSlot = (int)reader.readLong();
-        int unboxNumSlot = (int)reader.readLong();
-        int unboxStrSlot = (int)reader.readLong();
+        REPRData.unboxIntSlot = (int)reader.readLong();
+        REPRData.unboxNumSlot = (int)reader.readLong();
+        REPRData.unboxStrSlot = (int)reader.readLong();
         
         // Read unbox type map.
         if (reader.readLong() != 0) {
@@ -553,8 +573,8 @@ public class P6Opaque extends REPR {
         REPRData.nameToHintMap = nameToHintMaps.toArray(new HashMap[0]);
         
         // Read delegate slots.
-        int posDelegateSlot = (int)reader.readLong();
-        int assDelegateSlot = (int)reader.readLong();
+        REPRData.posDelSlot = (int)reader.readLong();
+        REPRData.assDelSlot = (int)reader.readLong();
         
         // Finally, reassemble the Java backing type.
         ArrayList<AttrInfo> attrInfoList = new ArrayList<AttrInfo>();
@@ -564,13 +584,59 @@ public class P6Opaque extends REPR {
         		info.st = flattenedSTables[i];
         	else
         		info.st = tc.gc.KnowHOW.st; // Any reference type will do
-        	info.boxTarget = i == unboxIntSlot || i == unboxNumSlot || i == unboxStrSlot;
-        	info.posDelegate = i == posDelegateSlot;
-        	info.assDelegate = i == assDelegateSlot;
+        	info.boxTarget = i == REPRData.unboxIntSlot || i == REPRData.unboxNumSlot ||
+        			i == REPRData.unboxStrSlot;
+        	info.posDelegate = i == REPRData.posDelSlot;
+        	info.assDelegate = i == REPRData.assDelSlot;
         	info.hasAutoVivContainer = REPRData.autoVivContainers[i] != null;
         	attrInfoList.add(info);
         }
         generateJVMType(tc, st, attrInfoList);
+    }
+    
+    public void serialize_repr_data(ThreadContext tc, STable st, SerializationWriter writer) {
+    	P6OpaqueREPRData REPRData = (P6OpaqueREPRData)st.REPRData;
+    	
+    	int numAttrs = REPRData.flattenedSTables.length;
+    	writer.writeInt(numAttrs);
+    	
+        for (int i = 0; i < numAttrs; i++) {
+            if (REPRData.flattenedSTables[i] == null) {
+            	writer.writeInt(0);
+            }
+            else {
+            	writer.writeInt(1);
+            	writer.writeSTableRef(REPRData.flattenedSTables[i]);
+            }
+        }
+        
+        writer.writeInt(REPRData.mi ? 1 : 0);
+        
+        if (REPRData.autoVivContainers != null) {
+        	writer.writeInt(1);
+            for (int i = 0; i < numAttrs; i++)
+               writer.writeRef(REPRData.autoVivContainers[i]);
+        }
+        else {
+        	writer.writeInt(0);
+        }
+        
+        writer.writeInt(REPRData.unboxIntSlot);
+        writer.writeInt(REPRData.unboxNumSlot);
+        writer.writeInt(REPRData.unboxStrSlot);
+        
+        // TODO: Unbox slots
+        writer.writeInt(0);
+        
+        int numClasses = REPRData.classHandles.length;
+        writer.writeInt(numClasses);
+        for (int i = 0; i < numClasses; i++) {
+        	writer.writeRef(REPRData.classHandles[i]);
+            writer.writeIntHash(REPRData.nameToHintMap[i]);
+        }
+        
+        writer.writeInt(REPRData.posDelSlot);
+        writer.writeInt(REPRData.assDelSlot);
     }
 
 	public SixModelObject deserialize_stub(ThreadContext tc, STable st) {

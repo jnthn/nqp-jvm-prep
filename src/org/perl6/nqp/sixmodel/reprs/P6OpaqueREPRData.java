@@ -35,4 +35,13 @@ public class P6OpaqueREPRData {
      * Is the type multiply inheriting?
      */
     public boolean mi;
+    
+    /**
+     * Unbox and delegation slots; -1 if no such unbox slot.
+     */
+    public int unboxIntSlot = -1;
+    public int unboxNumSlot = -1;
+    public int unboxStrSlot = -1;
+    public int posDelSlot = -1;
+    public int assDelSlot = -1;
 }
