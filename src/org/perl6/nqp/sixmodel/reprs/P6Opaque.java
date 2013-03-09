@@ -67,8 +67,8 @@ public class P6Opaque extends REPR {
                     indexes.put(attrName, curAttr++);
                     AttrInfo info = new AttrInfo();
                     info.st = attrType.st;
-                    if (st.REPR.get_storage_spec(tc, st).inlineable == StorageSpec.INLINED)
-                    	flattenedSTables.add(st);
+                    if (attrType.st.REPR.get_storage_spec(tc, attrType.st).inlineable == StorageSpec.INLINED)
+                    	flattenedSTables.add(attrType.st);
                     else
                     	flattenedSTables.add(null);
                     info.boxTarget = attrHash.exists_key(tc, "box_target") != 0;
@@ -601,9 +601,30 @@ public class P6Opaque extends REPR {
             	}
             }
         }
-        catch (Exception e)
+        catch (IllegalAccessException | NoSuchFieldException | InstantiationException e)
         {
             throw new RuntimeException(e);
         }	
 	}
+	
+	public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
+		try {
+			STable[] flattenedSTables = ((P6OpaqueREPRData)obj.st.REPRData).flattenedSTables;
+			if (flattenedSTables == null)
+		        throw ExceptionHandling.dieInternal(tc,
+		            "Representation must be composed before it can be serialized");
+		    for (int i = 0; i < flattenedSTables.length; i++) {
+		    	if (flattenedSTables[i] == null) {
+		    		writer.writeRef((SixModelObject)obj.getClass().getField("field_" + i).get(obj));
+		    	}
+		    	else {
+		    		flattenedSTables[i].REPR.serialize_inlined(tc, flattenedSTables[i],
+            				writer, "field_" + i, obj);
+		    	}
+		    }
+		}
+		catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+    }
 }
