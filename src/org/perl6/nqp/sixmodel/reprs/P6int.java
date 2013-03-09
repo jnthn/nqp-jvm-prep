@@ -10,7 +10,6 @@ import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
-import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -125,6 +124,15 @@ public class P6int extends REPR {
 			String prefix, SixModelObject obj) {
 		try {
 			obj.getClass().getField(prefix).set(obj, reader.readLong());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void serialize_inlined(ThreadContext tc, STable st, SerializationWriter writer,
+			String prefix, SixModelObject obj) {
+		try {
+			writer.writeInt((long)obj.getClass().getField(prefix).get(obj));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -128,4 +128,13 @@ public class P6str extends REPR {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public void serialize_inlined(ThreadContext tc, STable st, SerializationWriter writer,
+			String prefix, SixModelObject obj) {
+		try {
+			writer.writeStr((String)obj.getClass().getField(prefix).get(obj));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

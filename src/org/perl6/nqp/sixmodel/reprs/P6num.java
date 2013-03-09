@@ -129,4 +129,13 @@ public class P6num extends REPR {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public void serialize_inlined(ThreadContext tc, STable st, SerializationWriter writer,
+			String prefix, SixModelObject obj) {
+		try {
+			writer.writeNum((double)obj.getClass().getField(prefix).get(obj));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

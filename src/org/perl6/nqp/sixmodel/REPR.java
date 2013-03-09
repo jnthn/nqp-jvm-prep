@@ -124,6 +124,10 @@ public abstract class REPR {
     public void generateBoxingMethods(ThreadContext tc, STable st, ClassGen c, ConstantPoolGen cp, String prefix) {
         throw ExceptionHandling.dieInternal(tc, "This representation does not support being a box target");        
     }
+    public void serialize_inlined(ThreadContext tc, STable st, SerializationWriter writer, 
+    		String prefix, SixModelObject obj) {
+    	throw ExceptionHandling.dieInternal(tc, "This representation cannot serialize an inlined representation of itself");
+    }
     public void deserialize_inlined(ThreadContext tc, STable st, SerializationReader reader, 
     		String prefix, SixModelObject obj) {
     	throw ExceptionHandling.dieInternal(tc, "This representation cannot deserialize an inlined representation of itself");
