@@ -352,7 +352,7 @@ public class SerializationWriter {
 	    offset += outputs[STABLE_DATA].position();
 	    
 	    /* Put objects table in place, and set location/rows in header. */
-	    output.position(20);
+	    output.position(24);
 	    output.putInt(offset);
 	    output.putInt(this.sc.root_objects.size());
 	    output.position(offset);
