@@ -116,7 +116,7 @@ public class KnowHOWMethods extends CompilationUnit {
 	        type_obj.st.ModeFlags = STable.METHOD_CACHE_AUTHORITATIVE;
 	        
 	        /* Set type check cache. */
-	        // TODO
+	        type_obj.st.TypeCheckCache = new SixModelObject[] { type_obj };
 	        
 	        /* Use any attribute information to produce attribute protocol
 	         * data. The protocol consists of an array... */
