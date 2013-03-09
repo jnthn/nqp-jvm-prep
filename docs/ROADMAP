@@ -24,6 +24,3 @@ Context Introspection
 * ContainerSpec
 * Type check handling (fallback case)
 * Work something out for bigint REPR
-
-SCs
-* Serialization
