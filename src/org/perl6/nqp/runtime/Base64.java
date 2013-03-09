@@ -3,6 +3,55 @@ package org.perl6.nqp.runtime;
 import java.nio.ByteBuffer;
 
 public class Base64 {
+	private static char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+	
+	/* This works around a lack of unsigned in Java. */
+	private static int deSign(byte b) {
+		if (b < 0)
+			return (int)b + 256;
+		else
+			return (int)b;
+	}
+	
+	public static String encode(ByteBuffer buf)
+	{
+		int size = buf.capacity();
+		char[] str = new char[(size + 3) * 4/3 + 1];
+
+		int p = 0;
+		int i = 0;
+		buf.position(0);
+		while (i < size) {
+			int c = deSign(buf.get());
+			i++;
+			
+			c *= 256;
+			if (i < size)
+	            c += deSign(buf.get());
+			i++;
+
+			c *= 256;
+			if (i < size)
+	            c += deSign(buf.get());
+			i++;
+
+			str[p++] = base64[(c & 0x00fc0000) >> 18];
+			str[p++] = base64[(c & 0x0003f000) >> 12];
+
+			if (i > size + 1)
+				str[p++] = '=';
+			else
+				str[p++] = base64[(c & 0x00000fc0) >> 6];
+
+			if (i > size)
+				str[p++] = '=';
+			else
+				str[p++] = base64[c & 0x0000003f];
+		}
+
+		return String.copyValueOf(str, 0, p);
+	}
+	
 	private static int POS(char c)
 	{
 		if (c >= 'A' && c <= 'Z') return c - 'A';

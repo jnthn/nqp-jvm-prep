@@ -391,7 +391,7 @@ public class SerializationWriter {
 	        throw new RuntimeException("Serialization sanity check failed: offset != output_size");
 	    
 	    /* Base 64 encode and return. */
-	    throw new RuntimeException("No base-64 encoding yet");
+	    return Base64.encode(output);
 	}
 	
 	/* Grabs an array of the bytes actually populated in the specified buffer. */
