@@ -43,7 +43,7 @@ public class CodeRef extends SixModelObject {
             long[][] handlers) {
         staticInfo = new StaticCodeInfo(compUnit, mh, name,uniqueId,
                 oLexicalNames, iLexicalNames, nLexicalNames, sLexicalNames,
-                handlers);
+                handlers, this);
     }
     
     /**

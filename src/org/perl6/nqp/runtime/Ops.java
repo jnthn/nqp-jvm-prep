@@ -2621,6 +2621,12 @@ public final class Ops {
     	((CodeRef)code).isCompilerStub = true;
     	return code;
     }
+    public static SixModelObject getstaticcode(SixModelObject code, ThreadContext tc) {
+    	if (code instanceof CodeRef)
+            return ((CodeRef)code).staticInfo.staticCode;
+        else
+            throw ExceptionHandling.dieInternal(tc, "getstaticcode can only be used with a CodeRef");
+    }
 
     /* process related opcodes */
     public static long exit(final long status) {
