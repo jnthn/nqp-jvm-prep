@@ -80,9 +80,9 @@ public class VMArray extends REPR {
 
 	public void deserialize_finish(ThreadContext tc, STable st,
 			SerializationReader reader, SixModelObject obj) {
-		long elems = reader.readLong();
+		int elems = reader.readInt32();
 		if (st.REPRData == null) {
-			for (long i = 0; i < elems; i++)
+			for (int i = 0; i < elems; i++)
 				obj.bind_pos_boxed(tc, i, reader.readRef());
 		}
 		else {
@@ -106,8 +106,8 @@ public class VMArray extends REPR {
 	}
 	
     public void serialize(ThreadContext tc, SerializationWriter writer, SixModelObject obj) {
-    	long elems = obj.elems(tc);
-    	writer.writeInt(elems);
+    	int elems = (int)obj.elems(tc);
+    	writer.writeInt32(elems);
     	if (obj.st.REPRData == null) {
     		for (long i = 0; i < elems; i++)
     			writer.writeRef(obj.at_pos_boxed(tc, i));

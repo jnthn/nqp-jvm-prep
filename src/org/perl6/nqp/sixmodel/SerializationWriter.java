@@ -197,11 +197,6 @@ public class SerializationWriter {
 	    outputs[currentBuffer].putInt(ref.sc.root_objects.indexOf(ref));
 	}
 	
-	/* Writes a hash; just delegate to the REPR. */
-	private void writeHashStrVar(SixModelObject ref) {
-		ref.st.REPR.serialize(tc, this, ref);
-	}
-	
 	/* Writing function for references to things. */
 	public void writeRef(SixModelObject ref) {
 	    /* Work out what kind of thing we have and determine the discriminator. */
@@ -284,21 +279,14 @@ public class SerializationWriter {
 	        case REFVAR_VM_STR:
 	        	writeStr(ref.get_str(tc));
 	            break;
-	        // XXX Implement these cases.
-	        /*
 	        case REFVAR_VM_ARR_VAR:
-	            writeArrayVar(ref);
-	            break;
 	        case REFVAR_VM_ARR_INT:
-	            writeArrayInt(ref);
-	            break;
 	        case REFVAR_VM_ARR_STR:
-	            writeArrayStr(ref);
-	            break;
-	        */
 	        case REFVAR_VM_HASH_STR_VAR:
-	            writeHashStrVar(ref);
+	        	/* These all delegate to the REPR. */
+	        	ref.st.REPR.serialize(tc, this, ref);
 	            break;
+	        // XXX Implement these cases.
 	        /*
 	        case REFVAR_STATIC_CODEREF:
 	        case REFVAR_CLONED_CODEREF:
