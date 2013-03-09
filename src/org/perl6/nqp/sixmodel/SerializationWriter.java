@@ -436,7 +436,7 @@ public class SerializationWriter {
 	    
 	    /* Delegate to its serialization REPR function. */
 	    if (!(obj instanceof TypeObject))
-	        obj.st.REPR.serialize(tc, obj, this);
+	        obj.st.REPR.serialize(tc, this, obj);
 	}
 
 	private void serializeStable(STable sTable) {
