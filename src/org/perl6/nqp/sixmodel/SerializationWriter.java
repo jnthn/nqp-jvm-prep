@@ -440,8 +440,67 @@ public class SerializationWriter {
 	        obj.st.REPR.serialize(tc, this, obj);
 	}
 
-	private void serializeStable(STable sTable) {
-		throw new RuntimeException("STable serialization NYI");
+	private void serializeStable(STable st) {
+	    /* Ensure there's space in the STables table. */
+		growToHold(STABLES, STABLES_TABLE_ENTRY_SIZE);
+	    
+	    /* Make STables table entry. */
+		outputs[STABLES].putInt(addStringToHeap(st.REPR.name));
+		outputs[STABLES].putInt(outputs[STABLE_DATA].position());
+	    
+	    /* Make sure we're going to write to the correct place. */
+	    currentBuffer = STABLE_DATA;
+	    
+	    /* Write HOW, WHAT and WHO. */
+	    writeObjRef(st.HOW);
+	    writeObjRef(st.WHAT);
+	    writeRef(st.WHO);
+
+	    /* Method cache and v-table. */
+	    growToHold(currentBuffer, 2);
+	    if (st.MethodCache != null) {
+	    	outputs[currentBuffer].putShort(REFVAR_VM_HASH_STR_VAR);
+	    	writeInt32(st.MethodCache.size());
+	    	for (String meth : st.MethodCache.keySet()) {
+	    		writeStr(meth);
+	    		writeRef(st.MethodCache.get(meth));
+	    	}
+	    }
+	    else {
+	    	outputs[currentBuffer].putShort(REFVAR_VM_NULL);
+	    }
+	    int vtl = st.VTable == null ? 0 : st.VTable.length;
+	    writeInt(vtl);
+	    for (int i = 0; i < vtl; i++)
+	        writeRef(st.VTable[i]);
+	    
+	    /* Type check cache. */
+	    int tcl = st.TypeCheckCache == null ? 0 : st.TypeCheckCache.length;
+	    writeInt(tcl);
+	    for (int i = 0; i < tcl; i++)
+	        writeRef(st.TypeCheckCache[i]);
+	    
+	    /* Mode flags. */
+	    writeInt(st.ModeFlags);
+	    
+	    /* Boolification spec. */
+	    writeInt(st.BoolificationSpec == null ? 0 : 1);
+	    if (st.BoolificationSpec != null) {
+	        writeInt(st.BoolificationSpec.Mode);
+	        writeRef(st.BoolificationSpec.Method);
+	    }
+	    
+	    /* Container spec. */
+	    writeInt(st.ContainerSpec == null ? 0 : 1);
+	    if (st.ContainerSpec != null) {
+	        writeRef(st.ContainerSpec.ClassHandle);
+	        writeStr(st.ContainerSpec.AttrName);
+	        writeInt(st.ContainerSpec.Hint);
+	        writeRef(st.ContainerSpec.FetchMethod);
+	    }
+	    
+	    /* If the REPR has a function to serialize representation data, call it. */
+	    st.REPR.serialize_repr_data(tc, st, this);
 	}
 
 	/* Grows a buffer as needed to hold more data. */
