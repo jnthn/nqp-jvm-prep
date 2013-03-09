@@ -37,7 +37,7 @@ nqptest: all
 	$(PROVE) --exec="$(NQP) nqp-jvm-cc.nqp" t/nqp/*.t
 
 selftest: all
-	$(PROVE) --exec="java -cp .;bin;3rdparty/bcel/bcel-5.2.jar NQPJVM" t/nqp/*.t
+	$(PROVE) --exec="java -cp .;bin;3rdparty/bcel/bcel-5.2.jar NQPJVM" t/nqp/*.t t/serialization/*.t
 
 clean:
 	$(PERL) -MExtUtils::Command -e rm_rf bin *.pir *.pbc *.class *.dump
