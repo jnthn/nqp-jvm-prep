@@ -1062,11 +1062,11 @@ class HLL::Compiler does HLL::Backend::Default {
 
         if (%adverbs<profile-compile>) {
             $output := $!backend.run_profiled({
-                self.compile($code, |%adverbs);
+                self.compile($code, :compunit_ok(1), |%adverbs);
             });
         }
         else {
-            $output := self.compile($code, |%adverbs);
+            $output := self.compile($code, :compunit_ok(1), |%adverbs);
         }
 
         if $!backend.is_compunit($output) && %adverbs<target> eq '' {
@@ -1330,7 +1330,13 @@ class HLL::Compiler does HLL::Backend::Default {
             }
             last if $_ eq $target;
         }
-        return $result;
+        
+        if %adverbs<compunit_ok> {
+            return $result
+        }
+        else {
+            return $!backend.compunit_mainline($result);
+        }
     }
 
     method start($source, *%adverbs) {
