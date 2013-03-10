@@ -683,6 +683,54 @@ for <if unless> -> $op_name {
     });
 }
 
+QAST::OperationsJAST.add_core_op('defor', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("Operation 'defor' needs 2 operands");
+    }
+    my $tmp := $op.unique('defined');
+    $qastcomp.as_jast(QAST::Stmts.new(
+        QAST::Op.new(
+            :op('bind'),
+            QAST::Var.new( :name($tmp), :scope('local'), :decl('var') ),
+            $op[0]
+        ),
+        QAST::Op.new(
+            :op('if'),
+            QAST::Op.new(
+                :op('defined'),
+                QAST::Var.new( :name($tmp), :scope('local') )
+            ),
+            QAST::Var.new( :name($tmp), :scope('local') ),
+            $op[1]
+        )))
+});
+
+QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("The 'ifnull' op expects two children");
+    }
+    
+    # Compile the expression.
+    my $il   := JAST::InstructionList.new();
+    my $expr := $qastcomp.as_jast($op[0], :want($RT_OBJ));
+    $il.append($expr.jast);
+    
+    # Emit null check.
+    my $lbl := JAST::Label.new( :name($qastcomp.unique('ifnull_')) );
+    $*STACK.obtain($expr);
+    $il.append(JAST::Instruction.new( :op('dup') ));
+    $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
+    
+    # Emit "then" part.
+    $il.append(JAST::Instruction.new( :op('pop') ));
+    my $then := $qastcomp.as_jast($op[1], :want($RT_OBJ));
+    $il.append($then.jast);
+    $*STACK.obtain($then);
+    $il.append($lbl);
+    
+    result($il, $RT_OBJ);
+});
+
 # Loops.
 for ('', 'repeat_') -> $repness {
     for <while until> -> $op_name {
@@ -975,54 +1023,6 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     else {
         result($il, $RT_VOID)
     }
-});
-
-QAST::OperationsJAST.add_core_op('defor', -> $qastcomp, $op {
-    if +$op.list != 2 {
-        nqp::die("Operation 'defor' needs 2 operands");
-    }
-    my $tmp := $op.unique('defined');
-    $qastcomp.as_jast(QAST::Stmts.new(
-        QAST::Op.new(
-            :op('bind'),
-            QAST::Var.new( :name($tmp), :scope('local'), :decl('var') ),
-            $op[0]
-        ),
-        QAST::Op.new(
-            :op('if'),
-            QAST::Op.new(
-                :op('defined'),
-                QAST::Var.new( :name($tmp), :scope('local') )
-            ),
-            QAST::Var.new( :name($tmp), :scope('local') ),
-            $op[1]
-        )))
-});
-
-QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
-    if +$op.list != 2 {
-        nqp::die("The 'ifnull' op expects two children");
-    }
-    
-    # Compile the expression.
-    my $il   := JAST::InstructionList.new();
-    my $expr := $qastcomp.as_jast($op[0], :want($RT_OBJ));
-    $il.append($expr.jast);
-    
-    # Emit null check.
-    my $lbl := JAST::Label.new( :name($qastcomp.unique('ifnull_')) );
-    $*STACK.obtain($expr);
-    $il.append(JAST::Instruction.new( :op('dup') ));
-    $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
-    
-    # Emit "then" part.
-    $il.append(JAST::Instruction.new( :op('pop') ));
-    my $then := $qastcomp.as_jast($op[1], :want($RT_OBJ));
-    $il.append($then.jast);
-    $*STACK.obtain($then);
-    $il.append($lbl);
-    
-    result($il, $RT_OBJ);
 });
 
 # Calling
@@ -1656,7 +1656,7 @@ QAST::OperationsJAST.map_classlib_core_op('scwbenable', $TYPE_OPS, 'scwbenable',
 QAST::OperationsJAST.map_classlib_core_op('pushcompsc', $TYPE_OPS, 'pushcompsc', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('popcompsc', $TYPE_OPS, 'popcompsc', [], $RT_OBJ, :tc);
 
-#bitwise opcodes
+# bitwise opcodes
 QAST::OperationsJAST.map_classlib_core_op('bitor_i', $TYPE_OPS, 'bitor_i', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('bitxor_i', $TYPE_OPS, 'bitxor_i', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('bitand_i', $TYPE_OPS, 'bitand_i', [$RT_INT, $RT_INT], $RT_INT);
