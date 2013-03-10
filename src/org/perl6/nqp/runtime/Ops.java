@@ -1246,8 +1246,7 @@ public final class Ops {
         	throw e;
         }
         catch (Throwable e) {
-        	e.printStackTrace();
-			ExceptionHandling.dieInternal(tc, e.getMessage());
+			ExceptionHandling.dieInternal(tc, e.toString());
 		}
     }
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
