@@ -2664,6 +2664,7 @@ public final class Ops {
     	exObj.initialize(tc);
     	exObj.message = msg;
     	exObj.category = ExceptionHandling.EX_CAT_CATCH;
+		exObj.origin = tc.curFrame;
     	ExceptionHandling.handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
     	return msg;
     }
@@ -2704,6 +2705,15 @@ public final class Ops {
     	}
     	else {
     		throw ExceptionHandling.dieInternal(tc, "backtracestring needs an object with VMException representation");
+    	}
+    }
+    public static SixModelObject rethrow(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof VMExceptionInstance) {
+    		VMExceptionInstance ex = (VMExceptionInstance)obj;
+    		return ExceptionHandling.handlerDynamic(tc, ex.category, ex);
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "rethrow needs an object with VMException representation");
     	}
     }
 

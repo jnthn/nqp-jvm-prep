@@ -28,6 +28,7 @@ public class ExceptionHandling {
     	exObj.initialize(tc);
     	exObj.message = msg;
     	exObj.category = ExceptionHandling.EX_CAT_CATCH;
+		exObj.origin = tc.curFrame;
     	handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
     	return stooge;
 	}
@@ -36,8 +37,6 @@ public class ExceptionHandling {
 	public static SixModelObject handlerDynamic(ThreadContext tc, long category,
 			VMExceptionInstance exObj) {
 		CallFrame f = tc.curFrame;
-		if (exObj != null)
-			exObj.origin = f;
 		while (f != null) {
 			if (f.curHandler != 0) {
 				long tryHandler = f.curHandler;				

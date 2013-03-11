@@ -1270,6 +1270,7 @@ QAST::OperationsJAST.map_classlib_core_op('exception', $TYPE_OPS, 'exception', [
 QAST::OperationsJAST.map_classlib_core_op('getextype', $TYPE_OPS, 'getextype', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getmessage', $TYPE_OPS, 'getmessage', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('backtracestrings', $TYPE_OPS, 'backtracestrings', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('rethrow', $TYPE_OPS, 'rethrow', [$RT_OBJ], $RT_OBJ, :tc);
 my %handler_names := nqp::hash(
     'CATCH',   $EX_CAT_CATCH,
     'CONTROL', $EX_CAT_CONTROL,
