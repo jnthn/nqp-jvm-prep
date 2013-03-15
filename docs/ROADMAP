@@ -12,8 +12,6 @@ QAST to JAST Compiler
 
 Exceptions
 * Handling try as an expression
-* rethrow
-* resume
 * Various other exception related instructions
 
 Context Introspection
