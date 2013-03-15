@@ -1245,6 +1245,9 @@ public final class Ops {
         catch (LexoticException e) {
         	throw e;
         }
+        catch (ResumeException e) {
+        	throw e;
+        }
         catch (Throwable e) {
 			ExceptionHandling.dieInternal(tc, e.toString());
 		}
@@ -2715,6 +2718,10 @@ public final class Ops {
     	else {
     		throw ExceptionHandling.dieInternal(tc, "rethrow needs an object with VMException representation");
     	}
+    }
+    private static ResumeException theResumer = new ResumeException(); 
+    public static SixModelObject resume(SixModelObject obj, ThreadContext tc) {
+    	throw theResumer;
     }
 
     /* HLL configuration and compiler related options. */

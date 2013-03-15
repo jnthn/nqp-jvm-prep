@@ -84,6 +84,9 @@ public class ExceptionHandling {
 				tc.handlers.add(new HandlerInfo(exObj, handlerInfo));
 				Ops.invokeArgless(tc, Ops.getlex_o(handlerFrame, (int)handlerInfo[4]));
 			}
+			catch (ResumeException e) {
+				return exObj;
+			}
 			finally {
 				tc.handlers.remove(tc.handlers.size() - 1);
 			}
