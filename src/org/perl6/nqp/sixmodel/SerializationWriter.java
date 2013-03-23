@@ -12,11 +12,11 @@ import org.perl6.nqp.sixmodel.reprs.*;
 
 public class SerializationWriter {
 	/* The current version of the serialization format. */
-	private final int CURRENT_VERSION = 3;
+	private final int CURRENT_VERSION = 4;
 	
 	/* Various sizes (in bytes). */
 	private final int HEADER_SIZE               = 4 * 16;
-	private final int STABLES_TABLE_ENTRY_SIZE  = 8;
+	private final int STABLES_TABLE_ENTRY_SIZE  = 12;
 	private final int OBJECTS_TABLE_ENTRY_SIZE  = 16;
 	private final int CLOSURES_TABLE_ENTRY_SIZE = 24;
 	private final int CONTEXTS_TABLE_ENTRY_SIZE = 16;
