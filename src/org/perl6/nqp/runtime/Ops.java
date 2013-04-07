@@ -3191,6 +3191,30 @@ public final class Ops {
     	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
     }
     
+    public static SixModelObject bitor_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).or(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitxor_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).xor(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitand_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).and(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitneg_I(SixModelObject a, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).not());
+    }
+    
+    public static SixModelObject bitshiftl_I(SixModelObject a, long b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).shiftLeft((int)b));
+    }
+    
+    public static SixModelObject bitshiftr_I(SixModelObject a, long b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).shiftRight((int)b));
+    }
+    
     /* Evaluation of code; JVM-specific ops. */
     public static SixModelObject compilejast(String dump, ThreadContext tc) {
     	EvalResult res = new EvalResult();
