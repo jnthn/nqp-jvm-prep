@@ -3171,6 +3171,26 @@ public final class Ops {
     	return getBI(tc, a).compareTo(getBI(tc, b)) >= 0 ? 1 : 0;
     }
     
+    public static SixModelObject add_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).add(getBI(tc, b)));
+    }
+    
+    public static SixModelObject sub_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).subtract(getBI(tc, b)));
+    }
+    
+    public static SixModelObject mul_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).multiply(getBI(tc, b)));
+    }
+    
+    public static SixModelObject div_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).divide(getBI(tc, b)));
+    }
+    
+    public static SixModelObject mod_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
+    }
+    
     /* Evaluation of code; JVM-specific ops. */
     public static SixModelObject compilejast(String dump, ThreadContext tc) {
     	EvalResult res = new EvalResult();
