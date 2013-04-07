@@ -28,6 +28,7 @@ public class ExceptionHandling {
     	exObj.initialize(tc);
     	exObj.message = msg;
     	exObj.category = ExceptionHandling.EX_CAT_CATCH;
+		exObj.origin = tc.curFrame;
     	handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
     	return stooge;
 	}
@@ -36,8 +37,6 @@ public class ExceptionHandling {
 	public static SixModelObject handlerDynamic(ThreadContext tc, long category,
 			VMExceptionInstance exObj) {
 		CallFrame f = tc.curFrame;
-		if (exObj != null)
-			exObj.origin = f;
 		while (f != null) {
 			if (f.curHandler != 0) {
 				long tryHandler = f.curHandler;				
@@ -46,8 +45,18 @@ public class ExceptionHandling {
 					for (int i = 0; i < handlers.length; i++) {
 						if (handlers[i][0] == tryHandler) {
 							// Found an active one, but is it the right category?
-							if ((handlers[i][2] & category) != 0)
-								return invokeHandler(tc, handlers[i], category, f, exObj);
+							if ((handlers[i][2] & category) != 0) {
+								// Correct category, but ensure we aren't already in it.
+								boolean valid = true;
+								for (int j = 0; j < tc.handlers.size(); j++) {
+									if (tc.handlers.get(j).handlerInfo == handlers[i]) {
+										valid = false;
+										break;
+									}
+								}
+								if (valid)
+									return invokeHandler(tc, handlers[i], category, f, exObj);
+							}
 							
 							// If not, try outer one.
 							tryHandler = handlers[i][1];
@@ -72,8 +81,11 @@ public class ExceptionHandling {
 			throw tc.unwinder;
 		case EX_BLOCK:
 			try {
-				tc.handlers.add(new HandlerInfo(exObj));
+				tc.handlers.add(new HandlerInfo(exObj, handlerInfo));
 				Ops.invokeArgless(tc, Ops.getlex_o(handlerFrame, (int)handlerInfo[4]));
+			}
+			catch (ResumeException e) {
+				return exObj;
 			}
 			finally {
 				tc.handlers.remove(tc.handlers.size() - 1);

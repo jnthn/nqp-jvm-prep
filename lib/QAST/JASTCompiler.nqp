@@ -683,6 +683,54 @@ for <if unless> -> $op_name {
     });
 }
 
+QAST::OperationsJAST.add_core_op('defor', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("Operation 'defor' needs 2 operands");
+    }
+    my $tmp := $op.unique('defined');
+    $qastcomp.as_jast(QAST::Stmts.new(
+        QAST::Op.new(
+            :op('bind'),
+            QAST::Var.new( :name($tmp), :scope('local'), :decl('var') ),
+            $op[0]
+        ),
+        QAST::Op.new(
+            :op('if'),
+            QAST::Op.new(
+                :op('defined'),
+                QAST::Var.new( :name($tmp), :scope('local') )
+            ),
+            QAST::Var.new( :name($tmp), :scope('local') ),
+            $op[1]
+        )))
+});
+
+QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
+    if +$op.list != 2 {
+        nqp::die("The 'ifnull' op expects two children");
+    }
+    
+    # Compile the expression.
+    my $il   := JAST::InstructionList.new();
+    my $expr := $qastcomp.as_jast($op[0], :want($RT_OBJ));
+    $il.append($expr.jast);
+    
+    # Emit null check.
+    my $lbl := JAST::Label.new( :name($qastcomp.unique('ifnull_')) );
+    $*STACK.obtain($expr);
+    $il.append(JAST::Instruction.new( :op('dup') ));
+    $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
+    
+    # Emit "then" part.
+    $il.append(JAST::Instruction.new( :op('pop') ));
+    my $then := $qastcomp.as_jast($op[1], :want($RT_OBJ));
+    $il.append($then.jast);
+    $*STACK.obtain($then);
+    $il.append($lbl);
+    
+    result($il, $RT_OBJ);
+});
+
 # Loops.
 for ('', 'repeat_') -> $repness {
     for <while until> -> $op_name {
@@ -977,54 +1025,6 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
     }
 });
 
-QAST::OperationsJAST.add_core_op('defor', -> $qastcomp, $op {
-    if +$op.list != 2 {
-        nqp::die("Operation 'defor' needs 2 operands");
-    }
-    my $tmp := $op.unique('defined');
-    $qastcomp.as_jast(QAST::Stmts.new(
-        QAST::Op.new(
-            :op('bind'),
-            QAST::Var.new( :name($tmp), :scope('local'), :decl('var') ),
-            $op[0]
-        ),
-        QAST::Op.new(
-            :op('if'),
-            QAST::Op.new(
-                :op('defined'),
-                QAST::Var.new( :name($tmp), :scope('local') )
-            ),
-            QAST::Var.new( :name($tmp), :scope('local') ),
-            $op[1]
-        )))
-});
-
-QAST::OperationsJAST.add_core_op('ifnull', -> $qastcomp, $op {
-    if +$op.list != 2 {
-        nqp::die("The 'ifnull' op expects two children");
-    }
-    
-    # Compile the expression.
-    my $il   := JAST::InstructionList.new();
-    my $expr := $qastcomp.as_jast($op[0], :want($RT_OBJ));
-    $il.append($expr.jast);
-    
-    # Emit null check.
-    my $lbl := JAST::Label.new( :name($qastcomp.unique('ifnull_')) );
-    $*STACK.obtain($expr);
-    $il.append(JAST::Instruction.new( :op('dup') ));
-    $il.append(JAST::Instruction.new( :op('ifnonnull'), $lbl ));
-    
-    # Emit "then" part.
-    $il.append(JAST::Instruction.new( :op('pop') ));
-    my $then := $qastcomp.as_jast($op[1], :want($RT_OBJ));
-    $il.append($then.jast);
-    $*STACK.obtain($then);
-    $il.append($lbl);
-    
-    result($il, $RT_OBJ);
-});
-
 # Calling
 sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
     # Make sure we do positionals before nameds.
@@ -1270,6 +1270,8 @@ QAST::OperationsJAST.map_classlib_core_op('exception', $TYPE_OPS, 'exception', [
 QAST::OperationsJAST.map_classlib_core_op('getextype', $TYPE_OPS, 'getextype', [$RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('getmessage', $TYPE_OPS, 'getmessage', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('backtracestrings', $TYPE_OPS, 'backtracestrings', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('rethrow', $TYPE_OPS, 'rethrow', [$RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('resume', $TYPE_OPS, 'resume', [$RT_OBJ], $RT_OBJ, :tc);
 my %handler_names := nqp::hash(
     'CATCH',   $EX_CAT_CATCH,
     'CONTROL', $EX_CAT_CONTROL,
@@ -1540,14 +1542,19 @@ QAST::OperationsJAST.map_classlib_core_op('time_n', $TYPE_OPS, 'time_n', [], $RT
 
 # Arithmetic ops
 QAST::OperationsJAST.map_jvm_core_op('add_i', 'ladd', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('add_I', $TYPE_OPS, 'add_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_jvm_core_op('add_n', 'dadd', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('sub_i', 'lsub', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('sub_I', $TYPE_OPS, 'sub_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_jvm_core_op('sub_n', 'dsub', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('mul_i', 'lmul', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('mul_I', $TYPE_OPS, 'mul_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_jvm_core_op('mul_n', 'dmul', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('div_i', 'ldiv', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('div_I', $TYPE_OPS, 'div_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_jvm_core_op('div_n', 'ddiv', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('mod_i', 'lrem', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('mod_I', $TYPE_OPS, 'mod_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_jvm_core_op('mod_n', 'drem', [$RT_NUM, $RT_NUM], $RT_NUM);
 QAST::OperationsJAST.map_jvm_core_op('neg_i', 'lneg', [$RT_INT], $RT_INT);
 QAST::OperationsJAST.map_jvm_core_op('neg_n', 'dneg', [$RT_NUM], $RT_NUM);
@@ -1656,13 +1663,19 @@ QAST::OperationsJAST.map_classlib_core_op('scwbenable', $TYPE_OPS, 'scwbenable',
 QAST::OperationsJAST.map_classlib_core_op('pushcompsc', $TYPE_OPS, 'pushcompsc', [$RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('popcompsc', $TYPE_OPS, 'popcompsc', [], $RT_OBJ, :tc);
 
-#bitwise opcodes
+# bitwise opcodes
 QAST::OperationsJAST.map_classlib_core_op('bitor_i', $TYPE_OPS, 'bitor_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitor_I', $TYPE_OPS, 'bitor_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bitxor_i', $TYPE_OPS, 'bitxor_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitxor_I', $TYPE_OPS, 'bitxor_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bitand_i', $TYPE_OPS, 'bitand_i', [$RT_INT, $RT_INT], $RT_INT);
-QAST::OperationsJAST.map_classlib_core_op('bitshiftl_i', $TYPE_OPS, 'bitshiftl_i', [$RT_INT, $RT_INT], $RT_INT);
-QAST::OperationsJAST.map_classlib_core_op('bitshiftr_i', $TYPE_OPS, 'bitshiftr_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitand_I', $TYPE_OPS, 'bitand_I', [$RT_OBJ, $RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('bitneg_i', $TYPE_OPS, 'bitneg_i', [$RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitneg_I', $TYPE_OPS, 'bitneg_I', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bitshiftl_i', $TYPE_OPS, 'bitshiftl_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitshiftl_I', $TYPE_OPS, 'bitshiftl_I', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('bitshiftr_i', $TYPE_OPS, 'bitshiftr_i', [$RT_INT, $RT_INT], $RT_INT);
+QAST::OperationsJAST.map_classlib_core_op('bitshiftr_I', $TYPE_OPS, 'bitshiftr_I', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
 
 # relational opcodes
 QAST::OperationsJAST.map_classlib_core_op('cmp_i',  $TYPE_OPS, 'cmp_i',  [$RT_INT, $RT_INT], $RT_INT);
@@ -1672,6 +1685,15 @@ QAST::OperationsJAST.map_classlib_core_op('islt_i', $TYPE_OPS, 'islt_i', [$RT_IN
 QAST::OperationsJAST.map_classlib_core_op('isle_i', $TYPE_OPS, 'isle_i', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('isgt_i', $TYPE_OPS, 'isgt_i', [$RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('isge_i', $TYPE_OPS, 'isge_i', [$RT_INT, $RT_INT], $RT_INT);
+
+QAST::OperationsJAST.map_classlib_core_op('bool_I', $TYPE_OPS, 'bool_I', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('cmp_I', $TYPE_OPS, 'cmp_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('iseq_I', $TYPE_OPS, 'iseq_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('isne_I', $TYPE_OPS, 'isne_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('islt_I', $TYPE_OPS, 'islt_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('isle_I', $TYPE_OPS, 'isle_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('isgt_I', $TYPE_OPS, 'isgt_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('isge_I', $TYPE_OPS, 'isge_I', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
 
 QAST::OperationsJAST.map_classlib_core_op('cmp_n',  $TYPE_OPS, 'cmp_n',  [$RT_NUM, $RT_NUM], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('iseq_n', $TYPE_OPS, 'iseq_n', [$RT_NUM, $RT_NUM], $RT_INT);
@@ -1689,6 +1711,9 @@ QAST::OperationsJAST.map_classlib_core_op('isle_s', $TYPE_OPS, 'isle_s', [$RT_ST
 QAST::OperationsJAST.map_classlib_core_op('isgt_s', $TYPE_OPS, 'isgt_s', [$RT_STR, $RT_STR], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('isge_s', $TYPE_OPS, 'isge_s', [$RT_STR, $RT_STR], $RT_INT);
 
+# bigint ops
+QAST::OperationsJAST.map_classlib_core_op('fromstr_I', $TYPE_OPS, 'fromstr_I', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('tostr_I', $TYPE_OPS, 'tostr_I', [$RT_OBJ], $RT_STR, :tc);
 
 # boolean opcodes
 QAST::OperationsJAST.map_classlib_core_op('not_i', $TYPE_OPS, 'not_i', [$RT_INT], $RT_INT);
@@ -4206,7 +4231,6 @@ class QAST::CompilerJAST {
                     $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
                     $il.append(JAST::PushIVal.new( :value($node.max) ));
                     $il.append(JAST::Instruction.new( :op('lcmp') ));
-                    $il.append(JAST::Instruction.new( :op('l2i') ));
                     $il.append(JAST::Instruction.new( :op('ifge'), $donelabel ));
                 }
             }
@@ -4224,7 +4248,6 @@ class QAST::CompilerJAST {
                 $il.append(JAST::Instruction.new( :op('lload'), %*REG<rep> ));
                 $il.append(JAST::PushIVal.new( :value(+$node.min) ));
                 $il.append(JAST::Instruction.new( :op('lcmp') ));
-                $il.append(JAST::Instruction.new( :op('l2i  ') ));
                 $il.append(JAST::Instruction.new( :op('iflt'), %*REG<fail> ));
             }
         }

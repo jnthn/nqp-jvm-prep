@@ -1268,9 +1268,11 @@ public final class Ops {
         catch (LexoticException e) {
         	throw e;
         }
+        catch (ResumeException e) {
+        	throw e;
+        }
         catch (Throwable e) {
-        	e.printStackTrace();
-			ExceptionHandling.dieInternal(tc, e.getMessage());
+			ExceptionHandling.dieInternal(tc, e.toString());
 		}
     }
     public static SixModelObject invokewithcapture(SixModelObject invokee, SixModelObject capture, ThreadContext tc) throws Exception {
@@ -2276,7 +2278,7 @@ public final class Ops {
     }
     public static SixModelObject createsc(String handle, ThreadContext tc) {
     	if (tc.gc.scs.containsKey(handle))
-    		throw ExceptionHandling.dieInternal(tc, "SC with handle " + handle + "already exists");
+    		throw ExceptionHandling.dieInternal(tc, "SC with handle " + handle + " already exists");
     	
     	SerializationContext sc = new SerializationContext(handle);
     	tc.gc.scs.put(handle, sc);
@@ -2688,6 +2690,7 @@ public final class Ops {
     	exObj.initialize(tc);
     	exObj.message = msg;
     	exObj.category = ExceptionHandling.EX_CAT_CATCH;
+		exObj.origin = tc.curFrame;
     	ExceptionHandling.handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
     	return msg;
     }
@@ -2729,6 +2732,19 @@ public final class Ops {
     	else {
     		throw ExceptionHandling.dieInternal(tc, "backtracestring needs an object with VMException representation");
     	}
+    }
+    public static SixModelObject rethrow(SixModelObject obj, ThreadContext tc) {
+    	if (obj instanceof VMExceptionInstance) {
+    		VMExceptionInstance ex = (VMExceptionInstance)obj;
+    		return ExceptionHandling.handlerDynamic(tc, ex.category, ex);
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "rethrow needs an object with VMException representation");
+    	}
+    }
+    private static ResumeException theResumer = new ResumeException(); 
+    public static SixModelObject resume(SixModelObject obj, ThreadContext tc) {
+    	throw theResumer;
     }
 
     /* HLL configuration and compiler related options. */
@@ -3116,6 +3132,110 @@ public final class Ops {
         for (int i = 0; i < parts.length; i++)
             retval.append(parts[i]);
         return retval.toString();
+    }
+    
+    /* Big integer operations. */
+    
+    private static BigInteger getBI(ThreadContext tc, SixModelObject obj) {
+    	if (obj instanceof P6bigintInstance)
+    		return ((P6bigintInstance)obj).value;
+    	throw new RuntimeException("Inlined case of P6bigint NYI");
+    }
+    
+    private static SixModelObject makeBI(ThreadContext tc, SixModelObject type, BigInteger value) {
+    	SixModelObject res = type.st.REPR.allocate(tc, type.st);
+    	res.initialize(tc);
+    	if (res instanceof P6bigintInstance) {
+    		((P6bigintInstance)res).value = value;
+    	}
+    	else {
+    		throw new RuntimeException("Inlined case of P6bigint NYI");
+    	}
+    	return res;
+    }
+    
+    public static SixModelObject fromstr_I(String str, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, new BigInteger(str));
+    }
+    
+    public static String tostr_I(SixModelObject value, ThreadContext tc) {
+    	return getBI(tc, value).toString();
+    }
+    
+    public static long bool_I(SixModelObject a, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(BigInteger.ZERO) == 0 ? 0 : 1;
+    }
+    
+    public static long cmp_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b));
+    }
+    
+    public static long iseq_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) == 0 ? 1 : 0;
+    }
+    
+    public static long isne_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) == 0 ? 0 : 1;
+    }
+    
+    public static long islt_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) < 0 ? 1 : 0;
+    }
+    
+    public static long isle_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) <= 0 ? 1 : 0;
+    }
+    
+    public static long isgt_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) > 0 ? 1 : 0;
+    }
+    
+    public static long isge_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) >= 0 ? 1 : 0;
+    }
+    
+    public static SixModelObject add_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).add(getBI(tc, b)));
+    }
+    
+    public static SixModelObject sub_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).subtract(getBI(tc, b)));
+    }
+    
+    public static SixModelObject mul_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).multiply(getBI(tc, b)));
+    }
+    
+    public static SixModelObject div_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).divide(getBI(tc, b)));
+    }
+    
+    public static SixModelObject mod_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitor_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).or(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitxor_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).xor(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitand_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).and(getBI(tc, b)));
+    }
+    
+    public static SixModelObject bitneg_I(SixModelObject a, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).not());
+    }
+    
+    public static SixModelObject bitshiftl_I(SixModelObject a, long b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).shiftLeft((int)b));
+    }
+    
+    public static SixModelObject bitshiftr_I(SixModelObject a, long b, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).shiftRight((int)b));
     }
     
     /* Evaluation of code; JVM-specific ops. */

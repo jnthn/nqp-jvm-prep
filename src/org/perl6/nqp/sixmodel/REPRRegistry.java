@@ -64,5 +64,6 @@ public class REPRRegistry {
         addREPR("NFA", new NFA());
         addREPR("VMException", new VMException());
         addREPR("IOHandle", new IOHandle());
+        addREPR("P6bigint", new P6bigint());
     }
 }
