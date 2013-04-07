@@ -534,6 +534,9 @@ public class SerializationWriter {
 	        writeRef(st.ContainerSpec.FetchMethod);
 	    }
 	    
+	    /* Location of REPR data. */
+	    outputs[STABLES].putInt(outputs[STABLE_DATA].position());
+	    
 	    /* If the REPR has a function to serialize representation data, call it. */
 	    st.REPR.serialize_repr_data(tc, st, this);
 	}
