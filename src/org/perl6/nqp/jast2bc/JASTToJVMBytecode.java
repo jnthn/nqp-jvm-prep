@@ -171,10 +171,9 @@ public class JASTToJVMBytecode {
                     String[] bits = curLine.split("\\s", 4);
                     if (localVariables.containsKey(bits[2]))
                         throw new Exception("Duplicate local name: " + bits[2]);
-                    
-                    //TODO: indexes
-                    localVariables.put(bits[2], 
-                    		new VariableDef(++curArgIndex, processType(bits[3]).getDescriptor()));
+                    Type t = processType(bits[3]);
+                    localVariables.put(bits[2], new VariableDef(curArgIndex, t.getDescriptor()));
+                    curArgIndex += (t == Type.LONG_TYPE || t == Type.DOUBLE_TYPE ? 2 : 1);
                 }
                 else
                     throw new Exception("Cannot understand '" + curLine + "'");
