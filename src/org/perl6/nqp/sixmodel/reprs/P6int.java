@@ -70,7 +70,7 @@ public class P6int extends REPR {
     	getMeth.visitInsn(Opcodes.LRETURN);
     	getMeth.visitMaxs(0, 0);
 
-    	String setDesc = "(Lorg/perl6/nqp/runtime/TheadContext;J)V";
+        String setDesc = "(Lorg/perl6/nqp/runtime/ThreadContext;J)V";
     	MethodVisitor setMeth = cw.visitMethod(Opcodes.ACC_PUBLIC, "set_int", setDesc, null, null);
     	setMeth.visitVarInsn(Opcodes.ALOAD, 0);
     	setMeth.visitVarInsn(Opcodes.LLOAD, 2);
