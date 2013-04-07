@@ -3111,6 +3111,66 @@ public final class Ops {
         return retval.toString();
     }
     
+    /* Big integer operations. */
+    
+    private static BigInteger getBI(ThreadContext tc, SixModelObject obj) {
+    	if (obj instanceof P6bigintInstance)
+    		return ((P6bigintInstance)obj).value;
+    	throw new RuntimeException("Inlined case of P6bigint NYI");
+    }
+    
+    private static SixModelObject makeBI(ThreadContext tc, SixModelObject type, BigInteger value) {
+    	SixModelObject res = type.st.REPR.allocate(tc, type.st);
+    	res.initialize(tc);
+    	if (res instanceof P6bigintInstance) {
+    		((P6bigintInstance)res).value = value;
+    	}
+    	else {
+    		throw new RuntimeException("Inlined case of P6bigint NYI");
+    	}
+    	return res;
+    }
+    
+    public static SixModelObject fromstr_I(String str, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, new BigInteger(str));
+    }
+    
+    public static String tostr_I(SixModelObject value, ThreadContext tc) {
+    	return getBI(tc, value).toString();
+    }
+    
+    public static long bool_I(SixModelObject a, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(BigInteger.ZERO) == 0 ? 0 : 1;
+    }
+    
+    public static long cmp_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b));
+    }
+    
+    public static long iseq_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) == 0 ? 1 : 0;
+    }
+    
+    public static long isne_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) == 0 ? 0 : 1;
+    }
+    
+    public static long islt_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) < 0 ? 1 : 0;
+    }
+    
+    public static long isle_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) <= 0 ? 1 : 0;
+    }
+    
+    public static long isgt_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) > 0 ? 1 : 0;
+    }
+    
+    public static long isge_I(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return getBI(tc, a).compareTo(getBI(tc, b)) >= 0 ? 1 : 0;
+    }
+    
     /* Evaluation of code; JVM-specific ops. */
     public static SixModelObject compilejast(String dump, ThreadContext tc) {
     	EvalResult res = new EvalResult();
