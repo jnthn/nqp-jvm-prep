@@ -11,6 +11,7 @@ import org.perl6.nqp.sixmodel.reprs.KnowHOWAttribute;
 import org.perl6.nqp.sixmodel.reprs.KnowHOWREPR;
 import org.perl6.nqp.sixmodel.reprs.NFA;
 import org.perl6.nqp.sixmodel.reprs.P6Opaque;
+import org.perl6.nqp.sixmodel.reprs.P6bigint;
 import org.perl6.nqp.sixmodel.reprs.P6int;
 import org.perl6.nqp.sixmodel.reprs.P6num;
 import org.perl6.nqp.sixmodel.reprs.P6str;

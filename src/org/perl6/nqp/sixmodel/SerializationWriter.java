@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.perl6.nqp.runtime.Base64;
+import org.perl6.nqp.runtime.CallFrame;
 import org.perl6.nqp.runtime.CodeRef;
+import org.perl6.nqp.runtime.ExceptionHandling;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.reprs.CallCapture;
 import org.perl6.nqp.sixmodel.reprs.IOHandle;
