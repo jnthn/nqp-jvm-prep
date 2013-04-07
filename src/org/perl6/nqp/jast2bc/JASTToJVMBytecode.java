@@ -252,7 +252,6 @@ public class JASTToJVMBytecode {
                 else if (curLine.startsWith(".push_idx ")) {
                     Integer value = Integer.parseInt(curLine.substring(".push_idx ".length()));
                     m.visitLdcInsn(value);
-//                    il.append(new PUSH(cp, value));
                 }
                 else if (curLine.equals(".try")) {
                 	Label start = new Label();
@@ -620,7 +619,7 @@ public class JASTToJVMBytecode {
         	m.visitIntInsn(Opcodes.NEWARRAY, type);
         	break;
         case 0xbd: // anewarray
-        	m.visitTypeInsn(Opcodes.ANEWARRAY, processType(rest).getDescriptor());
+        	m.visitTypeInsn(Opcodes.ANEWARRAY, processType(rest).getInternalName());
             break;
         case 0xbe: // arraylength
         	m.visitInsn(Opcodes.ARRAYLENGTH);
