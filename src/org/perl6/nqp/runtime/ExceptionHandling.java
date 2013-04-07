@@ -23,12 +23,19 @@ public class ExceptionHandling {
 	 * handler model. Note the exception is not resumable. */
 	private static RuntimeException stooge = new RuntimeException("Stooge exception leaked");
 	public static RuntimeException dieInternal(ThreadContext tc, String msg) {
-		SixModelObject exType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.exceptionType;
-    	VMExceptionInstance exObj = (VMExceptionInstance)exType.st.REPR.allocate(tc, exType.st);
-    	exObj.initialize(tc);
-    	exObj.message = msg;
-    	exObj.category = ExceptionHandling.EX_CAT_CATCH;
-		exObj.origin = tc.curFrame;
+		SixModelObject exType;
+		VMExceptionInstance exObj;
+		try {
+			exType = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.exceptionType;
+			exObj = (VMExceptionInstance)exType.st.REPR.allocate(tc, exType.st);
+			exObj.initialize(tc);
+			exObj.message = msg;
+			exObj.category = ExceptionHandling.EX_CAT_CATCH;
+			exObj.origin = tc.curFrame;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(msg);
+		}
     	handlerDynamic(tc, ExceptionHandling.EX_CAT_CATCH, exObj);
     	return stooge;
 	}
