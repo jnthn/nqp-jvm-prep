@@ -1985,7 +1985,7 @@ class QAST::CompilerJAST {
                 'Ljava/lang/Void;', 'TYPE', $TYPE_CLASS ));
             $cra.append(JAST::PushCVal.new( :value($TYPE_TC) ));
             $cra.append(JAST::PushIndex.new( :value(3) ));
-            $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CLASS ));
+            $cra.append(JAST::Instruction.new( :op('anewarray'), $TYPE_CLASS ));
             $cra.append(JAST::Instruction.new( :op('dup') ));
             $cra.append(JAST::PushIndex.new( :value(0) ));
             $cra.append(JAST::PushCVal.new( :value($TYPE_CR) ));
@@ -2004,7 +2004,7 @@ class QAST::CompilerJAST {
             
             # Create array.
             $cra.append(JAST::PushIndex.new( :value($!cur_idx) ));
-            $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_CR ));
+            $cra.append(JAST::Instruction.new( :op('anewarray'), $TYPE_CR ));
             
             # Add all the code-refs.
             my $TYPE_STRARR := "[$TYPE_STR;";
@@ -2036,7 +2036,7 @@ class QAST::CompilerJAST {
                 for @!lexical_name_lists[$i] {
                     if $_ {
                         $cra.append(JAST::PushIndex.new( :value(+$_) ));
-                        $cra.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+                        $cra.append(JAST::Instruction.new( :op('anewarray'), $TYPE_STR ));
                         my int $i := 0;
                         for $_ {
                             $cra.append(JAST::Instruction.new( :op('dup') ));
@@ -2051,7 +2051,7 @@ class QAST::CompilerJAST {
                 }
                 
                 $cra.append(JAST::PushIndex.new( :value(+@!handlers[$i]) ));
-                $cra.append(JAST::Instruction.new( :op('newarray'), "[J" ));
+                $cra.append(JAST::Instruction.new( :op('anewarray'), "[J" ));
                 my $hidx := 0;
                 for @!handlers[$i] {
                     $cra.append(JAST::Instruction.new( :op('dup') ));
@@ -2111,7 +2111,7 @@ class QAST::CompilerJAST {
             
             # Create array.
             $csa.append(JAST::PushIndex.new( :value(+@!callsites) ));
-            $csa.append(JAST::Instruction.new( :op('newarray'), $TYPE_CSD ));
+            $csa.append(JAST::Instruction.new( :op('anewarray'), $TYPE_CSD ));
             
             # All all the callsites
             my int $i := 0;
@@ -2134,7 +2134,7 @@ class QAST::CompilerJAST {
                 }
                 if @cs_names {
                     $csa.append(JAST::PushIndex.new( :value(+@cs_names) ));
-                    $csa.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+                    $csa.append(JAST::Instruction.new( :op('anewarray'), $TYPE_STR ));
                     $j := 0;
                     for @cs_names {
                         $csa.append(JAST::Instruction.new( :op('dup') ));
@@ -2793,7 +2793,7 @@ class QAST::CompilerJAST {
             for %arg_array_lengths {
                 $*JMETH.add_local($_.key, "[$TYPE_OBJ");
                 $*JMETH.append(JAST::PushIndex.new( :value($_.value) ));
-                $*JMETH.append(JAST::Instruction.new( :op('newarray'), $TYPE_OBJ ));
+                $*JMETH.append(JAST::Instruction.new( :op('anewarray'), $TYPE_OBJ ));
                 $*JMETH.append(JAST::Instruction.new( :op('astore'), $_.key ));
             }
             
@@ -3209,7 +3209,7 @@ class QAST::CompilerJAST {
             nqp::push(@chunks, $value);
             my $il := JAST::InstructionList.new();
             $il.append(JAST::PushIndex.new( :value(nqp::elems(@chunks)) ));
-            $il.append(JAST::Instruction.new( :op('newarray'), $TYPE_STR ));
+            $il.append(JAST::Instruction.new( :op('anewarray'), $TYPE_STR ));
             my int $i := 0;
             for @chunks {
                 $il.append(JAST::Instruction.new( :op('dup') ));
