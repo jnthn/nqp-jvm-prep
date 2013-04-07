@@ -611,8 +611,12 @@ public class JASTToJVMBytecode {
         		type = Opcodes.T_DOUBLE;
         	else if (rest.equals("Boolean"))
         		type = Opcodes.T_BOOLEAN;
+        	else if (rest.equals("J") || rest.equals("Long"))
+        		type = Opcodes.T_LONG;
+        	else if (rest.equals("Byte"))
+        		type = Opcodes.T_BYTE;
         	else 
-        		type = Opcodes.T_INT;
+        		throw new RuntimeException("Unknown native array type");
         	m.visitIntInsn(Opcodes.NEWARRAY, type);
         	break;
         case 0xbd: // anewarray
