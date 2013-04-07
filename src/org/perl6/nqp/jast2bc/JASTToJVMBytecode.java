@@ -132,6 +132,7 @@ public class JASTToJVMBytecode {
         Map<String, VariableDef> localVariables = new HashMap<String, VariableDef>();
         Map<String, Label> labelMap = new HashMap<String, Label>();
         Stack<Label> tryStartStack = new Stack<Label>();
+        Stack<Label> tryEndStack = new Stack<Label>();
         int curArgIndex = 1;
         
         MethodVisitor m = null;
@@ -260,7 +261,15 @@ public class JASTToJVMBytecode {
                 	tryStartStack.push(start);
                 }
                 else if (curLine.startsWith(".catch ")) {
-                    String typeName = curLine.substring(".catch ".length());
+                    Label afterCatch = new Label();
+                    m.visitJumpInsn(Opcodes.GOTO, afterCatch);
+                    tryEndStack.push(afterCatch);
+                    
+                	String typeName = curLine.substring(".catch ".length());
+                    if (typeName.equals(""))
+                    	typeName = null;
+                    else
+                    	typeName = typeName.substring(1, typeName.length() - 1); 
                     Label start = tryStartStack.peek();
                     Label end = new Label();
                     Label handler = new Label();
@@ -270,6 +279,7 @@ public class JASTToJVMBytecode {
                 }
                 else if (curLine.equals(".endtry")) {
                 	tryStartStack.pop();
+                	m.visitLabel(tryEndStack.pop());
                 }
                 else {
                     throw new Exception("Don't understand directive: " + curLine);
