@@ -3140,7 +3140,10 @@ public final class Ops {
     private static BigInteger getBI(ThreadContext tc, SixModelObject obj) {
     	if (obj instanceof P6bigintInstance)
     		return ((P6bigintInstance)obj).value;
-    	throw new RuntimeException("Inlined case of P6bigint NYI");
+    	/* What follows is a bit of a hack, relying on the first field being the
+    	 * big integer. */
+    	obj.get_attribute_native(tc, null, null, 0);
+    	return (BigInteger)tc.native_j;
     }
     
     private static SixModelObject makeBI(ThreadContext tc, SixModelObject type, BigInteger value) {
@@ -3150,7 +3153,8 @@ public final class Ops {
     		((P6bigintInstance)res).value = value;
     	}
     	else {
-    		throw new RuntimeException("Inlined case of P6bigint NYI");
+    		tc.native_j = value;
+    		res.bind_attribute_native(tc, null, null, 0);
     	}
     	return res;
     }
