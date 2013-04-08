@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.perl6.nqp.runtime.ThreadContext;
 import org.perl6.nqp.sixmodel.REPR;
 import org.perl6.nqp.sixmodel.STable;
@@ -12,8 +13,6 @@ import org.perl6.nqp.sixmodel.SerializationReader;
 import org.perl6.nqp.sixmodel.SixModelObject;
 import org.perl6.nqp.sixmodel.StorageSpec;
 import org.perl6.nqp.sixmodel.TypeObject;
-
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
 public class P6bigint extends REPR {
 	public SixModelObject type_object_for(ThreadContext tc, SixModelObject HOW) {
