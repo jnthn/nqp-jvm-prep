@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +15,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -588,6 +592,9 @@ public class JASTToJVMBytecode {
         case 0xb8: // invokestatic
             emitCall(m, rest, instruction);
             break;
+        case 0xba:
+        	emitInvokeDynamic(m, rest);
+        	break;
         case 0xbb: // new
             Type t = processType(rest);
         	m.visitTypeInsn(instruction, t.getInternalName());
@@ -648,6 +655,16 @@ public class JASTToJVMBytecode {
             argumentTypes[i - 3] = processType(bits[i]);
         m.visitMethodInsn(callType, targetType.getInternalName(), methodName, 
         		Type.getMethodDescriptor(returnType, argumentTypes));
+    }
+
+    private static void emitInvokeDynamic(MethodVisitor m, String callSpec) {
+        String[] bits = callSpec.split("\\s");
+        if (bits.length != 4)
+        	throw new RuntimeException("invokedynamic needs 4 arguments");
+        MethodType bsmMT = MethodType.methodType(CallSite.class, MethodHandles.Lookup.class,
+        		java.lang.String.class, MethodType.class);
+        Handle bsmHandle = new Handle(Opcodes.H_INVOKESTATIC, bits[2], bits[3], bsmMT.toMethodDescriptorString());
+        m.visitInvokeDynamicInsn(bits[0], bits[1], bsmHandle);
     }
 
     private static void emitBranchInstruction(MethodVisitor m,

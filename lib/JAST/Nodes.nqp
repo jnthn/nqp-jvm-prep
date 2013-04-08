@@ -212,6 +212,37 @@ class JAST::Instruction is JAST::Node {
     }
 }
 
+# Really an instruction, but makes things a bit more pleasant to work with.
+# For now, we only support the default signature of a bootstrap method and
+# assume that it is static.
+class JAST::InvokeDynamic is JAST::Node {
+    has $!name;
+    has @!arg_types;
+    has $!ret_type;
+    has $!bsm_type;
+    has $!bsm_name;
+    
+    method new($name, $ret_type, @arg_types, $bsm_type, $bsm_name) {
+        self.bless(:$name, :$ret_type, :@arg_types, :$bsm_type, :$bsm_name)
+    }
+    
+    method BUILD(:$name, :$ret_type, :@arg_types, :$bsm_type, :$bsm_name) {
+        $!name := $name;
+        $!ret_type := $ret_type;
+        @!arg_types := @arg_types;
+        $!bsm_type := $bsm_type;
+        $!bsm_name := $bsm_name;
+    }
+    
+    method dump() {
+        my @dump := [opname2code('invokedynamic'), $!name];
+        nqp::push(@dump, '(' ~ join('', @!arg_types) ~ ')' ~ $!ret_type);
+        nqp::push(@dump, $!bsm_type);
+        nqp::push(@dump, $!bsm_name);
+        join(" ", @dump)
+    }
+}
+
 class JAST::PushIVal is JAST::Node {
     has int $!value;
     
