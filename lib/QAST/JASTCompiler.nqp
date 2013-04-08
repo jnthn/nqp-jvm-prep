@@ -1715,6 +1715,8 @@ QAST::OperationsJAST.map_classlib_core_op('isge_s', $TYPE_OPS, 'isge_s', [$RT_ST
 # bigint ops
 QAST::OperationsJAST.map_classlib_core_op('fromstr_I', $TYPE_OPS, 'fromstr_I', [$RT_STR, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('tostr_I', $TYPE_OPS, 'tostr_I', [$RT_OBJ], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('fromnum_I', $TYPE_OPS, 'fromnum_I', [$RT_NUM, $RT_OBJ], $RT_OBJ, :tc);
+QAST::OperationsJAST.map_classlib_core_op('tonum_I', $TYPE_OPS, 'tonum_I', [$RT_OBJ], $RT_NUM, :tc);
 
 # boolean opcodes
 QAST::OperationsJAST.map_classlib_core_op('not_i', $TYPE_OPS, 'not_i', [$RT_INT], $RT_INT);

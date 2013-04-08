@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -3165,6 +3166,14 @@ public final class Ops {
     
     public static String tostr_I(SixModelObject value, ThreadContext tc) {
     	return getBI(tc, value).toString();
+    }
+    
+    public static SixModelObject fromnum_I(double num, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, BigDecimal.valueOf(num).toBigInteger());
+    }
+    
+    public static double tonum_I(SixModelObject value, ThreadContext tc) {
+    	return getBI(tc, value).doubleValue();
     }
     
     public static long bool_I(SixModelObject a, ThreadContext tc) {
