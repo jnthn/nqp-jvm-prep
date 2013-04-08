@@ -1860,6 +1860,8 @@ public final class Ops {
             return str.equals("") || str.equals("0") ? 0 : 1;
         case BoolificationSpec.MODE_NOT_TYPE_OBJECT:
             return obj instanceof TypeObject ? 0 : 1;
+        case BoolificationSpec.MODE_BIGINT:
+        	return obj instanceof TypeObject || getBI(tc, obj).compareTo(BigInteger.ZERO) == 0 ? 0 : 1;
         case BoolificationSpec.MODE_ITER:
             return ((VMIterInstance)obj).boolify() ? 1 : 0;
         case BoolificationSpec.MODE_HAS_ELEMS:
