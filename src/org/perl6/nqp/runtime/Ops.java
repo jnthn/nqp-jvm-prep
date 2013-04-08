@@ -3232,6 +3232,10 @@ public final class Ops {
     	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
     }
     
+    public static SixModelObject expmod_I(SixModelObject a, SixModelObject b, SixModelObject c, SixModelObject type, ThreadContext tc) {
+    	return makeBI(tc, type, getBI(tc, a).modPow(getBI(tc, b), getBI(tc, c)));
+    }
+    
     public static SixModelObject pow_I(SixModelObject a, SixModelObject b, SixModelObject biType, SixModelObject nType, ThreadContext tc) {
     	BigInteger base = getBI(tc, a);
     	BigInteger exponent = getBI(tc, b);
