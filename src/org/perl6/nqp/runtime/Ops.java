@@ -3168,6 +3168,10 @@ public final class Ops {
     	return getBI(tc, value).toString();
     }
     
+    public static String base_I(SixModelObject value, long radix, ThreadContext tc) {
+    	return getBI(tc, value).toString((int)radix).toUpperCase();
+    }
+    
     public static SixModelObject fromnum_I(double num, SixModelObject type, ThreadContext tc) {
     	return makeBI(tc, type, BigDecimal.valueOf(num).toBigInteger());
     }
