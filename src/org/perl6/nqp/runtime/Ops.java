@@ -3219,6 +3219,44 @@ public final class Ops {
     	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
     }
     
+    public static SixModelObject pow_I(SixModelObject a, SixModelObject b, SixModelObject biType, SixModelObject nType, ThreadContext tc) {
+    	BigInteger base = getBI(tc, a);
+    	BigInteger exponent = getBI(tc, b);
+    	int cmp = exponent.compareTo(BigInteger.ZERO);
+    	if (cmp == 0 || base.compareTo(BigInteger.ONE) == 0) {
+    		return makeBI(tc, biType, BigInteger.ONE);
+    	}
+    	else if (cmp > 0) {
+    		if (exponent.bitLength() > 31) {
+    			/* Overflows integer. Terrifyingly huge, but try to cope somehow. */
+    			cmp = base.compareTo(BigInteger.ZERO);
+    			if (cmp == 0 || base.compareTo(BigInteger.ONE) == 0) {
+    				/* 0 ** $big_number and 1 ** big_number are easy to do: */
+    				return makeBI(tc, biType, base);
+    			}
+    			else {
+    				/* Otherwise, do floating point infinity of the right sign. */
+    				SixModelObject result = nType.st.REPR.allocate(tc, nType.st);
+    	    		result.initialize(tc);
+    	    		result.set_num(tc, cmp > 0 ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY);
+    	    		return result;
+    			}
+    		}
+    		else {
+    			/* Can safely take its integer value. */
+    			return makeBI(tc, biType, base.pow(exponent.intValue()));
+    		}
+    	}
+    	else {
+    		double fBase = base.doubleValue();
+    		double fExponent = exponent.doubleValue();
+    		SixModelObject result = nType.st.REPR.allocate(tc, nType.st);
+    		result.initialize(tc);
+    		result.set_num(tc, Math.pow(fBase, fExponent));
+    		return result;
+    	}
+    }
+    
     public static SixModelObject bitor_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
     	return makeBI(tc, type, getBI(tc, a).or(getBI(tc, b)));
     }
