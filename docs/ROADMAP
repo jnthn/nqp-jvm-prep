@@ -18,7 +18,5 @@ Context Introspection
 * Tests for what's implemented so far
 
 6model
-* BoolificationSpec - bigint case
 * ContainerSpec
 * Type check handling (fallback case)
-* Work something out for bigint REPR
