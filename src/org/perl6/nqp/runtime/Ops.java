@@ -3228,6 +3228,10 @@ public final class Ops {
     	return makeBI(tc, type, getBI(tc, a).divide(getBI(tc, b)));
     }
     
+    public static double div_In(SixModelObject a, SixModelObject b, ThreadContext tc) {
+    	return new BigDecimal(getBI(tc, a)).divide(new BigDecimal(getBI(tc, b))).doubleValue();
+    }
+    
     public static SixModelObject mod_I(SixModelObject a, SixModelObject b, SixModelObject type, ThreadContext tc) {
     	return makeBI(tc, type, getBI(tc, a).mod(getBI(tc, b)));
     }
