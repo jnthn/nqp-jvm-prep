@@ -3241,8 +3241,10 @@ class QAST::CompilerJAST {
         $il.append(JAST::PushSVal.new( :value($handle) ));
         $il.append(JAST::PushIVal.new( :value($idx) ));
         $il.append(JAST::Instruction.new( :op('aload_1') ));
-        $il.append(JAST::Instruction.new( :op('invokestatic'), $TYPE_OPS, 'wval',
-            $TYPE_SMO, $TYPE_STR, 'Long', $TYPE_TC ));
+        $il.append(JAST::InvokeDynamic.new(
+            'wval', $TYPE_SMO, [$TYPE_STR, 'J', $TYPE_TC],
+            'org/perl6/nqp/runtime/IndyBootstrap', 'wval'
+        ));
         result($il, $RT_OBJ);
     }
     
