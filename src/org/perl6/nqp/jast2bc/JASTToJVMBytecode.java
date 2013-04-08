@@ -76,13 +76,7 @@ public class JASTToJVMBytecode {
             throw new Exception("Missing class name");
         if (superName == null)
             throw new Exception("Missing superclass name");
-        
-        // Create class generator object.
-//        ClassGen c = new ClassGen(className, superName,  "<generated>",
-//                Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
-//        ConstantPoolGen cp = c.getConstantPool();
-//        InstructionList il = new InstructionList();
-        
+
         className = className.replace('.', '/');
         superName = superName.replace('.', '/');
 
@@ -204,8 +198,6 @@ public class JASTToJVMBytecode {
             // Check if it's a label.
             if (curLine.startsWith(":")) {
                 String labelName = curLine.substring(1);
-//                if (labelMap.containsKey(labelName))
-//                    throw new Exception("Duplicate label: " + labelName);
                 if (!labelMap.containsKey(labelName))
                 	labelMap.put(labelName, new Label());
                 m.visitLabel(labelMap.get(labelName));
