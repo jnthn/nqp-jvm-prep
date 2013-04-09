@@ -49,8 +49,11 @@ my class Result {
     has int $!type;     # Result type (obj/int/num/str)
     has str $!local;    # Local where the result is; if empty, it's on the stack
     
-    method jast() { $!jast }
-    method type() { $!type }
+    method jast()  { $!jast }
+    method type()  { $!type }
+    method local() { $!local }
+    
+    method set_local($local) { $!local := $local }
 }
 sub result($jast, int $type) {
     my $r := nqp::create(Result);
@@ -1328,11 +1331,13 @@ QAST::OperationsJAST.add_core_op('handle', sub ($qastcomp, $op) {
         $mask := nqp::bitor_i($mask, $cat_mask);
     }
     
-    # Compile, create a lexical to put the handler in, and add it.
+    # Compile, create a lexical to put the handler in, and add it. Should
+    # also force the stack to empty.
     my $name   := QAST::Node.unique('!HANDLER_');
     $*BLOCK.add_lexical(QAST::Var.new( :name($name) ));
     my $lexidx := $*BLOCK.lexical_idx($name);
     my $il     := JAST::InstructionList.new();
+    $*STACK.spill_to_locals($il);
     my $hb_res := $qastcomp.as_jast($hblock, :want($RT_OBJ));
     $il.append($hb_res.jast);
     $*STACK.obtain($il, $hb_res);
@@ -2359,6 +2364,7 @@ class QAST::CompilerJAST {
     # at some point in the future.
     my class StackState {
         has @!stack;
+        has @!spill_locals;
         
         method push($result) {
             nqp::istype($result, Result)
@@ -2376,28 +2382,82 @@ class QAST::CompilerJAST {
             }
             
             # See if the things we need are all on the stack.
-            if +@!stack >= @things {
-                my int $sp := @!stack - +@things;
-                my int $tp := 0;
-                my int $ok := 1;
-                while $tp < +@things {
-                    unless nqp::istype(@things[$tp], Result) {
-                        nqp::die("Should only look up Result objects on the stack");
-                    }
-                    unless nqp::eqaddr(@!stack[$sp], @things[$tp]) {
-                        $ok := 0;
-                        last;
-                    }
-                    $sp++, $tp++;
+            my int $sp        := @!stack - +@things;
+            my int $tp        := 0;
+            my int $ok        := 1;
+            my int $all_stack := 1;
+            my int $all_local := 1;
+            while $tp < +@things {
+                unless nqp::istype(@things[$tp], Result) {
+                    nqp::die("Should only look up Result objects on the stack");
                 }
-                if $ok {
+                unless nqp::eqaddr(@!stack[$sp], @things[$tp]) {
+                    $ok := 0;
+                    last;
+                }
+                if @!stack[$sp].local {
+                    $all_stack := 0;
+                }
+                else {
+                    $all_local := 0;
+                }
+                $sp++, $tp++;
+            }
+            if $ok {
+                # If they're all on the stack, easy.
+                if $all_stack {
                     for @things { nqp::pop(@!stack) }
                     return 1;
                 }
+                
+                # If they're all local, load them onto the stack. Also, we can
+                # re-use the stack saving temporaries.
+                elsif $all_local {
+                    for @things {
+                        my $local := $_.local;
+                        my $type  := $_.type;
+                        $il.append(JAST::Instruction.new( :op(load_ins($type)), $local ));
+                        if nqp::islist(@!spill_locals[$type]) {
+                            nqp::push(@!spill_locals[$type], $local);
+                        }
+                        else {
+                            @!spill_locals[$type] := [$local];
+                        }
+                        nqp::pop(@!stack)
+                    }
+                    return 1;
+                }
+                
+                # Mix of local and stack is not yet supported.
+                else {
+                    nqp::die("Mix of local and stack items in obtain NYI");
+                }
             }
             
-            # Otherwise, we need to do a little more work.
-            nqp::die("Unhandled re-use of stack items");
+            # Otherwise, bad access.
+            nqp::die("Out-of-order access or re-use of stack items");
+        }
+        
+        # Spills the currnet stack contents to local variables.
+        method spill_to_locals($il) {
+            sub obtain_temp($type) {
+                if @!spill_locals[$type] {
+                    nqp::pop(@!spill_locals[$type])
+                }
+                else {
+                    fresh($type);
+                }
+            }
+            
+            my $sp := nqp::elems(@!stack);
+            while $sp-- {
+                my $item := @!stack[$sp];
+                unless $item.local {
+                    my $temp := obtain_temp($item.type);
+                    $il.append(JAST::Instruction.new( :op(store_ins($item.type)), $temp ));
+                    $item.set_local($temp);
+                }
+            }
         }
     }
 
