@@ -215,7 +215,7 @@ $ops.add_hll_op('nqp', 'falsey', -> $qastcomp, $op {
     my $il := JAST::InstructionList.new();
     my $res := $qastcomp.as_jast($op[0]);
     $il.append($res.jast);
-    $*STACK.obtain($res);
+    $*STACK.obtain($il, $res);
     
     # Now go by type.
     if $res.type == $RT_OBJ {
