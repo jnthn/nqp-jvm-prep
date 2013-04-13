@@ -2137,6 +2137,30 @@ public final class Ops {
         return str.codePointAt((int)offset);
     }
     
+    public static String sprintf(String format, SixModelObject arr, ThreadContext tc) {
+    	// This function just assumes that Java's printf format is compatible
+    	// with NQP's printf format...
+
+    	final int numElems = (int) arr.elems(tc);
+    	Object[] args = new Object[numElems];
+
+    	for (int i = 0; i < numElems; i++) {
+    	    SixModelObject obj = arr.at_pos_boxed(tc, i);
+    	    StorageSpec ss = obj.st.REPR.get_storage_spec(tc, obj.st);
+    	    if ((ss.can_box & StorageSpec.CAN_BOX_INT) != 0) {
+    	        args[i] = Long.valueOf(obj.get_int(tc));
+    	    } else if ((ss.can_box & StorageSpec.CAN_BOX_NUM) != 0) {
+    	        args[i] = Double.valueOf(obj.get_num(tc));
+    	    } else if ((ss.can_box & StorageSpec.CAN_BOX_STR) != 0) {
+    	        args[i] = obj.get_str(tc);
+    	    } else {
+    	        throw new IllegalArgumentException("sprintf only accepts ints, nums, and strs, not " + obj.getClass());
+    	    }
+    	}
+
+    	return String.format(format, args);
+    }
+    
     public static String escape(String str) {
     	int len = str.length();
     	StringBuilder sb = new StringBuilder(2 * len);
