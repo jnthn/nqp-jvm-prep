@@ -326,7 +326,9 @@ class QAST::Var is QAST::Node {
     }
 
     method dump_extra_node_info() {
-        "$!scope $!name";
+        $!decl
+            ?? "$!scope $!name :decl"
+            !! "$!scope $!name";
     }
 }
 # From src\QAST\VarWithFallback.nqp
@@ -432,6 +434,10 @@ class QAST::Stmts is QAST::Node {
         }
         $result
     }
+
+    method dump_extra_node_info() {
+        nqp::defined($!resultchild) ?? ":resultchild($!resultchild))" !! ''
+    }
 }
 # From src\QAST\Stmt.nqp
 
@@ -460,6 +466,10 @@ class QAST::Stmt is QAST::Node {
             $i := $i + 1;
         }
         $result
+    }
+    
+    method dump_extra_node_info() {
+        nqp::defined($!resultchild) ?? ":resultchild($!resultchild))" !! ''
     }
 }
 # From src\QAST\Block.nqp
