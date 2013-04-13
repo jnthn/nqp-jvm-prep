@@ -50,6 +50,7 @@ my knowhow NQPRoutine {
         nqp::defined($!dispatchees)
     }
     
+    # Derives a new dispatcher.
     method derive_dispatcher() {
         # Clone the underlying VM code ref.
         my $do  := nqp::clone($!do);
@@ -377,8 +378,6 @@ my knowhow NQPRoutine {
 }
 nqp::setinvokespec(NQPRoutine, NQPRoutine, '$!do', nqp::null);
 nqp::setboolspec(NQPRoutine, 5, nqp::null());
-#pir::stable_publish_vtable_handler_mapping__vPP(NQPRoutine,
-#    nqp::hash('get_string', nqp::list(NQPRoutine, '$!do')));
 
 my knowhow NQPSignature {
     has $!types;
@@ -468,8 +467,6 @@ my knowhow NQPRegex {
 }
 nqp::setinvokespec(NQPRegex, NQPRegex, '$!do', nqp::null);
 nqp::setboolspec(NQPRegex, 5, nqp::null());
-#pir::stable_publish_vtable_handler_mapping__vPP(NQPRegex,
-#    nqp::hash('get_string', nqp::list(NQPRegex, '$!do')));
 
 # From src\core\NQPMu.pm
 
@@ -491,7 +488,7 @@ my class NQPMu {
         my $i          := 0;
         while $i < $count {
             my $task := nqp::atpos($build_plan, $i);
-            my $code := nqp::atpos($task, 0);
+            my int $code := nqp::atpos($task, 0);
             $i := $i + 1;
             if nqp::iseq_i($code, 0) {
                 # Custom BUILD call.
