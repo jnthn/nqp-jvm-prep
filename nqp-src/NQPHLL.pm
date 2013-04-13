@@ -1198,7 +1198,7 @@ class HLL::Compiler does HLL::Backend::Default {
                 if nqp::can(self, 'handle-control') {
                     self.handle-control($_);
                 } else {
-#                    nqp::rethrow($_);
+                    nqp::rethrow($_);
                 }
                 $has_error := 1;
                 $error     := $_;
@@ -1251,10 +1251,18 @@ class HLL::Compiler does HLL::Backend::Default {
         my @files := nqp::islist($files) ?? $files !! [$files];
         $!user_progname := join(',', @files);
         my @codes;
-        for @files {
+        for @files -> $filename {
             my $err := 0;
+            my $in-handle;
             try {
-                my $in-handle := nqp::open($_, 'r');
+                $in-handle := nqp::open($filename, 'r');
+                CATCH {
+                    nqp::say("Could not open $filename. $_");
+                    $err := 1;
+                }
+            }
+            nqp::exit(1) if $err;
+            try {
                 nqp::setencoding($in-handle, $encoding);
                 nqp::push(@codes, nqp::readallfh($in-handle));
                 nqp::closefh($in-handle);
@@ -1318,7 +1326,7 @@ class HLL::Compiler does HLL::Backend::Default {
             }
             my $diff := nqp::time_n() - $timestamp;
             if nqp::defined($stagestats) {
-#                nqp::printfh($stderr, nqp::sprintf("Stage %-11s: %7.3f", [$_, $diff]));
+                nqp::printfh($stderr, nqp::sprintf("Stage %-11s: %7.3f", [$_, $diff]));
                 $!backend.force_gc() if nqp::bitand_i($stagestats, 0x4);
                 nqp::printfh($stderr, $!backend.vmstat())
                     if nqp::bitand_i($stagestats, 0x2);
@@ -1431,7 +1439,7 @@ class HLL::Compiler does HLL::Backend::Default {
             self.stages(@new-stages);
             return 1;
         }
-        my @new-stages := nqp::list_s();
+        my @new-stages := nqp::list();
         for self.stages {
             if $_ eq $where {
                 if $position eq 'before' {
@@ -1525,7 +1533,7 @@ class HLL::Compiler does HLL::Backend::Default {
 }
 
 my $compiler := HLL::Compiler.new();
-$compiler.language('jvm');
+$compiler.language($compiler.backend.name);
 
 # From src\HLL\CommandLine.pm
 

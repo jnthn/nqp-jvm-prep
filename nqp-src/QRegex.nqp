@@ -430,17 +430,17 @@ class QRegex::NFA {
         $copy
     }
 
-#    method __dump($dumper, $label) {
-#        my $subindent := $dumper.'newIndent'();
-#        print('[');
-#        my $st := 0;
-#        for $!states {
-#            print(nqp::sprintf("\n$subindent'%d' => [%s]", [$st, nqp::join(', ', $_)]));
-#            $st := $st + 1;
-#        }
-#        $dumper.deleteIndent();
-#        print("\n", $dumper.indent, ']');
-#    }
+    method __dump($dumper, $label) {
+        my $subindent := $dumper.'newIndent'();
+        print('[');
+        my $st := 0;
+        for $!states {
+            print(nqp::sprintf("\n$subindent'%d' => [%s]", [$st, nqp::join(', ', $_)]));
+            $st := $st + 1;
+        }
+        $dumper.deleteIndent();
+        print("\n", $dumper.indent, ']');
+    }
 }
 
 INIT {
