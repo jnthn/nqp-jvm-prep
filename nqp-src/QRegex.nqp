@@ -366,20 +366,18 @@ class QRegex::NFA {
 
     method run(str $target, int $offset) {
         unless nqp::isconcrete($!nfa_object) {
-#            pir::nqp_disable_sc_write_barrier__v();
+            nqp::scwbdisable();
             $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
-#            pir::nqp_enable_sc_write_barrier__v();
-            1;
+            nqp::scwbenable();
         }
         nqp::nfarunproto($!nfa_object, $target, $offset)
     }
     
     method run_alt(str $target, int $offset, $bstack, $cstack, @labels) {
         unless nqp::isconcrete($!nfa_object) {
-#            pir::nqp_disable_sc_write_barrier__v();
+            nqp::scwbdisable();
             $!nfa_object := nqp::nfafromstatelist($!states, NFAType);
-#            pir::nqp_enable_sc_write_barrier__v();
-            1;
+            nqp::scwbenable();
         }
         nqp::nfarunalt($!nfa_object, $target, $offset, $bstack, $cstack, @labels)
     }
