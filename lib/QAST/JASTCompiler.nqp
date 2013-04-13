@@ -1609,6 +1609,7 @@ QAST::OperationsJAST.map_classlib_core_op('split', $TYPE_OPS, 'split', [$RT_STR,
 QAST::OperationsJAST.map_classlib_core_op('findcclass', $TYPE_OPS, 'findcclass', [$RT_INT, $RT_STR, $RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('findnotcclass', $TYPE_OPS, 'findnotcclass', [$RT_INT, $RT_STR, $RT_INT, $RT_INT], $RT_INT);
 QAST::OperationsJAST.map_classlib_core_op('escape', $TYPE_OPS, 'escape', [$RT_STR], $RT_STR);
+QAST::OperationsJAST.map_classlib_core_op('flip', $TYPE_OPS, 'flip', [$RT_STR], $RT_STR);
 
 # substr can take 2 or 3 args, so needs special handling.
 QAST::OperationsJAST.map_classlib_core_op('substr2', $TYPE_OPS, 'substr2', [$RT_STR, $RT_INT], $RT_STR);
@@ -1750,6 +1751,7 @@ QAST::OperationsJAST.map_classlib_core_op('existspos', $TYPE_OPS, 'existspos', [
 QAST::OperationsJAST.map_classlib_core_op('existskey', $TYPE_OPS, 'existskey', [$RT_OBJ, $RT_STR], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('deletekey', $TYPE_OPS, 'deletekey', [$RT_OBJ, $RT_STR], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('elems', $TYPE_OPS, 'elems', [$RT_OBJ], $RT_INT, :tc);
+QAST::OperationsJAST.map_classlib_core_op('setelems', $TYPE_OPS, 'setelems', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('push', $TYPE_OPS, 'push', [$RT_OBJ, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('push_i', $TYPE_OPS, 'push_i', [$RT_OBJ, $RT_INT], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('push_n', $TYPE_OPS, 'push_n', [$RT_OBJ, $RT_NUM], $RT_NUM, :tc);

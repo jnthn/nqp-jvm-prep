@@ -1754,6 +1754,10 @@ public final class Ops {
     public static long elems(SixModelObject agg, ThreadContext tc) {
         return agg.elems(tc);
     }
+    public static SixModelObject setelems(SixModelObject agg, long elems, ThreadContext tc) {
+        agg.set_elems(tc, elems);
+    	return agg;
+    }
     public static long existspos(SixModelObject agg, long key, ThreadContext tc) {
         return agg.exists_pos(tc, key);
     }
@@ -2153,6 +2157,10 @@ public final class Ops {
     		}
     	}
     	return sb.toString();
+    }
+    
+    public static String flip(String str) {
+    	return new StringBuffer(str).reverse().toString();
     }
     
     /* Brute force, but not normally needed for most programs. */
