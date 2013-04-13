@@ -178,9 +178,11 @@ grammar QRegex::P6Regex::Grammar is HLL::Grammar {
                 $<max>=[ 
                        || \d+ 
                        || '*' 
+                       || \-\d+ <.panic: "Negative numbers are not allowed as range quantifier endpoint">
                        || <.panic: "Only integers or '*' allowed as range quantifier endpoint"> 
                        ] 
             ]?
+        || \-\d+ <.panic: "Negative numbers are not allowed as quantifiers">
         ]
     }
 
@@ -832,16 +834,18 @@ class QRegex::P6Regex::Actions is HLL::Actions {
                 elsif $_[0]<backslash> {
                     my $bs := $_[0]<backslash>.ast;
                     $bs.negate(!$bs.negate) if $<sign> eq '-';
-                    $bs.subtype('zerowidth') if $bs.negate;
                     @alts.push($bs);
                 }
-                else { $str := $str ~ ~$_[0]; }
+                else {
+                    my $c := ~$_[0];
+                    $str := $str ~ (%*RX<i> ?? nqp::lc($c) ~ nqp::uc($c) !! $c);
+                }
             }
             @alts.push(QAST::Regex.new( $str, :rxtype<enumcharlist>, :node($/), :negate( $<sign> eq '-' ) ))
                 if nqp::chars($str);
             $qast := +@alts == 1 ?? @alts[0] !!
                 $<sign> eq '-' ??
-                    QAST::Regex.new( :rxtype<concat>, :node($/), :subtype<zerowidth>, :negate(1),
+                    QAST::Regex.new( :rxtype<concat>, :node($/), :negate(1),
                         QAST::Regex.new( :rxtype<conj>, :subtype<zerowidth>, |@alts ), 
                         QAST::Regex.new( :rxtype<cclass>, :name<.> ) ) !!
                     QAST::Regex.new( :rxtype<altseq>, |@alts );
