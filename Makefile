@@ -1,6 +1,7 @@
 NQP    = nqp
 PARROT = parrot
 JAVAC  = javac
+JAR    = jar
 PERL   = perl
 PROVE  = prove
 
@@ -29,6 +30,7 @@ all: $(NQPLIBS)
 bin: $(JAVAS)
 	$(PERL) -MExtUtils::Command -e mkpath bin
 	$(JAVAC) -source 1.7 -cp 3rdparty/asm/asm-debug-all-4.1.jar -g -d bin $(JAVAS)
+	$(JAR) cf0 nqp-runtime.jar -C bin/ .
 
 test: all
 	$(PROVE) --exec=$(NQP) t/jast/*.t t/qast/*.t
@@ -37,7 +39,7 @@ nqptest: all
 	$(PROVE) --exec="$(NQP) nqp-jvm-cc.nqp" t/nqp/*.t
 
 selftest: all
-	$(PROVE) --exec="java -cp .;bin;3rdparty/asm/asm-4.1.jar NQPJVM" t/nqp/*.t t/serialization/*.t
+	$(PROVE) --exec="java -cp .;nqp-runtime.jar;3rdparty/asm/asm-4.1.jar NQPJVM" t/nqp/*.t t/serialization/*.t
 
 clean:
 	$(PERL) -MExtUtils::Command -e rm_rf bin *.pir *.pbc *.class *.dump

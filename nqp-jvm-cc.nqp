@@ -83,7 +83,7 @@ class HLL::Backend::JVM {
         my $name := %*COMPILING<%?OPTIONS><javaclass>;
         -> {
             run('java',
-                '-cp ' ~ pathlist('.', 'bin', '3rdparty/asm/asm-4.1.jar'),
+                '-cp ' ~ pathlist('.', 'nqp-runtime.jar', '3rdparty/asm/asm-4.1.jar'),
                 $name);
             unlink($name ~ '.class');
         }
