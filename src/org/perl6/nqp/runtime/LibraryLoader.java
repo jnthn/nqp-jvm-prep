@@ -8,14 +8,26 @@ import java.util.HashSet;
 public class LibraryLoader {
 	public static HashSet<String> loaded = new HashSet<String>();
 	
-	public void load(ThreadContext tc, String filename) {		
+	public void load(ThreadContext tc, String origFilename) {		
 		// Don't load the same thing multiple times.
-		if (loaded.contains(filename))
+		if (loaded.contains(origFilename))
 			return;
 		
 		try {
 			// Read in class data.
+			String filename = origFilename;
 			File file = new File(filename);
+			if (!file.exists() && filename.equals("ModuleLoader.class")) {
+				/* We special case the initial ModuleLoader loading. */
+		    	String[] cps = System.getProperty("java.class.path").split("[:;]");
+		    	for (int i = 0; i < cps.length; i++) {
+		    		file = new File(cps[i] + "/" + filename);
+		    		if (file.exists()) {
+		    			filename = cps[i] + "/" + filename;
+		    			break;
+		    		}
+		    	}
+			}
 			byte[] bytes = new byte[(int)file.length()];
 			DataInputStream dis = new DataInputStream((new FileInputStream(filename)));
 			dis.readFully(bytes);
@@ -28,7 +40,7 @@ public class LibraryLoader {
 			cu.runLoadIfAvailable(tc);
 			
 			// Note that we already loaded it.
-			loaded.add(filename);
+			loaded.add(origFilename);
 		} catch (Exception e) {
 			throw ExceptionHandling.dieInternal(tc, e.getMessage());
 		}
