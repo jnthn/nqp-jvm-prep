@@ -2384,6 +2384,14 @@ public final class Ops {
     		throw ExceptionHandling.dieInternal(tc, "scgethandle can only operate on an SCRef");
     	}
     }
+    public static String scgetdesc(SixModelObject scRef, ThreadContext tc) {
+    	if (scRef instanceof SCRefInstance) {
+    		return ((SCRefInstance)scRef).referencedSC.description;
+    	}
+    	else {
+    		throw ExceptionHandling.dieInternal(tc, "scgetdesc can only operate on an SCRef");
+    	}
+    }
     public static long scgetobjidx(SixModelObject scRef, SixModelObject find, ThreadContext tc) {
     	if (scRef instanceof SCRefInstance) {
     		 int idx = ((SCRefInstance)scRef).referencedSC.root_objects.indexOf(find);

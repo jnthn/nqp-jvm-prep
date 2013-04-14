@@ -1660,6 +1660,7 @@ QAST::OperationsJAST.map_classlib_core_op('scsetobj', $TYPE_OPS, 'scsetobj', [$R
 QAST::OperationsJAST.map_classlib_core_op('scsetcode', $TYPE_OPS, 'scsetcode', [$RT_OBJ, $RT_INT, $RT_OBJ], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('scgetobj', $TYPE_OPS, 'scgetobj', [$RT_OBJ, $RT_INT], $RT_OBJ, :tc);
 QAST::OperationsJAST.map_classlib_core_op('scgethandle', $TYPE_OPS, 'scgethandle', [$RT_OBJ], $RT_STR, :tc);
+QAST::OperationsJAST.map_classlib_core_op('scgetdesc', $TYPE_OPS, 'scgetdesc', [$RT_OBJ], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('scgetobjidx', $TYPE_OPS, 'scgetobjidx', [$RT_OBJ, $RT_OBJ], $RT_INT, :tc);
 QAST::OperationsJAST.map_classlib_core_op('scsetdesc', $TYPE_OPS, 'scsetdesc', [$RT_OBJ, $RT_STR], $RT_STR, :tc);
 QAST::OperationsJAST.map_classlib_core_op('scobjcount', $TYPE_OPS, 'scobjcount', [$RT_OBJ], $RT_INT, :tc);
@@ -2605,9 +2606,9 @@ class QAST::CompilerJAST {
         my $sh_elems := nqp::elems($sh);
         my $i := 0;
         while $i < $sh_elems {
-            $sh_ast.push(nqp::isnull_s($sh[$i])
+            $sh_ast.push(nqp::isnull_s(nqp::atpos_s($sh, $i))
                 ?? QAST::Op.new( :op('null_s') )
-                !! QAST::SVal.new( :value($sh[$i]) ));
+                !! QAST::SVal.new( :value(nqp::atpos_s($sh, $i)) ));
             $i := $i + 1;
         }
         
@@ -2630,12 +2631,12 @@ class QAST::CompilerJAST {
             QAST::Op.new(
                 :op('bind'),
                 QAST::Var.new( :name('cur_sc'), :scope('local'), :decl('var') ),
-                QAST::Op.new( :op('createsc'), QAST::SVal.new( :value($sc.handle()) ) )
+                QAST::Op.new( :op('createsc'), QAST::SVal.new( :value(nqp::scgethandle($sc)) ) )
             ),
             QAST::Op.new(
                 :op('scsetdesc'),
                 QAST::Var.new( :name('cur_sc'), :scope('local') ),
-                QAST::SVal.new( :value($sc.description) )
+                QAST::SVal.new( :value(nqp::scgetdesc($sc)) )
             ),
             QAST::Op.new(
                 :op('bind'),
