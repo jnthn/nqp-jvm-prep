@@ -9,6 +9,7 @@ import org.perl6.nqp.sixmodel.reprs.ContextRef;
 import org.perl6.nqp.sixmodel.reprs.IOHandle;
 import org.perl6.nqp.sixmodel.reprs.KnowHOWAttribute;
 import org.perl6.nqp.sixmodel.reprs.KnowHOWREPR;
+import org.perl6.nqp.sixmodel.reprs.MultiCache;
 import org.perl6.nqp.sixmodel.reprs.NFA;
 import org.perl6.nqp.sixmodel.reprs.P6Opaque;
 import org.perl6.nqp.sixmodel.reprs.P6bigint;
@@ -66,5 +67,6 @@ public class REPRRegistry {
         addREPR("VMException", new VMException());
         addREPR("IOHandle", new IOHandle());
         addREPR("P6bigint", new P6bigint());
+        addREPR("MultiCache", new MultiCache());
     }
 }

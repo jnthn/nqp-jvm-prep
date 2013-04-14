@@ -38,6 +38,7 @@ import org.perl6.nqp.sixmodel.reprs.CallCaptureInstance;
 import org.perl6.nqp.sixmodel.reprs.ContextRef;
 import org.perl6.nqp.sixmodel.reprs.ContextRefInstance;
 import org.perl6.nqp.sixmodel.reprs.IOHandleInstance;
+import org.perl6.nqp.sixmodel.reprs.MultiCacheInstance;
 import org.perl6.nqp.sixmodel.reprs.NFA;
 import org.perl6.nqp.sixmodel.reprs.NFAInstance;
 import org.perl6.nqp.sixmodel.reprs.NFAStateInfo;
@@ -1297,12 +1298,16 @@ public final class Ops {
     
     /* Multi-dispatch cache. */
     public static SixModelObject multicacheadd(SixModelObject cache, SixModelObject capture, SixModelObject result, ThreadContext tc) {
-    	// TODO
-    	return null;
+    	if (!(cache instanceof MultiCacheInstance))
+    		cache = tc.gc.MultiCache.st.REPR.allocate(tc, tc.gc.MultiCache.st);
+    	((MultiCacheInstance)cache).add((CallCaptureInstance)capture, result);
+    	return cache;
     }
     public static SixModelObject multicachefind(SixModelObject cache, SixModelObject capture, ThreadContext tc) {
-    	// TODO
-    	return null;
+    	if (cache instanceof MultiCacheInstance)
+    		return ((MultiCacheInstance)cache).lookup((CallCaptureInstance)capture);
+    	else
+    		return null;
     }
     
     /* Basic 6model operations. */

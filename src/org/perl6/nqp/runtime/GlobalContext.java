@@ -86,6 +86,11 @@ public class GlobalContext {
     public SixModelObject BOOTStrArray;
     
     /**
+     * Multi-dispatch cache type.
+     */
+    public SixModelObject MultiCache;
+    
+    /**
      * The main, startup thread's ThreadContext.
      */
     public ThreadContext mainThread;
