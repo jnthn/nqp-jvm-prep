@@ -914,7 +914,13 @@ class HLL::Backend::JVM {
     }
     
     method classfile($jast, *%adverbs) {
-        __JVM__compilejast($jast.dump());
+        if %adverbs<target> eq 'classfile' && %adverbs<output> {
+            __JVM__compilejasttofile($jast.dump(), %adverbs<output>);
+            nqp::null()
+        }
+        else {
+            __JVM__compilejast($jast.dump());
+        }
     }
     
     method jvm($cu, *%adverbs) {

@@ -54,6 +54,19 @@ public class JASTToJVMBytecode {
     	}
     }
     
+    public static void writeClassFromString(String in, String filename) {
+    	try {
+	    	BufferedReader br = new BufferedReader(new StringReader(in));
+	    	JavaClass c = buildClassFrom(br);
+	    	FileOutputStream fos = new FileOutputStream(filename);
+            fos.write(c.bytes);
+            fos.close();
+    	}
+    	catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+    
     private static JavaClass buildClassFrom(BufferedReader in) throws Exception
     {
         // Read in class name, superclass and any fields.

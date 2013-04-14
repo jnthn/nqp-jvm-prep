@@ -3355,6 +3355,10 @@ public final class Ops {
     	res.jc = JASTToJVMBytecode.buildClassFromString(dump);
     	return res;
     }
+    public static String compilejasttofile(String dump, String filename, ThreadContext tc) {
+    	JASTToJVMBytecode.writeClassFromString(dump, filename);
+    	return dump;
+    }
     public static SixModelObject loadcompunit(SixModelObject obj, ThreadContext tc) {
     	try {
 	    	EvalResult res = (EvalResult)obj;
