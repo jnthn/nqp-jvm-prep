@@ -7,10 +7,16 @@ knowhow ModuleLoader {
         
         # Put any explicitly specified path on the start of the list.
         my $explicit;
-        # XXX TODO: Exceptions.
-        #try { $explicit := %*COMPILING<%?OPTIONS>{$explicit_path}; }
-        if !nqp::isnull($explicit) && nqp::defined($explicit) {
+        if !nqp::isnull($explicit) {
+            try { $explicit := %*COMPILING<%?OPTIONS>{$explicit_path}; }
+        }
+        if nqp::defined($explicit) {
             nqp::push(@search_paths, $explicit);
+        }
+        else {
+            for nqp::jvmclasspaths() {
+                nqp::push(@search_paths, $_)
+            }
         }
         
         # Add CWD.

@@ -3376,4 +3376,15 @@ public final class Ops {
     		result.bind_pos_boxed(tc, i, res.cu.codeRefs[i]);
     	return result;
     }
+    public static SixModelObject jvmclasspaths(ThreadContext tc) {
+    	SixModelObject Array = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.listType;
+    	SixModelObject Str = tc.curFrame.codeRef.staticInfo.compUnit.hllConfig.strBoxType;
+    	SixModelObject result = Array.st.REPR.allocate(tc, Array.st);
+    	result.initialize(tc);
+    	String cpStr = System.getProperty("java.class.path");
+    	String[] cps = cpStr.split("[:;]");
+    	for (int i = 0; i < cps.length; i++)
+    		result.push_boxed(tc, box_s(cps[i], Str, tc));
+    	return result;
+    }
 }
