@@ -1029,11 +1029,11 @@ QAST::OperationsJAST.add_core_op('for', -> $qastcomp, $op {
 });
 
 # Calling
-sub process_args($qastcomp, $node, $il, $first, :$inv_temp) {
+sub process_args($qastcomp, @children, $il, $first, :$inv_temp) {
     # Make sure we do positionals before nameds.
     my @pos;
     my @named;
-    for @($node) {
+    for @children {
         nqp::push(($_.named ?? @named !! @pos), $_);
     }
     my @order := @pos;
@@ -1122,7 +1122,7 @@ QAST::OperationsJAST.add_core_op('call', sub ($qastcomp, $node) {
     $il.append($invokee.jast);
     
     # Process arguments.
-    my @argstuff := process_args($qastcomp, $node, $il, $node.name eq "" ?? 1 !! 0);
+    my @argstuff := process_args($qastcomp, @($node), $il, $node.name eq "" ?? 1 !! 0);
     my $cs_idx := @argstuff[0];
 
     # Emit call.
@@ -1152,25 +1152,26 @@ QAST::OperationsJAST.add_core_op('callmethod', -> $qastcomp, $node {
     if +@($node) == 0 {
         nqp::die("A 'callmethod' node must have at least one child");
     }
+    my @children := nqp::clone(@($node));
     
     # Handle indirect naming.
     my $name_tmp;
     if $node.name eq '' {
-        if +@($node) == 1 {
+        if +@children == 1 {
             nqp::die("Method call must either supply a name or have a child node that evaluates to the name");
         }
-        my $inv := $node.shift();
+        my $inv := @children.shift();
         $name_tmp := $*TA.fresh_s();
-        my $name_res := $qastcomp.as_jast($node.shift(), :want($RT_STR));
+        my $name_res := $qastcomp.as_jast(@children.shift(), :want($RT_STR));
         $il.append($name_res.jast);
         $*STACK.obtain($il, $name_res);
         $il.append(JAST::Instruction.new( :op('astore'), $name_tmp ));
-        $node.unshift($inv);
+        @children.unshift($inv);
     }
     
     # Process arguments, stashing the invocant.
     my $inv_temp := $*TA.fresh_o();
-    my @argstuff := process_args($qastcomp, $node, $il, 0, :$inv_temp);
+    my @argstuff := process_args($qastcomp, @children, $il, 0, :$inv_temp);
     my $cs_idx := @argstuff[0];
     
     # Look up method.
