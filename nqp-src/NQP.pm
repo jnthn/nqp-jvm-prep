@@ -3423,6 +3423,7 @@ $nqpcomp.language('nqp');
 $nqpcomp.parsegrammar(NQP::Grammar);
 $nqpcomp.parseactions(NQP::Actions);
 hll-config($nqpcomp.config);
+$nqpcomp.addstage('classname', :after<start>);
 
 # Add extra command line options.
 my @clo := $nqpcomp.commandline_options();
@@ -3434,6 +3435,7 @@ my @clo := $nqpcomp.commandline_options();
 @clo.push('no-regex-lib');
 @clo.push('dynext=s');
 @clo.push('stable-sc');
+@clo.push('javaclass=s');
 
 sub MAIN(*@ARGS) {
     # Enter the compiler.
