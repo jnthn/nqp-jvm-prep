@@ -925,7 +925,7 @@ class HLL::Backend::JVM {
     }
     
     method jvm($cu, *%adverbs) {
-        __JVM__loadcompunit($cu)
+        __JVM__loadcompunit($cu, %adverbs<bootstrap> ?? 1 !! 0)
     }
     
     method is_compunit($cuish) {

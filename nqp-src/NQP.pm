@@ -226,7 +226,8 @@ class NQP::World is HLL::World {
             my $compiler := nqp::getcomp('nqp');
             my $compiled := $compiler.compile(
                 QAST::CompUnit.new( :hll('nqp'), $past ),
-                :from<ast>, :compunit_ok(1));
+                :from<ast>, :compunit_ok(1),
+                :bootstrap(%*COMPILING<%?OPTIONS><bootstrap> ?? 1 !! 0));
 
             # Fix up any code objects holding stubs with the real compiled thing.
             my @allcodes := $compiler.backend.compunit_coderefs($compiled);
@@ -256,7 +257,7 @@ class NQP::World is HLL::World {
             }
             
             my $mainline := $compiler.backend.compunit_mainline($compiled);
-            $mainline(|@args, |%named);
+            $mainline(|@args, |%named)
         };
         
         # Create code object, if we'll need one.
@@ -336,7 +337,7 @@ class NQP::World is HLL::World {
         if $have_code_type {
             # Create it now.
             nqp::bindattr($code_obj, $code_type, '$!do', $dummy);
-            nqp::bindattr($code_obj, $code_type, '$!dispatchees', nqp::list())
+            nqp::bindattr($code_obj, $code_type, '$!dispatchees', compilee_list())
                 if $is_dispatcher;
             my $slot := self.add_object($code_obj);
 
@@ -419,8 +420,9 @@ class NQP::World is HLL::World {
         my $sig_type  := self.find_sym(['NQPSignature']);
         my $code_type := self.find_sym(['NQPRoutine']);
         my $sig_obj   := nqp::create($sig_type);
-        nqp::bindattr($sig_obj, $sig_type, '$!types', $types);
-        nqp::bindattr($sig_obj, $sig_type, '$!definednesses', $definednesses);
+        nqp::bindattr($sig_obj, $sig_type, '$!types', compilee_list($types));
+        nqp::bindattr($sig_obj, $sig_type, '$!definednesses',
+            compilee_list($definednesses));
         nqp::bindattr($code_obj, $code_type, '$!signature', $sig_obj);
     }
     
@@ -519,6 +521,20 @@ class NQP::World is HLL::World {
     # Does cleanups.
     method cleanup() {
         for @!clearup_tasks { $_() }
+    }
+    
+    # Makes a list safe to cross the compilation boundary.
+    sub compilee_list(@orig?) {
+        try {
+            my $list := nqp::create(__JVM__bootarray());
+            if nqp::islist(@orig) {
+                for @orig {
+                    nqp::push($list, $_);
+                }
+            }
+            return $list;
+            CATCH { return nqp::islist(@orig) ?? @orig !! nqp::list() }
+        }
     }
     
     # Checks if the given name is known anywhere in the lexpad
