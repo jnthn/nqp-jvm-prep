@@ -3399,4 +3399,12 @@ public final class Ops {
     		result.push_boxed(tc, box_s(cps[i], Str, tc));
     	return result;
     }
+    public static long usecompileehllconfig(ThreadContext tc) {
+    	tc.gc.useCompileeHLLConfig();
+    	return 1;
+    }
+    public static long usecompilerhllconfig(ThreadContext tc) {
+    	tc.gc.useCompilerHLLConfig();
+    	return 1;
+    }
 }

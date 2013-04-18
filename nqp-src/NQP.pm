@@ -3436,6 +3436,7 @@ my @clo := $nqpcomp.commandline_options();
 @clo.push('dynext=s');
 @clo.push('stable-sc');
 @clo.push('javaclass=s');
+@clo.push('bootstrap');
 
 sub MAIN(*@ARGS) {
     # Enter the compiler.
